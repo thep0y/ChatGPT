@@ -1,0 +1,7 @@
+[Desktop Entry]
+Categories=Office;
+Exec=chatgpt-client
+Icon=chatgpt-client
+Name=ChatGPT 客户端
+Terminal=false
+Type=Application
