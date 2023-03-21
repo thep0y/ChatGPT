@@ -9,7 +9,7 @@ interface ChatProps {
 const MessageList: React.FC<Omit<ChatProps, 'onSendMessage'>> = ({ messages }) => (
   <List
     dataSource={messages}
-    renderItem={(item) => <List.Item>{item.text}</List.Item>}
+    renderItem={(item) => <List.Item>{item.content}</List.Item>}
   />
 )
 

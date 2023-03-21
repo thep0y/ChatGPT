@@ -14,10 +14,10 @@ extern crate simplelog;
 use std::fs;
 use std::fs::File;
 
-use crate::chat::ChatGPTResponse;
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
-use chat::{chat_gpt_client, get_chat_models, ChatGPTRequest, ModelResponse};
+use chat::chat::{chat_gpt_client, ChatGPTRequest, ChatGPTResponse, Message};
+use chat::models::{get_chat_models, ModelResponse};
 use simplelog::{ColorChoice, CombinedLogger, TermLogger, TerminalMode, WriteLogger};
 
 // use tauri::Manager;
@@ -44,14 +44,8 @@ async fn get_models() -> Result<ModelResponse> {
 #[tauri::command]
 async fn chat_gpt(text: String, model: String) -> Result<ChatGPTResponse> {
     chat_gpt_client(ChatGPTRequest {
-        text,
-        model,
-        prompt: None,
-        length: None,
-        temperature: None,
-        top_p: None,
-        frequency_penalty: None,
-        presence_penalty: None,
+        model: "gpt-3.5-turbo".to_string(),
+        messages: vec![Message::new("user".to_string(), text)],
     })
     .await
 }
@@ -92,8 +86,7 @@ async fn main() {
 
     tauri::Builder::default()
         // .setup(|app| {
-        //     let window = app.get_window("main").unwrap();
-        //     set_shadow(&window, true).expect("Unsupported platform!");
+        //     // let window = app.get_window("main").unwrap();
         //     Ok(())
         // })
         .invoke_handler(tauri::generate_handler![chat_gpt, get_models])
