@@ -17,6 +17,7 @@ use std::fs::File;
 use crate::chat::ChatGPTResponse;
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
+use chat::{chat_gpt_client, get_chat_models, ChatGPTRequest, ModelResponse};
 use simplelog::{ColorChoice, CombinedLogger, TermLogger, TerminalMode, WriteLogger};
 
 // use tauri::Manager;
@@ -36,10 +37,23 @@ fn set_gtk_scale_env() {
 }
 
 #[tauri::command]
+async fn get_models() -> Result<ModelResponse> {
+    get_chat_models().await
+}
+
+#[tauri::command]
 async fn chat_gpt(text: String, model: String) -> Result<ChatGPTResponse> {
-    Ok(ChatGPTResponse {
-        text: "hello".to_string(),
+    chat_gpt_client(ChatGPTRequest {
+        text,
+        model,
+        prompt: None,
+        length: None,
+        temperature: None,
+        top_p: None,
+        frequency_penalty: None,
+        presence_penalty: None,
     })
+    .await
 }
 
 #[tokio::main]
@@ -82,7 +96,7 @@ async fn main() {
         //     set_shadow(&window, true).expect("Unsupported platform!");
         //     Ok(())
         // })
-        .invoke_handler(tauri::generate_handler![chat_gpt])
+        .invoke_handler(tauri::generate_handler![chat_gpt, get_models])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

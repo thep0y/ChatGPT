@@ -100,7 +100,8 @@
         "minHeight": 676,
         "maxWidth": 1600,
         "maxHeight": 1010,
-        "title": "ChatGPT"
+        "title": "ChatGPT",
+        "alwaysOnTop": true
       }
     ]
   }

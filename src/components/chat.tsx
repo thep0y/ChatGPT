@@ -1,63 +1,43 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, memo } from 'react'
+import { List, Input, Button } from 'antd'
 
-const ChatGpt: React.FC = () => {
-  const [inputText, setInputText] = useState('')
-  const [model, setModel] = useState('gpt2')
-  const [responseText, setResponseText] = useState('')
+interface ChatProps {
+  messages: Message[]
+  onSendMessage: (message: string) => void
+}
 
-  const handleInputTextChange = (event) => {
-    setInputText(event.target.value)
+const MessageList: React.FC<Omit<ChatProps, 'onSendMessage'>> = ({ messages }) => (
+  <List
+    dataSource={messages}
+    renderItem={(item) => <List.Item>{item.text}</List.Item>}
+  />
+)
+
+const MessageInput: React.FC<Omit<ChatProps, 'messages'>> = ({ onSendMessage }) => {
+  const [message, setMessage] = useState('')
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setMessage(e.target.value)
   }
 
-  const handleModelChange = (event) => {
-    setModel(event.target.value)
-  }
-
-  const handleChatGPTSubmit = async (event) => {
-    event.preventDefault()
-
-    const url = 'http://localhost:5000/chat-gpt'
-    const params = {
-      text: inputText,
-      model
-    }
-
-    try {
-      const response = await axios.post(url, params)
-
-      setResponseText(response.data.text)
-    } catch (error) {
-      console.error(error)
-    }
+  const handleClick = (): void => {
+    onSendMessage(message)
+    setMessage('')
   }
 
   return (
     <div>
-      <form onSubmit={handleChatGPTSubmit}>
-        <label>
-          Input text:
-          <input type="text" value={inputText} onChange={handleInputTextChange} />
-        </label>
-
-        <br />
-
-        <label>
-          Model:
-          <select value={model} onChange={handleModelChange}>
-            <option value="gpt2">GPT-2</option>
-            <option value="davinci">Davinci</option>
-          </select>
-        </label>
-
-        <br />
-        <button type="submit">Submit</button>
-      </form>
-
-      <div>
-        {responseText}
-      </div>
+      <Input value={message} onChange={handleChange} />
+      <Button onClick={handleClick}>发送</Button>
     </div>
   )
 }
 
-export default ChatGpt
+const Chat: React.FC<ChatProps> = ({ messages, onSendMessage }: ChatProps) => (
+  <div>
+    <MessageList messages={messages} />
+    <MessageInput onSendMessage={onSendMessage} />
+  </div>
+)
+
+export default memo(Chat)

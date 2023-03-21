@@ -4,14 +4,14 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 // import '~/styles/index.scss'
 // import TitleBar from '~/components/TitleBar'
 
-const Chat = lazy(async () => await import('~/components/chat'))
+const ChatPage = lazy(async () => await import('~/components/ChatPage'))
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: (
       <React.Suspense>
-        <Chat />
+        <ChatPage />
       </React.Suspense>
     )
   }
