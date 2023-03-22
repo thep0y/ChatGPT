@@ -14,7 +14,7 @@ lazy_static! {
     pub(crate) static ref API_KEY: String = {
         match env::var("OPEN_API_KEY") {
             Ok(v) => {
-                debug!("token in env: {}", v);
+                trace!("token in env: {}", v);
                 v
             },
             Err(e) => {
@@ -33,7 +33,7 @@ pub(crate) fn create_headers() -> HeaderMap {
         format!("Bearer {}", *API_KEY).parse().unwrap(),
     );
 
-    debug!("headers: {:?}", headers);
+    trace!("headers: {:?}", headers);
 
     headers
 }

@@ -44,10 +44,6 @@ pub fn logger_config(is_term: bool) -> Config {
 }
 
 pub fn log_level() -> LevelFilter {
-    if cfg!(debug_assertions) {
-        return LevelFilter::Trace;
-    }
-
     let level_strings: HashMap<&str, LevelFilter> = HashMap::from([
         ("0", LevelFilter::Off),
         ("1", LevelFilter::Error),
@@ -60,7 +56,13 @@ pub fn log_level() -> LevelFilter {
     match env::var("LOG_LEVEL") {
         Ok(v) => match level_strings.get(&v as &str) {
             Some(l) => *l,
-            None => LevelFilter::Debug,
+            None => {
+                if cfg!(debug_assertions) {
+                    LevelFilter::Trace
+                } else {
+                    LevelFilter::Debug
+                }
+            }
         },
         Err(_) => LevelFilter::Debug,
     }

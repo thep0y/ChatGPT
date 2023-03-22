@@ -9,7 +9,7 @@
     "build": "tauri build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "start:dev": "cross-env RUST_BACKTRACE=1 LOG_LEVEL=5 tauri dev",
+    "start:dev": "cross-env RUST_BACKTRACE=1 LOG_LEVEL=4 tauri dev",
     "dev": "pnpm start:dev"
   },
   "dependencies": {
