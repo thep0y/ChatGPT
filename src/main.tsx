@@ -3,9 +3,9 @@ import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 // import '~/styles/index.scss'
 // import TitleBar from '~/components/TitleBar'
+import '~/styles/index.scss'
 
 const ChatPage = lazy(async () => await import('~/components/ChatPage'))
-const Message = lazy(async () => await import('~/components/message'))
 
 const router = createBrowserRouter([
   {

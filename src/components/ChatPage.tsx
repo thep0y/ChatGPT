@@ -3,6 +3,7 @@ import { Layout } from 'antd'
 import Chat from '~/components/Chat'
 import { invoke } from '@tauri-apps/api'
 import { now } from '~/lib'
+import '~/styles/ChatPage.scss'
 
 const { Header, Content } = Layout
 
@@ -23,12 +24,12 @@ const ChatPage: React.FC = () => {
     // TODO: 使用 Tauri API 发送消息并接收 ChatGPT 的回复
 
     try {
-      const resp = await invoke<ChatGPTResponse>('chat_gpt', { text: message, model: '' })
+      const resp = await invoke<ChatGPTResponse>('chat_gpt', {
+        text: message,
+        model: ''
+      })
 
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        resp.choices[0].message
-      ])
+      setMessages((prevMessages) => [...prevMessages, resp.choices[0].message])
     } catch (e) {
       console.error(e)
     }
@@ -36,7 +37,9 @@ const ChatPage: React.FC = () => {
 
   return (
     <Layout>
-      <Header>ChatGPT</Header>
+      <Header className="chat-title">
+        <h2> 这是对话标题 </h2>
+      </Header>
 
       <Content>
         <Chat messages={messages} onSendMessage={handleSendMessage} />
