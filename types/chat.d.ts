@@ -3,13 +3,16 @@
  * Email:       thepoy@163.com
  * File Name:   chat.d.ts
  * Created At:  2023-03-21 20:38:24
- * Modified At: 2023-03-21 23:44:00
+ * Modified At: 2023-03-22 19:20:40
  * Modified By: thepoy
  */
 
+type Role = 'user' | 'assistant'
+
 declare interface Message {
-  role: string
+  role: Role
   content: string
+  time: number
 }
 
 declare interface ChatGPTRequest {
@@ -35,4 +38,11 @@ declare interface ChatGPTResponse {
   created: number
   choices: Choice[]
   usage: Usage
+}
+
+declare interface ChatBubbleProps {
+  message: string
+  role: Role
+  avatar?: string
+  time: string
 }

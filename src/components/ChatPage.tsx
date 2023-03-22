@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Layout } from 'antd'
 import Chat from '~/components/Chat'
 import { invoke } from '@tauri-apps/api'
-import { Model } from '~/lib'
+import { now } from '~/lib'
 
 const { Header, Content } = Layout
 
@@ -18,12 +18,12 @@ const ChatPage: React.FC = () => {
   const handleSendMessage = async (message: string): Promise<void> => {
     setMessages((prevMessages) => [
       ...prevMessages,
-      { content: message, role: 'user' }
+      { content: message, role: 'user', time: now() }
     ])
     // TODO: 使用 Tauri API 发送消息并接收 ChatGPT 的回复
 
     try {
-      const resp = await invoke<ChatGPTResponse>('chat_gpt', { text: message, model: Model.GPT_3 })
+      const resp = await invoke<ChatGPTResponse>('chat_gpt', { text: message, model: '' })
 
       setMessages((prevMessages) => [
         ...prevMessages,

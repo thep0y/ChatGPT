@@ -1,0 +1,95 @@
+/*
+ * Author:      thepoy
+ * Email:       thepoy@163.com
+ * File Name:   ChatBubble.scss
+ * Created At:  2023-03-22 19:01:13
+ * Modified At: 2023-03-22 22:08:57
+ * Modified By: thepoy
+ */
+
+.list {
+  --sentColor: #0b93f6;
+  --receiveColor: #e5e5ea;
+  --bg: #fff;
+
+  display: flex;
+  flex-direction: column;
+  margin: 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+[data-theme="dark"] {
+  .list {
+    --bg: #161515;
+  }
+}
+
+.shared {
+  position: relative; /* Setup a relative container for our psuedo elements */
+  margin-bottom: 15px;
+  padding: 10px 20px;
+  line-height: 24px;
+  word-wrap: break-word; /* Make sure the text wraps to multiple lines if long */
+  border-radius: 25px;
+
+  &:before {
+    width: 20px;
+  }
+
+  &:after {
+    width: 26px;
+    background-color: #f5f5f5; /* All tails have the same bg cutout */
+  }
+
+  &:before,
+  &:after {
+    position: absolute;
+    bottom: 0;
+    height: 25px; /* height of our bubble "tail" - should match the border-radius above */
+    content: "";
+  }
+}
+
+.sent {
+  align-self: flex-end;
+  color: white;
+  background: var(--sentColor);
+
+  &:before {
+    right: -7px;
+    background-color: var(--sentColor);
+    border-bottom-left-radius: 16px 14px;
+  }
+
+  &:after {
+    right: -26px;
+    border-bottom-left-radius: 10px;
+  }
+}
+
+.received {
+  align-self: flex-start;
+  color: black;
+  background: var(--receiveColor);
+
+  &:before {
+    left: -7px;
+    background-color: var(--receiveColor);
+    border-bottom-right-radius: 16px 14px;
+  }
+
+  &:after {
+    left: -26px;
+    border-bottom-right-radius: 10px;
+  }
+}
+
+.noTail {
+  margin-bottom: 2px;
+
+  &:before,
+  &:after {
+    opacity: 0;
+  }
+}

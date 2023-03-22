@@ -1,5 +1,6 @@
 import React, { useState, memo } from 'react'
-import { List, Input, Button } from 'antd'
+import { Input, Button } from 'antd'
+import '~/styles/ChatBubble.scss'
 
 interface ChatProps {
   messages: Message[]
@@ -7,11 +8,32 @@ interface ChatProps {
 }
 
 const MessageList: React.FC<Omit<ChatProps, 'onSendMessage'>> = ({ messages }) => (
-  <List
-    dataSource={messages}
-    renderItem={(item) => <List.Item>{item.content}</List.Item>}
-  />
+  <ol className='list'>
+    {messages.map(({ content, role, time }, i) => {
+      const sent = role === 'user'
+
+      return (
+        <li
+          key={time}
+          className={`shared ${(sent ?? false) ? 'sent' : 'received'}`}
+        >
+          {content}
+        </li>
+      )
+    })}
+  </ol>
 )
+
+// const MessageList: React.FC<Omit<ChatProps, 'onSendMessage'>> = ({ messages }) => (
+//   <List
+//     dataSource={messages}
+//     renderItem={(item) => (
+//       <List.Item>
+//         <ChatBubble message={item.content} role={item.role} time={formatTime(item.time)} />
+//       </List.Item>
+//     )}
+//   />
+// )
 
 const MessageInput: React.FC<Omit<ChatProps, 'messages'>> = ({ onSendMessage }) => {
   const [message, setMessage] = useState('')

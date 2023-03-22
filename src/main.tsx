@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 // import TitleBar from '~/components/TitleBar'
 
 const ChatPage = lazy(async () => await import('~/components/ChatPage'))
+const Message = lazy(async () => await import('~/components/message'))
 
 const router = createBrowserRouter([
   {
