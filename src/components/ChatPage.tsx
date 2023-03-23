@@ -10,6 +10,7 @@ const { Header, Content } = Layout
 
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>(JSON.parse(import.meta.env.VITE_MESSAGES))
+  const [waiting, setWaiting] = useState<boolean>(false)
 
   // invoke('get_models').then(r => {
   //   console.log(r)
@@ -24,6 +25,8 @@ const ChatPage: React.FC = () => {
     ])
     // TODO: 使用 Tauri API 发送消息并接收 ChatGPT 的回复
 
+    setWaiting(true)
+
     try {
       const resp = await invoke<ChatGPTResponse>('chat_gpt', {
         text: message,
@@ -34,6 +37,8 @@ const ChatPage: React.FC = () => {
       setMessages((prevMessages) => [...prevMessages, { ...resp.choices[0].message, time: resp.created * 1000 }])
     } catch (e) {
       console.error(e)
+    } finally {
+      setWaiting(false)
     }
   }
 
@@ -45,7 +50,7 @@ const ChatPage: React.FC = () => {
 
       <Content>
         <React.Suspense>
-          <Chat messages={messages} onSendMessage={handleSendMessage} />
+          <Chat messages={messages} onSendMessage={handleSendMessage} waiting={waiting} />
         </React.Suspense>
       </Content>
     </Layout>

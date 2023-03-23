@@ -39,10 +39,3 @@ declare interface ChatGPTResponse {
   choices: Choice[]
   usage: Usage
 }
-
-declare interface ChatBubbleProps {
-  message: string
-  role: Role
-  avatar?: string
-  time: string
-}

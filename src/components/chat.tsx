@@ -1,16 +1,16 @@
 /* eslint-disable react/prop-types */
 import React, { useState, memo, lazy } from 'react'
-import { Input, Affix } from 'antd'
+import { Input, Affix, Button, Space } from 'antd'
+import { SendOutlined, LoadingOutlined } from '@ant-design/icons'
 import '~/styles/ChatBubble.scss'
 
 const Message = lazy(async () => await import('~/components/Message'))
 
-interface ChatProps {
+interface MessageListProps {
   messages: Message[]
-  onSendMessage: (message: string) => void
 }
 
-const MessageList: React.FC<Omit<ChatProps, 'onSendMessage'>> = ({
+const MessageList: React.FC<MessageListProps> = memo(({
   messages
 }) => (
   <ol className="list">
@@ -24,12 +24,17 @@ const MessageList: React.FC<Omit<ChatProps, 'onSendMessage'>> = ({
       </React.Suspense>
     ))}
   </ol>
-)
+))
 
-// MessageList.displayName = 'MessageList'
+MessageList.displayName = 'MessageList'
 
-const MessageInput: React.FC<Omit<ChatProps, 'messages'>> = ({
-  onSendMessage
+interface MessageInputProps {
+  onSendMessage: (message: string) => void
+  waiting: boolean
+}
+
+const MessageInput: React.FC<MessageInputProps> = ({
+  onSendMessage, waiting
 }) => {
   const [message, setMessage] = useState('')
 
@@ -38,23 +43,42 @@ const MessageInput: React.FC<Omit<ChatProps, 'messages'>> = ({
   }
 
   const handleEnter = (): void => {
-    onSendMessage(message)
-    setMessage('')
+    if (message.trim() !== '') {
+      onSendMessage(message)
+      setMessage('')
+    }
   }
 
   return (
     <div>
       <Affix offsetBottom={10}>
-        <Input value={message} onChange={handleChange} onPressEnter={handleEnter} />
+        <Space.Compact block>
+          <Input
+            value={message}
+            placeholder="输入你要发送给 ChatGPT 的消息"
+            onChange={handleChange}
+            onPressEnter={handleEnter}
+          />
+
+          <Button type='primary' onClick={handleEnter} disabled={waiting || message.trim() === ''}>
+            {
+             waiting
+               ? <LoadingOutlined />
+               : <SendOutlined />
+            }
+          </Button>
+        </Space.Compact>
       </Affix>
     </div>
   )
 }
 
-const Chat: React.FC<ChatProps> = memo(({ messages, onSendMessage }: ChatProps) => (
+type ChatProps = MessageListProps & MessageInputProps
+
+const Chat: React.FC<ChatProps> = memo(({ messages, onSendMessage, waiting }: ChatProps) => (
   <div>
     <MessageList messages={messages} />
-    <MessageInput onSendMessage={onSendMessage} />
+    <MessageInput onSendMessage={onSendMessage} waiting={waiting} />
   </div>
 ))
 
