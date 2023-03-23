@@ -1,9 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, lazy } from 'react'
 import { Layout } from 'antd'
-import Chat from '~/components/Chat'
+// import Chat from '~/components/Chat'
 import { invoke } from '@tauri-apps/api'
 import { now } from '~/lib'
 import '~/styles/ChatPage.scss'
+
+const Chat = lazy(async () => await import('~/components/Chat'))
 
 const { Header, Content } = Layout
 
@@ -45,7 +47,9 @@ const ChatPage: React.FC = () => {
       </Header>
 
       <Content>
-        <Chat messages={messages} onSendMessage={handleSendMessage} />
+        <React.Suspense>
+          <Chat messages={messages} onSendMessage={handleSendMessage} />
+        </React.Suspense>
       </Content>
     </Layout>
   )

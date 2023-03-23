@@ -1,71 +1,27 @@
 /* eslint-disable react/prop-types */
-import React, { useState, memo } from 'react'
+import React, { useState, memo, lazy } from 'react'
 import { Input, Button } from 'antd'
-import ReactMarkdown from 'react-markdown'
-import type { CodeProps } from 'react-markdown/lib/ast-to-react'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { dark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import '~/styles/ChatBubble.scss'
+
+const Message = lazy(async () => await import('~/components/Message'))
 
 interface ChatProps {
   messages: Message[]
   onSendMessage: (message: string) => void
 }
 
-const Message: React.FC<Message> = memo(({ content, role, time }) => {
-  const sent = role === 'user'
-
-  const renderCodeBlock = ({
-    node,
-    inline,
-    className,
-    children,
-    ...props
-  }: CodeProps): React.ReactElement => {
-    const match = /language-(\w+)/.exec(className ?? '')
-
-    if (!(inline ?? false) && match != null) {
-      return (
-        <SyntaxHighlighter
-          style={dark}
-          language={match[1]}
-          PreTag="div"
-          {...props}
-        >
-          {String(children).replace(/\n$/, '')}
-        </SyntaxHighlighter>
-      )
-    }
-
-    return (
-      <code className={className} {...props}>
-        {children}
-      </code>
-    )
-  }
-
-  return (
-    <li className={`shared ${sent ? 'sent' : 'received'}`}>
-      <ReactMarkdown components={{ code: renderCodeBlock }}>
-        {content}
-      </ReactMarkdown>
-    </li>
-  )
-})
-
-Message.displayName = 'Message'
-
 const MessageList: React.FC<Omit<ChatProps, 'onSendMessage'>> = memo(({
   messages
 }) => (
   <ol className="list">
     {messages.map(({ content, role, time }) => (
-      <Message
-        key={time}
-        content={content}
-        role={role}
-        time={0}
-      />
+      <React.Suspense key={time}>
+        <Message
+          content={content}
+          role={role}
+          time={0}
+        />
+      </React.Suspense>
     ))}
   </ol>
 ))
