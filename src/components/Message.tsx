@@ -2,8 +2,8 @@
 import React, { memo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import type { CodeProps } from 'react-markdown/lib/ast-to-react'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { dark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async'
+import { dark as CodeStyle } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 const Message: React.FC<Message> = memo(({ content, role, time }) => {
   const sent = role === 'user'
@@ -20,9 +20,12 @@ const Message: React.FC<Message> = memo(({ content, role, time }) => {
     if (!(inline ?? false) && match != null) {
       return (
         <SyntaxHighlighter
-          style={dark}
+          style={CodeStyle as any}
           language={match[1]}
           PreTag="div"
+          showLineNumbers
+          showInlineLineNumbers
+          wrapLines
           {...props}
         >
           {String(children).replace(/\n$/, '')}
