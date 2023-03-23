@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   ChatBubble.scss
  * Created At:  2023-03-22 19:01:13
- * Modified At: 2023-03-23 08:42:07
+ * Modified At: 2023-03-23 08:58:51
  * Modified By: thepoy
  */
 
@@ -19,6 +19,14 @@
   list-style: none;
   font-family: "SF Pro Display", "苹方-简", "方正悠黑", "方正悠黑 GBK",
     "方正修黑+", "方正修黑+ GBK", "黑源黑体", sans-serif;
+
+  li > p {
+    margin: 0;
+  }
+
+  li > p:nth-child(n + 2) {
+    margin-top: 5px;
+  }
 }
 
 [data-theme="dark"] {
