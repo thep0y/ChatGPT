@@ -21,22 +21,20 @@
 
   li > p {
     margin: 0;
-
-    > code {
-      margin: 0 2px;
-      padding: 0.1em 0.35em;
-      border-radius: 3px;
-      background: #263238;
-      color: #ffcb6b;
-      vertical-align: baseline;
-      font-weight: 400;
-      font-size: 14px;
-      font-family: var(--user-monospace);
-    }
   }
 
   li > p:nth-child(n + 2) {
     margin-top: 5px;
+  }
+
+  p > code {
+    margin: 0 2px;
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    vertical-align: baseline;
+    font-weight: 400;
+    font-size: 14px;
+    font-family: var(--user-monospace);
   }
 }
 
@@ -87,6 +85,11 @@
     right: -26px;
     border-bottom-left-radius: 10px;
   }
+
+  p > code {
+    background: #327394;
+    color: #fff;
+  }
 }
 
 .received {
@@ -103,6 +106,11 @@
   &:after {
     left: -26px;
     border-bottom-right-radius: 10px;
+  }
+
+  p > code {
+    background: #263238;
+    color: #ffcb6b;
   }
 }
 
