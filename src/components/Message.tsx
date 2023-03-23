@@ -19,12 +19,12 @@ const Message: React.FC<Message> = memo(({ content, role, time }) => {
   }: CodeProps): React.ReactElement => {
     const match = /language-(\w+)/.exec(className ?? '')
 
-    if (!(inline ?? false) && match != null) {
+    if (!(inline ?? false)) {
       return (
         <SyntaxHighlighter
           style={CodeStyle as any}
           customStyle={{ fontFamily: 'var(--user-monospace)' }}
-          language={match[1]}
+          language={(match != null) ? match[1] : undefined}
           PreTag="div"
           showLineNumbers
           showInlineLineNumbers
