@@ -9,7 +9,6 @@ const Chat = lazy(async () => await import('~/components/Chat'))
 const { Header, Content } = Layout
 
 const ChatPage: React.FC = () => {
-  console.log(import.meta.env)
   const [messages, setMessages] = useState<Message[]>(JSON.parse(import.meta.env.VITE_MESSAGES))
 
   // invoke('get_models').then(r => {

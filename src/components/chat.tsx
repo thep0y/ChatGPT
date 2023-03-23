@@ -10,23 +10,23 @@ interface ChatProps {
   onSendMessage: (message: string) => void
 }
 
-const MessageList: React.FC<Omit<ChatProps, 'onSendMessage'>> = memo(({
+const MessageList: React.FC<Omit<ChatProps, 'onSendMessage'>> = ({
   messages
 }) => (
   <ol className="list">
     {messages.map(({ content, role, time }) => (
-      <React.Suspense key={time}>
+      <React.Suspense fallback={null} key={time}>
         <Message
           content={content}
           role={role}
-          time={0}
+          time={time}
         />
       </React.Suspense>
     ))}
   </ol>
-))
+)
 
-MessageList.displayName = 'MessageList'
+// MessageList.displayName = 'MessageList'
 
 const MessageInput: React.FC<Omit<ChatProps, 'messages'>> = ({
   onSendMessage
