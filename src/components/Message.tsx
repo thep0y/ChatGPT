@@ -25,6 +25,7 @@ const Message: React.FC<Message> = memo(({ content, role, time }) => {
           PreTag="div"
           showLineNumbers
           showInlineLineNumbers
+          lineNumberStyle={{ minWidth: '2rem' }}
           wrapLines
           {...props}
         >
