@@ -30,7 +30,8 @@ const ChatPage: React.FC = () => {
         model: ''
       })
 
-      setMessages((prevMessages) => [...prevMessages, { ...resp.choices[0].message, time: resp.created }])
+      // chatgpt 的响应的时间戳是精确到秒的，需要 x1000 js 才能正确识别
+      setMessages((prevMessages) => [...prevMessages, { ...resp.choices[0].message, time: resp.created * 1000 }])
     } catch (e) {
       console.error(e)
     }
