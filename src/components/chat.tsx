@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useState, memo, lazy } from 'react'
-import { Input, Button } from 'antd'
+import { Input, Affix } from 'antd'
 import '~/styles/ChatBubble.scss'
 
 const Message = lazy(async () => await import('~/components/Message'))
@@ -44,7 +44,9 @@ const MessageInput: React.FC<Omit<ChatProps, 'messages'>> = ({
 
   return (
     <div>
-      <Input value={message} onChange={handleChange} onPressEnter={handleEnter} />
+      <Affix offsetBottom={10}>
+        <Input value={message} onChange={handleChange} onPressEnter={handleEnter} />
+      </Affix>
     </div>
   )
 }
