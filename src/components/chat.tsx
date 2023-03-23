@@ -1,5 +1,6 @@
 import React, { useState, memo } from 'react'
 import { Input, Button } from 'antd'
+import ReactMarkdown from 'react-markdown'
 import '~/styles/ChatBubble.scss'
 
 interface ChatProps {
@@ -17,7 +18,9 @@ const MessageList: React.FC<Omit<ChatProps, 'onSendMessage'>> = ({ messages }) =
           key={time}
           className={`shared ${(sent ?? false) ? 'sent' : 'received'}`}
         >
-          {content}
+          <ReactMarkdown>
+            {content}
+          </ReactMarkdown>
         </li>
       )
     })}
