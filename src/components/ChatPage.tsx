@@ -30,7 +30,7 @@ const ChatPage: React.FC = () => {
         model: ''
       })
 
-      setMessages((prevMessages) => [...prevMessages, resp.choices[0].message])
+      setMessages((prevMessages) => [...prevMessages, { ...resp.choices[0].message, time: resp.created }])
     } catch (e) {
       console.error(e)
     }
