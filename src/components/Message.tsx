@@ -8,6 +8,8 @@ import { dark as CodeStyle } from 'react-syntax-highlighter/dist/esm/styles/pris
 const Message: React.FC<Message> = memo(({ content, role, time }) => {
   const sent = role === 'user'
 
+  CodeStyle['code[class*="language-"]'].fontFamily = 'var(--user-monospace)'
+
   const renderCodeBlock = ({
     node,
     inline,
@@ -21,6 +23,7 @@ const Message: React.FC<Message> = memo(({ content, role, time }) => {
       return (
         <SyntaxHighlighter
           style={CodeStyle as any}
+          customStyle={{ fontFamily: 'var(--user-monospace)' }}
           language={match[1]}
           PreTag="div"
           showLineNumbers
