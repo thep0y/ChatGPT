@@ -4,6 +4,10 @@ import ReactMarkdown from 'react-markdown'
 import type { CodeProps } from 'react-markdown/lib/ast-to-react'
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async'
 import { dark as CodeStyle } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+
+import 'katex/dist/katex.min.css'
 
 const Message: React.FC<Message> = memo(({ content, role, time }) => {
   const sent = role === 'user'
@@ -46,7 +50,11 @@ const Message: React.FC<Message> = memo(({ content, role, time }) => {
 
   return (
     <li className={`shared ${sent ? 'sent' : 'received'}`}>
-      <ReactMarkdown components={{ code: renderCodeBlock }}>
+      <ReactMarkdown
+        components={{ code: renderCodeBlock }}
+        remarkPlugins={[remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+      >
         {content}
       </ReactMarkdown>
     </li>
