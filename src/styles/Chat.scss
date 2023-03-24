@@ -9,6 +9,8 @@
 
 #chat {
   padding-top: 10px;
+  padding-bottom: 30px;
+  height: 100%;
 
   .ant-float-btn-icon {
     color: inherit;
@@ -30,6 +32,11 @@
     .ant-float-btn-body {
       background-color: #fff;
     }
+  }
+
+  .ant-spin-nested-loading > div > .ant-spin {
+    position: fixed;
+    max-height: initial;
   }
 }
 
@@ -157,4 +164,12 @@
   &::before {
     background-color: transparent;
   }
+}
+
+#input-message {
+  position: fixed;
+  bottom: 10px;
+  display: flex;
+  width: 100%;
+  justify-content: center;
 }

@@ -1,0 +1,19 @@
+/*
+ * author   thepoy
+ * file     progress.scss
+ * created  2023-03-24 19:55:41
+ * modified 2023-03-24 19:55:41
+ */
+
+#mask-progress {
+  top: 0;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  z-index: 99;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  justify-content: center;
+}

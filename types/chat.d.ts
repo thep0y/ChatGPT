@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   chat.d.ts
  * Created At:  2023-03-21 20:38:24
- * Modified At: Thu Mar 23 2023
+ * Modified At: Fri Mar 24 2023
  * Modified By: thepoy
  */
 
@@ -38,4 +38,9 @@ declare interface ChatGPTResponse {
   created: number
   choices: Choice[]
   usage: Usage
+}
+
+declare interface Saving {
+  name: string
+  status: boolean
 }

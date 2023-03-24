@@ -7,7 +7,8 @@ import { addNewLine } from '~/lib/message'
 
 const Chat = lazy(async () => await import('~/components/Chat'))
 
-const { Header, Content } = Layout
+// const { Header, Content } = Layout
+const { Content } = Layout
 
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>(

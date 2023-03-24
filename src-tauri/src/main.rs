@@ -11,8 +11,9 @@ mod logger;
 extern crate log;
 extern crate simplelog;
 
-use std::fs;
-use std::fs::File;
+use std::fs as SysFS;
+use tokio::fs::{File, OpenOptions};
+use tokio::io::{AsyncWriteExt, BufWriter};
 
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
@@ -34,6 +35,23 @@ fn set_gtk_scale_env() {
         std::env::set_var("GDK_SCALE", "2");
         std::env::set_var("GDK_DPI_SCALE", "0.5");
     }
+}
+
+#[tauri::command]
+async fn export_to_file(filepath: String, buf: Vec<u8>, offset: u32) -> Result<()> {
+    if offset == 0 {
+        let mut file = File::create(filepath).await.map_err(|e| e.to_string())?;
+        return file.write_all(&buf).await.map_err(|e| e.to_string());
+    }
+
+    let file = OpenOptions::new()
+        .append(true)
+        .open(filepath)
+        .await
+        .map_err(|e| e.to_string())?;
+    let mut writer = BufWriter::new(file);
+    writer.write_all(&buf).await.map_err(|e| e.to_string())?;
+    writer.flush().await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -64,7 +82,7 @@ async fn main() {
     let app_config_dir = config_dir.join("chatgpt-client");
 
     if !app_config_dir.exists() {
-        fs::create_dir(&app_config_dir).unwrap();
+        SysFS::create_dir(&app_config_dir).unwrap();
     }
 
     // trace 应该记录每一步代码的输出，用来追溯程序的运行情况。
@@ -79,7 +97,7 @@ async fn main() {
         WriteLogger::new(
             log_level(),
             logger_config(true),
-            File::create(app_config_dir.join("chatgpt-client.log")).unwrap(),
+            SysFS::File::create(app_config_dir.join("chatgpt-client.log")).unwrap(),
         ),
     ])
     .unwrap();
@@ -89,7 +107,11 @@ async fn main() {
         //     // let window = app.get_window("main").unwrap();
         //     Ok(())
         // })
-        .invoke_handler(tauri::generate_handler![chat_gpt, get_models])
+        .invoke_handler(tauri::generate_handler![
+            chat_gpt,
+            get_models,
+            export_to_file
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

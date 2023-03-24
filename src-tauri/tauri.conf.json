@@ -25,6 +25,7 @@
         "unminimize": true,
         "startDragging": true
       },
+      "fs": { "writeFile": true },
       "os": {
         "all": true
       },
