@@ -64,9 +64,9 @@ const ChatPage: React.FC = () => {
 
   return (
     <Layout>
-      <Header className="chat-title">
-        <h2> 这是对话标题 </h2>
-      </Header>
+      {/* <Header className="chat-title">
+        <h2> 这是对话标题，使用上下文时此处显示对话主题 </h2>
+      </Header> */}
 
       <Content>
         <React.Suspense fallback={null}>
