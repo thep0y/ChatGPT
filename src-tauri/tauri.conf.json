@@ -94,13 +94,12 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 676,
+        "width": 570,
+        "height": 920,
         "resizable": true,
         "hiddenTitle": true,
         "minWidth": 500,
         "minHeight": 676,
-        "maxWidth": 1600,
-        "maxHeight": 1010,
         "title": "ChatGPT",
         "alwaysOnTop": true
       }
