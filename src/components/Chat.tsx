@@ -101,8 +101,8 @@ const MESSAGE_SAVEING_FILTER_OPTION: SaveDialogOptions = {
       name: '图片',
       extensions: ['png']
     }
-  ] as DialogFilter[],
-  defaultPath: `ChatGPT 对话-${now()}.png`
+  ] as DialogFilter[]
+  // defaultPath: `ChatGPT 对话-${now()}.png`
 } as const
 
 const handleSaveError = (
@@ -122,7 +122,7 @@ const toImage = async (
   messageListComponentRef: React.RefObject<HTMLDivElement>,
   setSaving: React.Dispatch<React.SetStateAction<Saving>>
 ): Promise<ExportTask | null> => {
-  const filePath = await save(MESSAGE_SAVEING_FILTER_OPTION)
+  const filePath = await save({ ...MESSAGE_SAVEING_FILTER_OPTION, defaultPath: `ChatGPT 对话-${now()}.png` })
 
   setSaving({ status: true, name: '图片' })
   if (filePath === null) {
