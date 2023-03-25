@@ -25,7 +25,7 @@ import {
 } from '@tauri-apps/api/dialog'
 
 import '~/styles/Chat.scss'
-import { addNewLine } from '~/lib'
+import { addNewLine, now } from '~/lib'
 import { saveFile } from '~/lib/fs'
 import Progress from '~/components/Progress'
 
@@ -102,7 +102,7 @@ const MESSAGE_SAVEING_FILTER_OPTION: SaveDialogOptions = {
       extensions: ['png']
     }
   ] as DialogFilter[],
-  defaultPath: 'ChatGPT 对话.png'
+  defaultPath: `ChatGPT 对话-${now()}.png`
 } as const
 
 const handleSaveError = (
