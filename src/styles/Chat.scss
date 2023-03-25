@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   ChatBubble.scss
  * Created At:  2023-03-22 19:01:13
- * Modified At: 2023-03-25 19:23:11
+ * Modified At: 2023-03-25 19:47:38
  * Modified By: thepoy
  */
 
@@ -46,7 +46,7 @@
 
   display: flex;
   flex-direction: column;
-  margin: 0 10px;
+  margin: 0 20px 0 10px;
   padding: 0;
   list-style: none;
   font-family: var(--user-font);

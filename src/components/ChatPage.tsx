@@ -1,12 +1,13 @@
-import React, { useState, lazy, useEffect, useRef, useCallback } from 'react'
+import React, { useState, lazy, useEffect, useCallback } from 'react'
 import { Layout } from 'antd'
 import { invoke } from '@tauri-apps/api'
 import { now } from '~/lib'
 import '~/styles/ChatPage.scss'
 import { addNewLine } from '~/lib/message'
+import { smoothScrollTo } from '~/components/scrollbar'
 
 const Chat = lazy(async () => await import('~/components/Chat'))
-const Scrollbar = lazy(async () => await import('~/components/Scrollbar'))
+const Scrollbar = lazy(async () => await import('~/components/scrollbar/Scrollbar'))
 
 // const { Header, Content } = Layout
 const { Content } = Layout
@@ -17,14 +18,13 @@ const ChatPage: React.FC = () => {
   )
   const [waiting, setWaiting] = useState<boolean>(false)
 
-  const bottomRef = useRef<HTMLDivElement>(null)
-
   // 滚动到底部
   const scrollToBottom = useCallback(() => {
-    if (bottomRef.current != null) {
-      bottomRef.current.scrollIntoView({
-        behavior: 'smooth'
-      })
+    const scrollbar = document.getElementById('custom-scrollbar')
+
+    if (scrollbar != null) {
+      // scrollbar.scrollTo(0, scrollbar.scrollHeight)
+      smoothScrollTo(scrollbar, scrollbar.scrollHeight, 1000)
     }
   }, [])
 
@@ -80,8 +80,6 @@ const ChatPage: React.FC = () => {
             />
           </Scrollbar>
         </React.Suspense>
-
-        <div ref={bottomRef} />
       </Content>
     </Layout>
   )

@@ -26,7 +26,7 @@ const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children }) => {
   }, [])
 
   return (
-    <div className="custom-scrollbar" ref={scrollRef}>
+    <div id='custom-scrollbar' className="custom-scrollbar" ref={scrollRef}>
       {children}
     </div>
   )
