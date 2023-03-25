@@ -3,40 +3,13 @@
  * Email:       thepoy@163.com
  * File Name:   ChatBubble.scss
  * Created At:  2023-03-22 19:01:13
- * Modified At: 2023-03-25 19:47:38
+ * Modified At: 2023-03-25 20:53:25
  * Modified By: thepoy
  */
 
 #chat {
   padding-top: 10px;
   height: 100%;
-
-  .ant-float-btn-icon {
-    color: inherit;
-  }
-
-  .ant-float-btn-default {
-    background-color: #ffffff21;
-    color: #00000021;
-
-    .ant-float-btn-body {
-      background-color: #ffffff21;
-    }
-  }
-
-  .ant-float-btn-default:hover {
-    background-color: #fff;
-    color: #000;
-
-    .ant-float-btn-body {
-      background-color: #fff;
-    }
-  }
-
-  .ant-spin-nested-loading > div > .ant-spin {
-    position: fixed;
-    max-height: initial;
-  }
 }
 
 .list {

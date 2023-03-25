@@ -1,13 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useState, memo, lazy, useRef, useCallback } from 'react'
-import {
-  Input,
-  Affix,
-  Button,
-  Space,
-  FloatButton,
-  message
-} from 'antd'
+import { Input, Affix, Button, Space, FloatButton, message } from 'antd'
 import {
   SendOutlined,
   LoadingOutlined,
@@ -70,7 +63,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   }
 
   return (
-    <div id='input-message'>
+    <div id="input-message">
       <Affix offsetBottom={10} style={{ width: '90%', maxWidth: '800px' }}>
         <Space.Compact block>
           <Input
@@ -122,7 +115,10 @@ const toImage = async (
   messageListComponentRef: React.RefObject<HTMLDivElement>,
   setSaving: React.Dispatch<React.SetStateAction<Saving>>
 ): Promise<ExportTask | null> => {
-  const filePath = await save({ ...MESSAGE_SAVEING_FILTER_OPTION, defaultPath: `ChatGPT 对话-${now()}.png` })
+  const filePath = await save({
+    ...MESSAGE_SAVEING_FILTER_OPTION,
+    defaultPath: `ChatGPT 对话-${now()}.png`
+  })
 
   setSaving({ status: true, name: '图片' })
   if (filePath === null) {
@@ -200,14 +196,13 @@ const Chat: React.FC<ChatProps> = memo(
         {saving.status ? <Progress progress={progress} /> : null}
 
         <div id="chat">
-
           <div ref={messageListComponentRef}>
             <MessageList messages={messages} />
           </div>
 
           <FloatButton.Group
             trigger="hover"
-            style={{ right: 8 }}
+            style={{ right: 8, bottom: 100 }}
             icon={<SaveOutlined />}
           >
             <FloatButton

@@ -1,5 +1,6 @@
 import React, { useState, lazy, useEffect, useCallback } from 'react'
-import { Layout } from 'antd'
+import { Layout, FloatButton } from 'antd'
+import { SettingOutlined } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { now } from '~/lib'
 import '~/styles/ChatPage.scss'
@@ -8,6 +9,7 @@ import { smoothScrollTo } from '~/components/scrollbar'
 
 const Chat = lazy(async () => await import('~/components/Chat'))
 const Scrollbar = lazy(async () => await import('~/components/scrollbar/Scrollbar'))
+const Settings = lazy(async () => await import('~/components/Settings'))
 
 // const { Header, Content } = Layout
 const { Content } = Layout
@@ -17,6 +19,7 @@ const ChatPage: React.FC = () => {
     JSON.parse(import.meta.env.VITE_MESSAGES)
   )
   const [waiting, setWaiting] = useState<boolean>(false)
+  const [openSetting, setOpenSetting] = useState(false)
 
   // 滚动到底部
   const scrollToBottom = useCallback(() => {
@@ -64,24 +67,47 @@ const ChatPage: React.FC = () => {
     }
   }, [])
 
+  const onCreate = (values: any) => {
+    console.log('Received values of form: ', values)
+    setOpenSetting(false)
+  }
+
   return (
-    <Layout>
-      {/* <Header className="chat-title">
+    <>
+      <FloatButton
+        icon={<SettingOutlined />}
+        style={{ right: 8 }}
+        onClick={() => {
+          setOpenSetting(true)
+        }}
+      />
+
+      <Settings
+        open={openSetting}
+        onCreate={onCreate}
+        onCancel={() => {
+          setOpenSetting(false)
+        }}
+      />
+
+      <Layout>
+        {/* <Header className="chat-title">
         <h2> 这是对话标题，使用上下文时此处显示对话主题 </h2>
       </Header> */}
 
-      <Content>
-        <React.Suspense fallback={null}>
-          <Scrollbar>
-            <Chat
-              messages={messages}
-              onSendMessage={handleSendMessage}
-              waiting={waiting}
-            />
-          </Scrollbar>
-        </React.Suspense>
-      </Content>
-    </Layout>
+        <Content>
+          <React.Suspense fallback={null}>
+            <Scrollbar>
+              <Chat
+                messages={messages}
+                onSendMessage={handleSendMessage}
+                waiting={waiting}
+              />
+            </Scrollbar>
+          </React.Suspense>
+        </Content>
+      </Layout>
+    </>
   )
 }
 
