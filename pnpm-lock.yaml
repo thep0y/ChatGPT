@@ -27,6 +27,7 @@ specifiers:
   katex: ^0.16.4
   localforage: ^1.10.0
   match-sorter: ^6.3.1
+  perfect-scrollbar: ^1.5.5
   react: ^18.2.0
   react-dom: ^18.2.0
   react-markdown: ^8.0.6
@@ -53,6 +54,7 @@ dependencies:
   katex: 0.16.4
   localforage: 1.10.0
   match-sorter: 6.3.1
+  perfect-scrollbar: 1.5.5
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
   react-markdown: 8.0.6_k4en7uapxoluuejoeg6o3ic2aa
@@ -3583,6 +3585,10 @@ packages:
   /path-type/4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
     engines: {node: '>=8'}
+
+  /perfect-scrollbar/1.5.5:
+    resolution: {integrity: sha512-dzalfutyP3e/FOpdlhVryN4AJ5XDVauVWxybSkLZmakFE2sS3y3pc4JnSprw8tGmHvkaG5Edr5T7LBTZ+WWU2g==}
+    dev: false
 
   /picocolors/1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}

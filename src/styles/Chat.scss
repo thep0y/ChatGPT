@@ -3,13 +3,12 @@
  * Email:       thepoy@163.com
  * File Name:   ChatBubble.scss
  * Created At:  2023-03-22 19:01:13
- * Modified At: Fri Mar 24 2023
+ * Modified At: 2023-03-25 19:23:11
  * Modified By: thepoy
  */
 
 #chat {
   padding-top: 10px;
-  padding-bottom: 30px;
   height: 100%;
 
   .ant-float-btn-icon {
@@ -100,6 +99,10 @@
     bottom: 0;
     height: 25px; /* height of our bubble "tail" - should match the border-radius above */
     content: "";
+  }
+
+  &:last-child {
+    margin-bottom: 50px;
   }
 }
 

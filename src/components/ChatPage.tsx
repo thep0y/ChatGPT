@@ -6,6 +6,7 @@ import '~/styles/ChatPage.scss'
 import { addNewLine } from '~/lib/message'
 
 const Chat = lazy(async () => await import('~/components/Chat'))
+const Scrollbar = lazy(async () => await import('~/components/Scrollbar'))
 
 // const { Header, Content } = Layout
 const { Content } = Layout
@@ -71,11 +72,13 @@ const ChatPage: React.FC = () => {
 
       <Content>
         <React.Suspense fallback={null}>
-          <Chat
-            messages={messages}
-            onSendMessage={handleSendMessage}
-            waiting={waiting}
-          />
+          <Scrollbar>
+            <Chat
+              messages={messages}
+              onSendMessage={handleSendMessage}
+              waiting={waiting}
+            />
+          </Scrollbar>
         </React.Suspense>
 
         <div ref={bottomRef} />

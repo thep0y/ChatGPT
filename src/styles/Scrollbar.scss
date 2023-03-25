@@ -1,0 +1,53 @@
+/*
+ * Author:      thepoy
+ * Email:       thepoy@163.com
+ * File Name:   Scrollbar.scss
+ * Created At:  2023-03-25 19:01:59
+ * Modified At: 2023-03-25 19:23:50
+ * Modified By: thepoy
+ */
+
+.custom-scrollbar {
+  position: fixed;
+  height: 100%;
+}
+
+.custom-scrollbar .ps__rail-x,
+.custom-scrollbar .ps__rail-y {
+  opacity: 0.6;
+}
+
+.custom-scrollbar .ps__rail-x:hover,
+.custom-scrollbar .ps__rail-y:hover,
+.custom-scrollbar .ps__rail-x:focus,
+.custom-scrollbar .ps__rail-y:focus {
+  opacity: 0.9;
+}
+
+.custom-scrollbar .ps__rail-x {
+  bottom: 0;
+  height: 15px;
+}
+
+.custom-scrollbar .ps__rail-y {
+  right: 0;
+  width: 15px;
+}
+
+.custom-scrollbar .ps__thumb-x,
+.custom-scrollbar .ps__thumb-y {
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s linear;
+}
+
+.custom-scrollbar .ps__thumb-x {
+  height: 10px;
+}
+
+.custom-scrollbar .ps__thumb-x:hover,
+.custom-scrollbar .ps__thumb-y:hover,
+.custom-scrollbar .ps__thumb-x:focus,
+.custom-scrollbar .ps__thumb-y:focus {
+  background-color: rgba(0, 0, 0, 0.5);
+}
