@@ -99,7 +99,7 @@
         "resizable": true,
         "hiddenTitle": true,
         "minWidth": 500,
-        "minHeight": 676,
+        "minHeight": 300,
         "title": "ChatGPT",
         "alwaysOnTop": true
       }
