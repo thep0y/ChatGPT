@@ -23,13 +23,14 @@ const ChatPage: React.FC = () => {
   const [config, setConfig] = useState<Config | null>(null)
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     async function fetchConfig () {
       const config = await readConfig()
 
       setConfig(config)
     }
 
-    fetchConfig()
+    void fetchConfig()
   }, [])
 
   // 滚动到底部
