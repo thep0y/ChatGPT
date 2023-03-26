@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   config.ts
  * Created At:  2023-03-26 18:30:56
- * Modified At: 2023-03-26 21:53:25
+ * Modified At: 2023-03-26 22:09:15
  * Modified By: thepoy
  */
 
@@ -52,7 +52,7 @@ export const readConfig = async (): Promise<Config> => {
     const config = await invoke<ConfigStruct>('read_config')
 
     if (config.open_api_key === '') {
-      await message.warning('配置文件不存在，使用初始配置')
+      await message.warning('配置文件不存在，请先填写关键配置信息')
     }
 
     return {

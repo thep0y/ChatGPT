@@ -27,6 +27,11 @@ const ChatPage: React.FC = () => {
       const config = await readConfig()
 
       setConfig(config)
+
+      // 没有配置 api key
+      if (config.openApiKey === '') {
+        setOpenSetting(true)
+      }
     }
 
     void fetchConfig()
