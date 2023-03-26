@@ -114,9 +114,6 @@ const Settings: React.FC<SettingsProps> = ({
 
   const onCancel = (): void => {
     form.resetFields()
-    console.log(form.getFieldsValue())
-
-    console.log(config.proxy)
 
     setProxy({ ...config.proxy })
     setOpenApiKey(config.openApiKey)
