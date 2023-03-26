@@ -23,8 +23,7 @@ const ChatPage: React.FC = () => {
   const [config, setConfig] = useState<Config | null>(null)
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    async function fetchConfig () {
+    const fetchConfig = async (): Promise<void> => {
       const config = await readConfig()
 
       setConfig(config)
