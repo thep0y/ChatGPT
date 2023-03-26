@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   config.ts
  * Created At:  2023-03-26 18:30:56
- * Modified At: 2023-03-26 19:37:00
+ * Modified At: 2023-03-26 19:53:53
  * Modified By: thepoy
  */
 
@@ -27,6 +27,25 @@ interface ConfigStruct {
   image_scale: number
   use_context: boolean
 }
+
+export const PROTOCOLS = [[
+  {
+    value: 'http://',
+    label: 'http'
+  },
+  {
+    value: 'https://',
+    label: 'https'
+  },
+  {
+    value: 'socks5://',
+    label: 'socks5'
+  },
+  {
+    value: 'socks5h://',
+    label: 'socks5h'
+  }
+]]
 
 export const readConfig = async (): Promise<Config> => {
   try {

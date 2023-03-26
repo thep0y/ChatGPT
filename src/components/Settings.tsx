@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import {
   Form,
   Input,
@@ -8,72 +8,122 @@ import {
   Row,
   Col,
   InputNumber,
-  Switch
+  Switch,
+  message
 } from 'antd'
+
+const PROTOCOLS: ProtocolOption[] = [
+  {
+    value: 'http://',
+    label: 'http'
+  },
+  {
+    value: 'https://',
+    label: 'https'
+  },
+  {
+    value: 'socks5://',
+    label: 'socks5'
+  },
+  {
+    value: 'socks5h://',
+    label: 'socks5h'
+  }
+]
+
+const IMAGE_SCALE_MIN = 2
+const IMAGE_SCALE_MAX = 8
+
+const PORT_MIN = 1
+const PORT_MAX = 65535
 
 interface SettingsProps {
   config: Config
   open: boolean
-  // onCreate: (settings: SettingsForm) => void
-  onCancel: () => void
   onConfigChange: (settings: Config) => void
+  closeSettings: () => void
+}
+
+interface ProtocolOption {
+  readonly value: string
+  readonly label: string
 }
 
 const Settings: React.FC<SettingsProps> = ({
   config,
   open,
-  // onCreate,
-  onCancel,
-  onConfigChange
+  onConfigChange,
+  closeSettings
 }) => {
   const [form] = Form.useForm()
 
   // TODO: 此处默认值应从配置文件中读取
-  const [proxy, setProxy] = useState<Proxy>({ ...config.proxy })
+  const [proxy, setProxy] = useState({ ...config.proxy })
   const [openApiKey, setOpenApiKey] = useState(config.openApiKey)
   const [imageScale, setImageScale] = useState(config.imageScale)
   const [useContext, setUseContext] = useState(config.useContext)
 
-  const onSelectProtocol = (protocol: Protocol): void => {
+  const onProxyInputChange = useCallback((
+    key: keyof Proxy,
+    value: string | number
+  ): void => {
     setProxy((pre) => {
-      pre.protocol = protocol
+      const nc = { ...pre, [key]: value }
 
-      return pre
+      return nc
     })
-  }
+  }, [])
 
-  const onInputHost = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setProxy((pre) => {
-      pre.host = e.target.value
-
-      return pre
-    })
-  }
-
-  const onInputPort = (port: number | null): void => {
-    if (port == null) return
-
-    setProxy((pre) => {
-      pre.port = port
-
-      return pre
-    })
-  }
-
-  const onInputOpenApiKey = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const onInputOpenApiKey = useCallback((e: React.ChangeEvent<HTMLInputElement>): void => {
     setOpenApiKey(e.target.value)
-  }
+  }, [])
 
-  const onImageScaleChange = (newValue: number | null): void => {
-    if (newValue == null) {
-      return
+  const onImageScaleChange = useCallback((newValue: number | null): void => {
+    if (newValue != null) setImageScale(newValue)
+  }, [])
+
+  const onUseContextChange = useCallback((status: boolean): void => {
+    void message.warning('当前暂未实现上下文功能')
+
+    // setUseContext(status)
+    setUseContext(false)
+  }, [])
+
+  const onFinish = useCallback(async (): Promise<void> => {
+    try {
+      await form.validateFields()
+      form.resetFields()
+
+      const newSettings: Config = { proxy, imageScale, useContext, openApiKey }
+
+      onConfigChange(newSettings)
+    } catch (info) {
+      console.log('Validate Failed:', info)
     }
+  }, [proxy, imageScale, useContext, openApiKey])
 
-    setImageScale(newValue)
-  }
+  const protocolOptions = useMemo(
+    () =>
+      PROTOCOLS.map(protocol => (
+        <Select.Option key={protocol.value} value={protocol.value}>
+          {protocol.label}
+        </Select.Option>
+      )),
+    []
+  )
 
-  const onUseContextChange = (status: boolean): void => {
-    setUseContext(status)
+  const onCancel = (): void => {
+    form.resetFields()
+    console.log(form.getFieldsValue())
+
+    console.log(config.proxy)
+
+    setProxy({ ...config.proxy })
+    setOpenApiKey(config.openApiKey)
+    setImageScale(config.imageScale)
+    setUseContext(config.useContext)
+
+    closeSettings()
   }
 
   return (
@@ -83,27 +133,7 @@ const Settings: React.FC<SettingsProps> = ({
       okText="保存"
       cancelText="取消"
       onCancel={onCancel}
-      onOk={() => {
-        form
-          .validateFields()
-          .then(() => {
-            form.resetFields()
-
-            const newSettings: Config = {
-              proxy: { ...proxy },
-              imageScale,
-              useContext,
-              openApiKey
-            }
-
-            console.log(newSettings)
-
-            onConfigChange(newSettings)
-          })
-          .catch((info) => {
-            console.log('Validate Failed:', info)
-          })
-      }}
+      onOk={onFinish}
     >
       <Form
         form={form}
@@ -111,7 +141,7 @@ const Settings: React.FC<SettingsProps> = ({
         name="settings"
         initialValues={{ 'open-api-key': openApiKey }}
       >
-        <Form.Item name="proxy" label="代理" initialValue={proxy}>
+        <Form.Item name="proxy" label="代理" initialValue={config.proxy}>
           <Input.Group compact>
             <Form.Item
               name={['proxy', 'protocol']}
@@ -119,33 +149,16 @@ const Settings: React.FC<SettingsProps> = ({
               rules={[{ required: true, message: '请选择代理协议！' }]}
             >
               <Select
+                style={{ width: 91 }}
                 value={proxy.protocol}
                 placeholder="选择协议"
                 optionFilterProp="children"
-                onChange={onSelectProtocol}
-                filterOption={(input, option) =>
-                  (option?.label ?? '')
-                    .toLowerCase()
-                    .includes(input.toLowerCase())}
-                options={[
-                  {
-                    value: 'http://',
-                    label: 'http'
-                  },
-                  {
-                    value: 'https://',
-                    label: 'https'
-                  },
-                  {
-                    value: 'socks5://',
-                    label: 'socks5'
-                  },
-                  {
-                    value: 'socks5h://',
-                    label: 'socks5h'
-                  }
-                ]}
-              />
+                onChange={(value) => {
+                  onProxyInputChange('protocol', value)
+                }}
+              >
+                {protocolOptions}
+              </Select>
             </Form.Item>
 
             <Form.Item
@@ -157,8 +170,10 @@ const Settings: React.FC<SettingsProps> = ({
               <Input
                 placeholder="HOST"
                 value={proxy.host}
-                style={{ width: 250 }}
-                onChange={onInputHost}
+                style={{ width: 240 }}
+                onChange={(e) => {
+                  onProxyInputChange('host', e.target.value)
+                }}
               />
             </Form.Item>
 
@@ -168,11 +183,13 @@ const Settings: React.FC<SettingsProps> = ({
               rules={[{ required: true, message: '请输入代理端口！' }]}
             >
               <InputNumber
-                min={1}
-                max={65535}
+                min={PORT_MIN}
+                max={PORT_MAX}
                 value={proxy.port}
                 placeholder="PORT"
-                onChange={onInputPort}
+                onChange={(value) => {
+                  onProxyInputChange('port', value ?? 1)
+                }}
               />
             </Form.Item>
           </Input.Group>
@@ -191,8 +208,8 @@ const Settings: React.FC<SettingsProps> = ({
             <Col span={12}>
               <Slider
                 value={imageScale}
-                min={2}
-                max={8}
+                min={IMAGE_SCALE_MIN}
+                max={IMAGE_SCALE_MAX}
                 onChange={onImageScaleChange}
               />
             </Col>
@@ -200,8 +217,8 @@ const Settings: React.FC<SettingsProps> = ({
             <Col span={4}>
               <InputNumber
                 value={imageScale}
-                min={2}
-                max={8}
+                min={IMAGE_SCALE_MIN}
+                max={IMAGE_SCALE_MAX}
                 style={{ margin: '0 16px' }}
                 onChange={onImageScaleChange}
               />
@@ -214,7 +231,10 @@ const Settings: React.FC<SettingsProps> = ({
           label="是否使用上下文"
           className="collection-create-form_last-form-item"
         >
-          <Switch checked={useContext} onChange={onUseContextChange} disabled />
+          <Switch
+            checked={useContext}
+            onChange={onUseContextChange}
+          />
         </Form.Item>
       </Form>
     </Modal>

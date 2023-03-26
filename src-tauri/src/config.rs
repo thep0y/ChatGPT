@@ -47,8 +47,8 @@ pub fn read_config() -> Result<Option<Config>> {
     toml::from_str(&config_str).map_err(|e| e.to_string())
 }
 
-pub fn write_config(config: Config) -> Result<()> {
-    let config_str = toml::to_string(&config).map_err(|e| e.to_string())?;
+pub fn write_config(config: &Config) -> Result<()> {
+    let config_str = toml::to_string(config).map_err(|e| e.to_string())?;
 
     fs::write(CONFIG_FILE.to_owned(), config_str).map_err(|e| e.to_string())
 }

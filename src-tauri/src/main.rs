@@ -84,7 +84,11 @@ async fn read_config() -> Result<Config> {
 
 #[tauri::command]
 async fn write_config(config: Config) -> Result<()> {
-    config::write_config(config)
+    config::write_config(&config)?;
+
+    debug!("已保存配置 {:?}", config);
+
+    Ok(())
 }
 
 #[tauri::command]

@@ -2,7 +2,7 @@ import React, { useState, lazy, useEffect, useCallback } from 'react'
 import { Layout, FloatButton, Spin } from 'antd'
 import { SettingOutlined } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
-import { now, readConfig, saveConfig } from '~/lib'
+import { isEqual, now, readConfig, saveConfig } from '~/lib'
 import '~/styles/ChatPage.scss'
 import { addNewLine } from '~/lib/message'
 import { smoothScrollTo } from '~/components/scrollbar'
@@ -81,7 +81,16 @@ const ChatPage: React.FC = () => {
     setConfig(newConfig)
     setOpenSetting(false)
 
+    console.log(config)
+    console.log(newConfig)
+
+    if (isEqual(config, newConfig)) return
+
     void saveConfig(newConfig)
+  }
+
+  const closeSettings = (): void => {
+    setOpenSetting(false)
   }
 
   if (config == null) {
@@ -106,9 +115,7 @@ const ChatPage: React.FC = () => {
         config={config}
         open={openSetting}
         // onCreate={onCreate}
-        onCancel={() => {
-          setOpenSetting(false)
-        }}
+        closeSettings={closeSettings}
         onConfigChange={handleConfigChange}
       />
 
