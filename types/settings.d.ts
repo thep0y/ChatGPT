@@ -3,11 +3,11 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: 2023-03-26 14:11:14
+ * Modified At: 2023-03-26 18:02:24
  * Modified By: thepoy
  */
 
-declare type Protocol = 'http' | 'https' | 'socks5' | 'socks5h'
+declare type Protocol = 'http://' | 'https://' | 'socks5://' | 'socks5h://'
 
 declare interface Proxy {
   protocol?: Protocol
