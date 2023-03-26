@@ -57,8 +57,8 @@ async fn export_to_file(filepath: String, buf: Vec<u8>, offset: u32) -> Result<(
 }
 
 #[tauri::command]
-async fn get_models() -> Result<ModelResponse> {
-    get_chat_models().await
+async fn get_models(proxy: String, api_key: String) -> Result<ModelResponse> {
+    get_chat_models(&proxy, &api_key).await
 }
 
 #[tauri::command]
@@ -92,11 +92,20 @@ async fn write_config(config: Config) -> Result<()> {
 }
 
 #[tauri::command]
-async fn chat_gpt(text: String, _model: String) -> Result<ChatGPTResponse> {
-    chat_gpt_client(ChatGPTRequest {
-        model: "gpt-3.5-turbo".to_string(),
-        messages: vec![Message::new("user".to_string(), text)],
-    })
+async fn chat_gpt(
+    proxy: String,
+    api_key: String,
+    text: String,
+    _model: String,
+) -> Result<ChatGPTResponse> {
+    chat_gpt_client(
+        &proxy,
+        &api_key,
+        ChatGPTRequest {
+            model: "gpt-3.5-turbo".to_string(),
+            messages: vec![Message::new("user".to_string(), text)],
+        },
+    )
     .await
 }
 

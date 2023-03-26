@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   config.ts
  * Created At:  2023-03-26 18:30:56
- * Modified At: 2023-03-26 19:53:53
+ * Modified At: 2023-03-26 21:53:25
  * Modified By: thepoy
  */
 
@@ -83,4 +83,10 @@ export const saveConfig = async (config: Config): Promise<void> => {
   } catch (e) {
     await message.error((e as any).toString())
   }
+}
+
+export const proxyToString = (proxy?: Proxy): string => {
+  if (proxy == null || proxy.protocol == null || (proxy.host == null) || (proxy.port == null)) return ''
+
+  return `${proxy.protocol}${proxy.host}:${proxy.port}`
 }

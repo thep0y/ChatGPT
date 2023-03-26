@@ -2,7 +2,7 @@ import React, { useState, lazy, useEffect, useCallback } from 'react'
 import { Layout, FloatButton, Spin } from 'antd'
 import { SettingOutlined } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
-import { isEqual, now, readConfig, saveConfig } from '~/lib'
+import { isEqual, now, proxyToString, readConfig, saveConfig } from '~/lib'
 import '~/styles/ChatPage.scss'
 import { addNewLine } from '~/lib/message'
 import { smoothScrollTo } from '~/components/scrollbar'
@@ -57,6 +57,8 @@ const ChatPage: React.FC = () => {
 
     try {
       const resp = await invoke<ChatGPTResponse>('chat_gpt', {
+        proxy: proxyToString(config?.proxy),
+        apiKey: config?.openApiKey,
         text: message,
         model: ''
       })
@@ -75,7 +77,7 @@ const ChatPage: React.FC = () => {
     } finally {
       setWaiting(false)
     }
-  }, [])
+  }, [config])
 
   const handleConfigChange = (newConfig: Config): void => {
     setConfig(newConfig)

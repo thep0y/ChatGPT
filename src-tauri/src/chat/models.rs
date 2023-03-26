@@ -38,13 +38,13 @@ pub struct ModelResponse {
     pub data: Vec<Model>,
 }
 
-pub async fn get_chat_models() -> Result<ModelResponse> {
-    let client = new_http_client()?;
+pub async fn get_chat_models(proxy: &str, api_key: &str) -> Result<ModelResponse> {
+    let client = new_http_client(proxy)?;
 
     let url = format!("{}{}", API_BASE_URL, "/v1/models");
     let response = client
         .get(&url)
-        .headers(create_headers())
+        .headers(create_headers(api_key))
         .send()
         .await
         .map_err(|e| e.to_string())?

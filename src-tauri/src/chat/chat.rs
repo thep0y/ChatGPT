@@ -50,12 +50,16 @@ pub struct ChatGPTResponse {
 const API: &str = "/v1/chat/completions";
 
 // ChatGPT API客户端
-pub async fn chat_gpt_client(request: ChatGPTRequest) -> Result<ChatGPTResponse> {
-    let client = new_http_client()?;
+pub async fn chat_gpt_client(
+    proxy: &str,
+    api_key: &str,
+    request: ChatGPTRequest,
+) -> Result<ChatGPTResponse> {
+    let client = new_http_client(proxy)?;
 
     let url = format!("{}{}", API_BASE_URL, API);
 
-    let mut headers = create_headers();
+    let mut headers = create_headers(api_key);
     headers.append("Content-Type", "application/json".parse().unwrap());
 
     let response = client
