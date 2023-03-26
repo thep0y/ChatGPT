@@ -183,7 +183,7 @@ const Settings: React.FC<SettingsProps> = ({
           label="OPEN API KEY"
           rules={[{ required: true, message: '请输入 OPEN API KEY！' }]}
         >
-          <Input onChange={onInputOpenApiKey} />
+          <Input.Password onChange={onInputOpenApiKey} />
         </Form.Item>
 
         <Form.Item name="image-scale" label="导入图片的缩放比例">
