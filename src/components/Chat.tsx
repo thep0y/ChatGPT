@@ -86,7 +86,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   )
 }
 
-type ChatProps = MessageListProps & MessageInputProps
+type ChatProps = MessageListProps & MessageInputProps & { config: Config }
 
 const MESSAGE_SAVEING_FILTER_OPTION: SaveDialogOptions = {
   filters: [
@@ -113,7 +113,8 @@ interface ExportTask {
 
 const toImage = async (
   messageListComponentRef: React.RefObject<HTMLDivElement>,
-  setSaving: React.Dispatch<React.SetStateAction<Saving>>
+  setSaving: React.Dispatch<React.SetStateAction<Saving>>,
+  imageScale: number
 ): Promise<ExportTask | null> => {
   const filePath = await save({
     ...MESSAGE_SAVEING_FILTER_OPTION,
@@ -142,7 +143,7 @@ const toImage = async (
   })
 
   try {
-    const blob = await domtoimage.toBlob(target, { scale: 8 })
+    const blob = await domtoimage.toBlob(target, { scale: imageScale })
 
     lis.forEach((li) => {
       li.classList.remove('export')
@@ -157,10 +158,12 @@ const toImage = async (
 }
 
 const Chat: React.FC<ChatProps> = memo(
-  ({ messages, onSendMessage, waiting }: ChatProps) => {
+  ({ messages, onSendMessage, waiting, config }: ChatProps) => {
     const messageListComponentRef = useRef<HTMLDivElement>(null)
     const [saving, setSaving] = useState<Saving>({ status: false, name: '' })
     const [progress, setProgress] = useState(0)
+
+    console.log(config)
 
     const handleSaveImage = useCallback(async () => {
       if (messages.length === 0) {
@@ -169,7 +172,7 @@ const Chat: React.FC<ChatProps> = memo(
         return
       }
 
-      const res = await toImage(messageListComponentRef, setSaving)
+      const res = await toImage(messageListComponentRef, setSaving, config.imageScale)
 
       if (res == null) {
         return
@@ -189,7 +192,7 @@ const Chat: React.FC<ChatProps> = memo(
         setProgress(0)
         setSaving((pre) => ({ status: !pre.status, name: pre.name }))
       }
-    }, [messageListComponentRef, setSaving, setProgress])
+    }, [messageListComponentRef, setSaving, setProgress, config])
 
     return (
       <>

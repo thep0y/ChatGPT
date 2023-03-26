@@ -92,7 +92,7 @@ async fn write_config(config: Config) -> Result<()> {
 }
 
 #[tauri::command]
-async fn chat_gpt(text: String, model: String) -> Result<ChatGPTResponse> {
+async fn chat_gpt(text: String, _model: String) -> Result<ChatGPTResponse> {
     chat_gpt_client(ChatGPTRequest {
         model: "gpt-3.5-turbo".to_string(),
         messages: vec![Message::new("user".to_string(), text)],

@@ -81,9 +81,6 @@ const ChatPage: React.FC = () => {
     setConfig(newConfig)
     setOpenSetting(false)
 
-    console.log(config)
-    console.log(newConfig)
-
     if (isEqual(config, newConfig)) return
 
     void saveConfig(newConfig)
@@ -131,6 +128,7 @@ const ChatPage: React.FC = () => {
                 messages={messages}
                 onSendMessage={handleSendMessage}
                 waiting={waiting}
+                config={config}
               />
             </Scrollbar>
           </React.Suspense>
