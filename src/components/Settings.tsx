@@ -14,22 +14,22 @@ import {
 interface SettingsProps {
   settings: SettingsForm
   open: boolean
-  onCreate: (settings: SettingsForm) => void
+  // onCreate: (settings: SettingsForm) => void
   onCancel: () => void
+  onSettingsChange: (settings: SettingsForm) => void
 }
 
 const Settings: React.FC<SettingsProps> = ({
   settings,
   open,
-  onCreate,
-  onCancel
+  // onCreate,
+  onCancel,
+  onSettingsChange
 }) => {
   const [form] = Form.useForm()
 
-  console.log(settings)
-
   // TODO: 此处默认值应从配置文件中读取
-  const [proxy, setProxy] = useState<Proxy>(settings.proxy)
+  const [proxy, setProxy] = useState<Proxy>({ ...settings.proxy })
   const [openApiKey, setOpenApiKey] = useState(settings.openApiKey)
   const [imageScale, setImageScale] = useState(settings.imageScale)
   const [useContext, setUseContext] = useState(settings.useContext)
@@ -50,7 +50,9 @@ const Settings: React.FC<SettingsProps> = ({
     })
   }
 
-  const onInputPort = (port: number): void => {
+  const onInputPort = (port: number | null): void => {
+    if (port == null) return
+
     setProxy((pre) => {
       pre.port = port
 
@@ -58,12 +60,14 @@ const Settings: React.FC<SettingsProps> = ({
     })
   }
 
+  const onInputOpenApiKey = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setOpenApiKey(e.target.value)
+  }
+
   const onImageScaleChange = (newValue: number | null): void => {
     if (newValue == null) {
       return
     }
-
-    console.log(newValue)
 
     setImageScale(newValue)
   }
@@ -82,9 +86,19 @@ const Settings: React.FC<SettingsProps> = ({
       onOk={() => {
         form
           .validateFields()
-          .then((values) => {
+          .then(() => {
             form.resetFields()
-            onCreate(values)
+
+            const newSettings: SettingsForm = {
+              proxy: { ...proxy },
+              imageScale,
+              useContext,
+              openApiKey
+            }
+
+            console.log(newSettings)
+
+            onSettingsChange(newSettings)
           })
           .catch((info) => {
             console.log('Validate Failed:', info)
@@ -95,25 +109,20 @@ const Settings: React.FC<SettingsProps> = ({
         form={form}
         layout="vertical"
         name="settings"
-        initialValues={{
-          'use-context': useContext,
-          'image-scale': imageScale,
-          'open-api-key': openApiKey
-        }}
+        initialValues={{ 'open-api-key': openApiKey }}
       >
-        <Form.Item name="proxy" label="代理">
+        <Form.Item name="proxy" label="代理" initialValue={proxy}>
           <Input.Group compact>
             <Form.Item
               name={['proxy', 'protocol']}
-              initialValue={proxy.protocol}
               noStyle
               rules={[{ required: true, message: '请选择代理协议！' }]}
             >
               <Select
+                value={proxy.protocol}
                 placeholder="选择协议"
                 optionFilterProp="children"
                 onChange={onSelectProtocol}
-                // defaultValue={proxy.protocol}
                 filterOption={(input, option) =>
                   (option?.label ?? '')
                     .toLowerCase()
@@ -147,7 +156,7 @@ const Settings: React.FC<SettingsProps> = ({
             >
               <Input
                 placeholder="HOST"
-                // defaultValue={proxy.host}
+                value={proxy.host}
                 style={{ width: 250 }}
                 onChange={onInputHost}
               />
@@ -155,14 +164,13 @@ const Settings: React.FC<SettingsProps> = ({
 
             <Form.Item
               name={['proxy', 'port']}
-              initialValue={proxy.port}
               noStyle
               rules={[{ required: true, message: '请输入代理端口！' }]}
             >
               <InputNumber
-                // defaultValue={proxy.port}
                 min={1}
                 max={65535}
+                value={proxy.port}
                 placeholder="PORT"
                 onChange={onInputPort}
               />
@@ -175,28 +183,26 @@ const Settings: React.FC<SettingsProps> = ({
           label="OPEN API KEY"
           rules={[{ required: true, message: '请输入 OPEN API KEY！' }]}
         >
-          <Input defaultValue={openApiKey} />
+          <Input onChange={onInputOpenApiKey} />
         </Form.Item>
 
         <Form.Item name="image-scale" label="导入图片的缩放比例">
           <Row>
             <Col span={12}>
               <Slider
-                defaultValue={imageScale}
+                value={imageScale}
                 min={2}
                 max={8}
                 onChange={onImageScaleChange}
-                value={typeof imageScale === 'number' ? imageScale : 0}
               />
             </Col>
 
             <Col span={4}>
               <InputNumber
-                defaultValue={imageScale}
+                value={imageScale}
                 min={2}
                 max={8}
                 style={{ margin: '0 16px' }}
-                value={imageScale}
                 onChange={onImageScaleChange}
               />
             </Col>

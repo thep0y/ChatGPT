@@ -21,7 +21,7 @@ const ChatPage: React.FC = () => {
   const [waiting, setWaiting] = useState<boolean>(false)
   const [openSetting, setOpenSetting] = useState(false)
   const [settings, setSettings] = useState<SettingsForm>({
-    proxy: { protocol: 'socks5h', host: '127.0.0.1', port: 1086 },
+    proxy: { protocol: 'socks5h://', host: '127.0.0.1', port: 1086 },
     openApiKey: 'fdsfs',
     imageScale: 8,
     useContext: false
@@ -72,14 +72,19 @@ const ChatPage: React.FC = () => {
     }
   }, [])
 
-  const onCreate = (values: any) => {
-    console.log('Received values of form: ', values)
-    setSettings({
-      imageScale: values['image-scale'],
-      openApiKey: values['open-api-key'],
-      proxy: values.proxy,
-      useContext: values['use-context']
-    })
+  // const onCreate = (values: any) => {
+  //   console.log('Received values of form: ', values)
+  //   setSettings({
+  //     imageScale: values['image-scale'],
+  //     openApiKey: values['open-api-key'],
+  //     proxy: values.proxy,
+  //     useContext: values['use-context']
+  //   })
+  //   setOpenSetting(false)
+  // }
+
+  const handleSettingsChange = (newSettings: SettingsForm): void => {
+    setSettings(newSettings)
     setOpenSetting(false)
   }
 
@@ -96,10 +101,11 @@ const ChatPage: React.FC = () => {
       <Settings
         settings={settings}
         open={openSetting}
-        onCreate={onCreate}
+        // onCreate={onCreate}
         onCancel={() => {
           setOpenSetting(false)
         }}
+        onSettingsChange={handleSettingsChange}
       />
 
       <Layout>
