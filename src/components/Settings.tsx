@@ -1,42 +1,41 @@
 import React, { useState } from 'react'
-import { Form, Input, Modal, Select, Slider, Row, Col, InputNumber, Switch } from 'antd'
+import {
+  Form,
+  Input,
+  Modal,
+  Select,
+  Slider,
+  Row,
+  Col,
+  InputNumber,
+  Switch
+} from 'antd'
 
-type Protocol = 'http' | 'https' | 'socks5' | 'socks5h'
-
-interface Proxy {
-  protocol?: Protocol
-  host?: string
-  port?: number
-}
-
-interface SettingsForm {
-  proxy: Proxy
-  openApiKey: string
-  imageScale: number
-  useContext: boolean
-}
-
-interface CollectionCreateFormProps {
+interface SettingsProps {
+  settings: SettingsForm
   open: boolean
   onCreate: (settings: SettingsForm) => void
   onCancel: () => void
 }
 
-const Settings: React.FC<CollectionCreateFormProps> = ({
+const Settings: React.FC<SettingsProps> = ({
+  settings,
   open,
   onCreate,
   onCancel
 }) => {
   const [form] = Form.useForm()
 
+  console.log(settings)
+
   // TODO: 此处默认值应从配置文件中读取
-  const [proxy, setProxy] = useState<Proxy>({})
-  const [openApiKey, setOpenApiKey] = useState('')
-  const [imageScale, setImageScale] = useState(4)
-  const [useContext, setUseContext] = useState(false)
+  const [proxy, setProxy] = useState<Proxy>(settings.proxy)
+  const [openApiKey, setOpenApiKey] = useState(settings.openApiKey)
+  const [imageScale, setImageScale] = useState(settings.imageScale)
+  const [useContext, setUseContext] = useState(settings.useContext)
 
   const onSelectProtocol = (protocol: Protocol): void => {
-    setProxy(pre => {
+    setProxy((pre) => {
       pre.protocol = protocol
 
       return pre
@@ -44,7 +43,7 @@ const Settings: React.FC<CollectionCreateFormProps> = ({
   }
 
   const onInputHost = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setProxy(pre => {
+    setProxy((pre) => {
       pre.host = e.target.value
 
       return pre
@@ -52,7 +51,7 @@ const Settings: React.FC<CollectionCreateFormProps> = ({
   }
 
   const onInputPort = (port: number): void => {
-    setProxy(pre => {
+    setProxy((pre) => {
       pre.port = port
 
       return pre
@@ -63,6 +62,8 @@ const Settings: React.FC<CollectionCreateFormProps> = ({
     if (newValue == null) {
       return
     }
+
+    console.log(newValue)
 
     setImageScale(newValue)
   }
@@ -93,22 +94,30 @@ const Settings: React.FC<CollectionCreateFormProps> = ({
       <Form
         form={form}
         layout="vertical"
-        name="form_in_modal"
-        initialValues={{ modifier: 'public' }}
+        name="settings"
+        initialValues={{
+          'use-context': useContext,
+          'image-scale': imageScale,
+          'open-api-key': openApiKey
+        }}
       >
-        <Form.Item
-          name="proxy"
-          label="代理"
-          rules={[{ required: true, message: '请输入有效的代理地址！' }]}
-        >
-          <Row>
-            <Col span={5}>
+        <Form.Item name="proxy" label="代理">
+          <Input.Group compact>
+            <Form.Item
+              name={['proxy', 'protocol']}
+              initialValue={proxy.protocol}
+              noStyle
+              rules={[{ required: true, message: '请选择代理协议！' }]}
+            >
               <Select
                 placeholder="选择协议"
                 optionFilterProp="children"
                 onChange={onSelectProtocol}
+                // defaultValue={proxy.protocol}
                 filterOption={(input, option) =>
-                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+                  (option?.label ?? '')
+                    .toLowerCase()
+                    .includes(input.toLowerCase())}
                 options={[
                   {
                     value: 'http://',
@@ -128,21 +137,37 @@ const Settings: React.FC<CollectionCreateFormProps> = ({
                   }
                 ]}
               />
-            </Col>
+            </Form.Item>
 
-            <Col span={12}>
-              <Input placeholder='HOST' onChange={onInputHost} />
-            </Col>
+            <Form.Item
+              name={['proxy', 'host']}
+              initialValue={proxy.host}
+              noStyle
+              rules={[{ required: true, message: '请输入代理地址！' }]}
+            >
+              <Input
+                placeholder="HOST"
+                // defaultValue={proxy.host}
+                style={{ width: 250 }}
+                onChange={onInputHost}
+              />
+            </Form.Item>
 
-            <Col span={4}>
+            <Form.Item
+              name={['proxy', 'port']}
+              initialValue={proxy.port}
+              noStyle
+              rules={[{ required: true, message: '请输入代理端口！' }]}
+            >
               <InputNumber
+                // defaultValue={proxy.port}
                 min={1}
                 max={65535}
-                placeholder='PORT'
+                placeholder="PORT"
                 onChange={onInputPort}
               />
-            </Col>
-          </Row>
+            </Form.Item>
+          </Input.Group>
         </Form.Item>
 
         <Form.Item
@@ -150,16 +175,14 @@ const Settings: React.FC<CollectionCreateFormProps> = ({
           label="OPEN API KEY"
           rules={[{ required: true, message: '请输入 OPEN API KEY！' }]}
         >
-          <Input />
+          <Input defaultValue={openApiKey} />
         </Form.Item>
 
-        <Form.Item
-          name="image-scale"
-          label="导入图片的缩放比例"
-        >
+        <Form.Item name="image-scale" label="导入图片的缩放比例">
           <Row>
             <Col span={12}>
               <Slider
+                defaultValue={imageScale}
                 min={2}
                 max={8}
                 onChange={onImageScaleChange}
@@ -169,6 +192,7 @@ const Settings: React.FC<CollectionCreateFormProps> = ({
 
             <Col span={4}>
               <InputNumber
+                defaultValue={imageScale}
                 min={2}
                 max={8}
                 style={{ margin: '0 16px' }}
@@ -180,11 +204,11 @@ const Settings: React.FC<CollectionCreateFormProps> = ({
         </Form.Item>
 
         <Form.Item
-          name="modifier"
+          name="use-context"
           label="是否使用上下文"
           className="collection-create-form_last-form-item"
         >
-          <Switch defaultChecked={useContext} onChange={onUseContextChange} />
+          <Switch checked={useContext} onChange={onUseContextChange} />
         </Form.Item>
       </Form>
     </Modal>

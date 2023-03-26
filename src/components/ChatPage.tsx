@@ -20,13 +20,18 @@ const ChatPage: React.FC = () => {
   )
   const [waiting, setWaiting] = useState<boolean>(false)
   const [openSetting, setOpenSetting] = useState(false)
+  const [settings, setSettings] = useState<SettingsForm>({
+    proxy: { protocol: 'socks5h', host: '127.0.0.1', port: 1086 },
+    openApiKey: 'fdsfs',
+    imageScale: 8,
+    useContext: false
+  })
 
   // 滚动到底部
   const scrollToBottom = useCallback(() => {
     const scrollbar = document.getElementById('custom-scrollbar')
 
     if (scrollbar != null) {
-      // scrollbar.scrollTo(0, scrollbar.scrollHeight)
       smoothScrollTo(scrollbar, scrollbar.scrollHeight, 1000)
     }
   }, [])
@@ -69,6 +74,12 @@ const ChatPage: React.FC = () => {
 
   const onCreate = (values: any) => {
     console.log('Received values of form: ', values)
+    setSettings({
+      imageScale: values['image-scale'],
+      openApiKey: values['open-api-key'],
+      proxy: values.proxy,
+      useContext: values['use-context']
+    })
     setOpenSetting(false)
   }
 
@@ -83,6 +94,7 @@ const ChatPage: React.FC = () => {
       />
 
       <Settings
+        settings={settings}
         open={openSetting}
         onCreate={onCreate}
         onCancel={() => {
