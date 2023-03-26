@@ -1,8 +1,8 @@
 import React, { useState, lazy, useEffect, useCallback } from 'react'
-import { Layout, FloatButton } from 'antd'
+import { Layout, FloatButton, message } from 'antd'
 import { SettingOutlined } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
-import { now } from '~/lib'
+import { defaultConfig, now, readConfig } from '~/lib'
 import '~/styles/ChatPage.scss'
 import { addNewLine } from '~/lib/message'
 import { smoothScrollTo } from '~/components/scrollbar'
@@ -20,12 +20,21 @@ const ChatPage: React.FC = () => {
   )
   const [waiting, setWaiting] = useState<boolean>(false)
   const [openSetting, setOpenSetting] = useState(false)
-  const [settings, setSettings] = useState<SettingsForm>({
-    proxy: { protocol: 'socks5h://', host: '127.0.0.1', port: 1086 },
-    openApiKey: 'fdsfs',
-    imageScale: 8,
-    useContext: false
-  })
+  // const [settings, setSettings] = useState<Config>({
+  //   proxy: { protocol: 'socks5h://', host: '127.0.0.1', port: 1086 },
+  //   openApiKey: 'fdsfs',
+  //   imageScale: 8,
+  //   useContext: false
+  // })
+  const [settings, setSettings] = useState<Config>(defaultConfig)
+
+  useEffect(() => {
+    readConfig().then(config => {
+      setSettings(config)
+    }).catch(e => {
+      void message.error(e)
+    })
+  }, [])
 
   // 滚动到底部
   const scrollToBottom = useCallback(() => {
@@ -83,7 +92,7 @@ const ChatPage: React.FC = () => {
   //   setOpenSetting(false)
   // }
 
-  const handleSettingsChange = (newSettings: SettingsForm): void => {
+  const handleSettingsChange = (newSettings: Config): void => {
     setSettings(newSettings)
     setOpenSetting(false)
   }

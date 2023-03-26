@@ -12,11 +12,11 @@ import {
 } from 'antd'
 
 interface SettingsProps {
-  settings: SettingsForm
+  settings: Config
   open: boolean
   // onCreate: (settings: SettingsForm) => void
   onCancel: () => void
-  onSettingsChange: (settings: SettingsForm) => void
+  onSettingsChange: (settings: Config) => void
 }
 
 const Settings: React.FC<SettingsProps> = ({
@@ -89,7 +89,7 @@ const Settings: React.FC<SettingsProps> = ({
           .then(() => {
             form.resetFields()
 
-            const newSettings: SettingsForm = {
+            const newSettings: Config = {
               proxy: { ...proxy },
               imageScale,
               useContext,

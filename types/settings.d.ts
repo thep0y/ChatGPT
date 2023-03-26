@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: 2023-03-26 18:02:24
+ * Modified At: 2023-03-26 18:31:54
  * Modified By: thepoy
  */
 
@@ -15,7 +15,7 @@ declare interface Proxy {
   port?: number
 }
 
-declare interface SettingsForm {
+declare interface Config {
   proxy: Proxy
   openApiKey: string
   imageScale: number

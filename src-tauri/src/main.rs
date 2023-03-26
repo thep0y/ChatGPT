@@ -4,6 +4,7 @@
 )]
 
 mod chat;
+mod config;
 mod error;
 mod logger;
 
@@ -11,6 +12,7 @@ mod logger;
 extern crate log;
 extern crate simplelog;
 
+use config::{Config, Proxy, APP_CONFIG_DIR};
 use std::fs as SysFS;
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncWriteExt, BufWriter};
@@ -60,6 +62,28 @@ async fn get_models() -> Result<ModelResponse> {
 }
 
 #[tauri::command]
+async fn read_config() -> Result<Config> {
+    match config::read_config()? {
+        Some(config) => Ok(config),
+        None => Ok(Config {
+            proxy: Proxy {
+                protocol: "socks5://".to_string(),
+                host: "localhost".to_string(),
+                port: 1080,
+            },
+            open_api_key: "".to_string(),
+            image_scale: 4,
+            use_context: false,
+        }),
+    }
+}
+
+#[tauri::command]
+async fn write_config(config: Config) -> Result<()> {
+    config::write_config(config)
+}
+
+#[tauri::command]
 async fn chat_gpt(text: String, model: String) -> Result<ChatGPTResponse> {
     chat_gpt_client(ChatGPTRequest {
         model: "gpt-3.5-turbo".to_string(),
@@ -73,18 +97,6 @@ async fn main() {
     #[cfg(target_os = "linux")]
     set_gtk_scale_env();
 
-    let config_dir = dirs::config_dir().unwrap();
-
-    // 配置目录名符合不同系统的命名风格
-    #[cfg(target_os = "windows")]
-    let app_config_dir = config_dir.join("ChatgptClient");
-    #[cfg(not(target_os = "windows"))]
-    let app_config_dir = config_dir.join("chatgpt-client");
-
-    if !app_config_dir.exists() {
-        SysFS::create_dir(&app_config_dir).unwrap();
-    }
-
     // trace 应该记录每一步代码的输出，用来追溯程序的运行情况。
     // debug 和 trace 没有本质上的区别，如果用来区分，则 debug 可以用来记录一些不重要的变量的日志。
     CombinedLogger::init(vec![
@@ -97,7 +109,7 @@ async fn main() {
         WriteLogger::new(
             log_level(),
             logger_config(true),
-            SysFS::File::create(app_config_dir.join("chatgpt-client.log")).unwrap(),
+            SysFS::File::create(APP_CONFIG_DIR.join("chatgpt-client.log")).unwrap(),
         ),
     ])
     .unwrap();
@@ -110,7 +122,9 @@ async fn main() {
         .invoke_handler(tauri::generate_handler![
             chat_gpt,
             get_models,
-            export_to_file
+            export_to_file,
+            read_config,
+            write_config
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
