@@ -77,7 +77,7 @@ const ChatPage: React.FC = () => {
     }
   }, [])
 
-  const handleSettingsChange = (newConfig: Config): void => {
+  const handleConfigChange = (newConfig: Config): void => {
     setConfig(newConfig)
     setOpenSetting(false)
 
@@ -103,13 +103,13 @@ const ChatPage: React.FC = () => {
       />
 
       <Settings
-        settings={config}
+        config={config}
         open={openSetting}
         // onCreate={onCreate}
         onCancel={() => {
           setOpenSetting(false)
         }}
-        onSettingsChange={handleSettingsChange}
+        onConfigChange={handleConfigChange}
       />
 
       <Layout>

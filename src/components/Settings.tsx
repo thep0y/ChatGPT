@@ -12,27 +12,27 @@ import {
 } from 'antd'
 
 interface SettingsProps {
-  settings: Config
+  config: Config
   open: boolean
   // onCreate: (settings: SettingsForm) => void
   onCancel: () => void
-  onSettingsChange: (settings: Config) => void
+  onConfigChange: (settings: Config) => void
 }
 
 const Settings: React.FC<SettingsProps> = ({
-  settings,
+  config,
   open,
   // onCreate,
   onCancel,
-  onSettingsChange
+  onConfigChange
 }) => {
   const [form] = Form.useForm()
 
   // TODO: 此处默认值应从配置文件中读取
-  const [proxy, setProxy] = useState<Proxy>({ ...settings.proxy })
-  const [openApiKey, setOpenApiKey] = useState(settings.openApiKey)
-  const [imageScale, setImageScale] = useState(settings.imageScale)
-  const [useContext, setUseContext] = useState(settings.useContext)
+  const [proxy, setProxy] = useState<Proxy>({ ...config.proxy })
+  const [openApiKey, setOpenApiKey] = useState(config.openApiKey)
+  const [imageScale, setImageScale] = useState(config.imageScale)
+  const [useContext, setUseContext] = useState(config.useContext)
 
   const onSelectProtocol = (protocol: Protocol): void => {
     setProxy((pre) => {
@@ -98,7 +98,7 @@ const Settings: React.FC<SettingsProps> = ({
 
             console.log(newSettings)
 
-            onSettingsChange(newSettings)
+            onConfigChange(newSettings)
           })
           .catch((info) => {
             console.log('Validate Failed:', info)
@@ -214,7 +214,7 @@ const Settings: React.FC<SettingsProps> = ({
           label="是否使用上下文"
           className="collection-create-form_last-form-item"
         >
-          <Switch checked={useContext} onChange={onUseContextChange} />
+          <Switch checked={useContext} onChange={onUseContextChange} disabled />
         </Form.Item>
       </Form>
     </Modal>
