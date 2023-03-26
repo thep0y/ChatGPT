@@ -163,8 +163,6 @@ const Chat: React.FC<ChatProps> = memo(
     const [saving, setSaving] = useState<Saving>({ status: false, name: '' })
     const [progress, setProgress] = useState(0)
 
-    console.log(config)
-
     const handleSaveImage = useCallback(async () => {
       if (messages.length === 0) {
         await message.warning('当前消息列表为空')
