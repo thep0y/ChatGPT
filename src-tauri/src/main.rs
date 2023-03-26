@@ -63,7 +63,7 @@ async fn get_models() -> Result<ModelResponse> {
 
 #[tauri::command]
 async fn read_config() -> Result<Config> {
-    match config::read_config()? {
+    let config = match config::read_config()? {
         Some(config) => Ok(config),
         None => Ok(Config {
             proxy: Proxy {
@@ -75,7 +75,11 @@ async fn read_config() -> Result<Config> {
             image_scale: 4,
             use_context: false,
         }),
-    }
+    };
+
+    debug!("读取配置文件：{:?}", config);
+
+    config
 }
 
 #[tauri::command]

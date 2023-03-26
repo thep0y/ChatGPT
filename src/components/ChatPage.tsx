@@ -1,8 +1,8 @@
 import React, { useState, lazy, useEffect, useCallback } from 'react'
-import { Layout, FloatButton, message } from 'antd'
+import { Layout, FloatButton, Spin } from 'antd'
 import { SettingOutlined } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
-import { defaultConfig, now, readConfig, saveConfig } from '~/lib'
+import { now, readConfig, saveConfig } from '~/lib'
 import '~/styles/ChatPage.scss'
 import { addNewLine } from '~/lib/message'
 import { smoothScrollTo } from '~/components/scrollbar'
@@ -20,14 +20,16 @@ const ChatPage: React.FC = () => {
   )
   const [waiting, setWaiting] = useState<boolean>(false)
   const [openSetting, setOpenSetting] = useState(false)
-  const [config, setConfig] = useState<Config>(defaultConfig)
+  const [config, setConfig] = useState<Config | null>(null)
 
   useEffect(() => {
-    readConfig().then(config => {
+    async function fetchConfig () {
+      const config = await readConfig()
+
       setConfig(config)
-    }).catch(e => {
-      void message.error(e)
-    })
+    }
+
+    fetchConfig()
   }, [])
 
   // 滚动到底部
@@ -80,6 +82,14 @@ const ChatPage: React.FC = () => {
     setOpenSetting(false)
 
     void saveConfig(newConfig)
+  }
+
+  if (config == null) {
+    return (
+      <Spin tip="正在读取配置文件">
+        <div className="content" />
+      </Spin>
+    )
   }
 
   return (

@@ -22,14 +22,14 @@ lazy_static! {
     static ref CONFIG_FILE: PathBuf = APP_CONFIG_DIR.join("config.toml");
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Proxy {
     pub protocol: String,
     pub host: String,
     pub port: u16,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Config {
     pub proxy: Proxy,
     pub open_api_key: String,
