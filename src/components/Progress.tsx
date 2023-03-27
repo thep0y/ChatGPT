@@ -1,6 +1,6 @@
 import React from 'react'
 import { Progress } from 'antd'
-import '~/styles/progress.scss'
+import '~/styles/Progress.scss'
 
 interface MaskProgressProps {
   progress: number
