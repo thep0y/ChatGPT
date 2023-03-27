@@ -19,7 +19,7 @@ use tokio::io::{AsyncWriteExt, BufWriter};
 
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
-use chat::chat::{chat_gpt_client, ChatGPTRequest, ChatGPTResponse, Message};
+use chat::chat::{chat_gpt_client, ChatGPTRequest, ChatGPTResponse};
 use chat::models::{get_chat_models, ModelResponse};
 use simplelog::{ColorChoice, CombinedLogger, TermLogger, TerminalMode, WriteLogger};
 
@@ -95,18 +95,10 @@ async fn write_config(config: Config) -> Result<()> {
 async fn chat_gpt(
     proxy: String,
     api_key: String,
-    text: String,
-    _model: String,
+    request: ChatGPTRequest,
 ) -> Result<ChatGPTResponse> {
-    chat_gpt_client(
-        &proxy,
-        &api_key,
-        ChatGPTRequest {
-            model: "gpt-3.5-turbo".to_string(),
-            messages: vec![Message::new("user".to_string(), text)],
-        },
-    )
-    .await
+    debug!("发送的消息：{:?}", request);
+    chat_gpt_client(&proxy, &api_key, request).await
 }
 
 #[tokio::main]

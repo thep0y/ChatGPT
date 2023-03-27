@@ -61,11 +61,17 @@ const ChatPage: React.FC = () => {
     setWaiting(true)
 
     try {
+      const request: ChatGPTRequest = {
+        messages: [{
+          role: 'user',
+          content
+        }],
+        model: 'gpt-3.5-turbo'
+      }
       const resp = await invoke<ChatGPTResponse>('chat_gpt', {
         proxy: proxyToString(config?.proxy),
         apiKey: config?.openApiKey,
-        text: content,
-        model: ''
+        request
       })
 
       // chatgpt 的响应的时间戳是精确到秒的，需要 x1000 js 才能正确识别

@@ -7,20 +7,39 @@ use serde_json::Value;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Message {
-    role: String,
-    content: String,
+    pub role: String,
+    pub content: String,
 }
 
-impl Message {
-    pub fn new(role: String, content: String) -> Self {
-        Message { role, content }
-    }
+#[derive(Debug, Deserialize, Serialize)]
+pub enum Stop {
+    String(String),
+    Array(Vec<String>),
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ChatGPTRequest {
     pub model: String,
     pub messages: Vec<Message>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<f32>, // (0, 2), default: 1
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_p: Option<f32>, // (0, 1), default: 1
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub n: Option<u8>, // default: 1
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stream: Option<bool>, // default: false,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stop: Option<Stop>, // default: null
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_tokens: Option<u64>, // default: 无穷大
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub presence_penalty: Option<f32>, // (-2.0, 2.0), default: 0
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub frequency_penalty: Option<f32>, // (-2.0, 2.0), default: 0
+    // pub logit_bias: Option<HashMap<>> // TODO: 待处理
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub user: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -42,6 +61,7 @@ pub struct Usage {
 pub struct ChatGPTResponse {
     pub id: String,
     pub object: String,
+    pub model: String,
     pub created: u64,
     pub choices: Vec<Choice>,
     pub usage: Usage,

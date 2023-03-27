@@ -3,26 +3,36 @@
  * Email:       thepoy@163.com
  * File Name:   chat.d.ts
  * Created At:  2023-03-21 20:38:24
- * Modified At: Fri Mar 24 2023
+ * Modified At: 2023-03-27 20:18:40
  * Modified By: thepoy
  */
 
 type Role = 'user' | 'assistant'
 
-declare interface Message {
+declare interface ChatMessage {
   role: Role
   content: string
-  time: number
 }
+
+declare type Message = ChatMessage & { time: number }
 
 declare interface ChatGPTRequest {
   model: string
-  messages: Message[]
+  messages: ChatMessage[]
+  temperature?: number
+  top_p?: number
+  n?: number
+  stream?: boolean
+  stop?: number
+  max_tokens?: number
+  presence_penalty?: number
+  frequency_penalty?: number
+  user?: string
 }
 
 interface Choice {
   index: number
-  message: Omit<Message, 'time'>
+  message: ChatMessage
   finish_reason: string
 }
 
