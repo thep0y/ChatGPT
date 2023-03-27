@@ -1,5 +1,5 @@
 import React, { useState, lazy, useEffect, useCallback } from 'react'
-import { Layout, FloatButton, Spin } from 'antd'
+import { Layout, FloatButton, Spin, message } from 'antd'
 import { SettingOutlined } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { isEqual, now, proxyToString, readConfig, saveConfig } from '~/lib'
@@ -51,10 +51,10 @@ const ChatPage: React.FC = () => {
     scrollToBottom()
   }, [messages, scrollToBottom])
 
-  const handleSendMessage = useCallback(async (message: string): Promise<void> => {
+  const handleSendMessage = useCallback(async (content: string): Promise<void> => {
     setMessages((prevMessages) => [
       ...prevMessages,
-      { content: message, role: 'user', time: now() }
+      { content, role: 'user', time: now() }
     ])
     // TODO: 使用 Tauri API 发送消息并接收 ChatGPT 的回复
 
@@ -64,7 +64,7 @@ const ChatPage: React.FC = () => {
       const resp = await invoke<ChatGPTResponse>('chat_gpt', {
         proxy: proxyToString(config?.proxy),
         apiKey: config?.openApiKey,
-        text: message,
+        text: content,
         model: ''
       })
 
@@ -78,7 +78,7 @@ const ChatPage: React.FC = () => {
         }
       ])
     } catch (e) {
-      console.error(e)
+      await message.error((e as any))
     } finally {
       setWaiting(false)
     }
