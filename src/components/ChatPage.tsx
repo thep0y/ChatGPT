@@ -72,8 +72,49 @@ const ChatPage: React.FC = () => {
       }
 
       if (stream) {
+        let role: Role = 'assistant'
+
         const unlisten = await appWindow.listen<string>('stream', (v) => {
-          const slices = v.payload.split('\n')
+          const payload = v.payload.trim()
+
+          if (payload === 'data: [DONE]') {
+            return
+          }
+
+          const slices = payload.split('\n')
+
+          if (slices.length === 3) {
+            const first = JSON.parse(slices[0].slice(6)) as ChatGPTResponse<StreamChoice>
+
+            // slices 为 3 且 role 存在时会包含部分有效信息
+            if (first.choices[0].delta.role != null) {
+              role = first.choices[0].delta.role
+              setMessages((prevMessages) => [
+                ...prevMessages,
+                {
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  content: first.choices[2].delta.content!,
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  role,
+                  time: first.created * 1000
+                }
+              ])
+
+              return
+            }
+
+            // slices 为 3 且第一个不是 role 时将其 content 追加到队列的最后一个消息中
+            setMessages((prevMessages) => [
+              ...prevMessages.slice(0, prevMessages.length - 1),
+              {
+                ...prevMessages[prevMessages.length - 1],
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                content: prevMessages[prevMessages.length - 1].content + first.choices[0].delta.content!
+              }
+            ])
+
+            return
+          }
 
           const chunk = JSON.parse(slices[0].slice(6)) as ChatGPTResponse<StreamChoice>
 
