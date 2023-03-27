@@ -35,6 +35,7 @@ pub struct Config {
     pub open_api_key: String,
     pub image_scale: u8,
     pub use_context: bool,
+    pub use_stream: Option<bool>,
 }
 
 pub fn read_config() -> Result<Option<Config>> {

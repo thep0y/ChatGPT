@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: 2023-03-26 18:31:54
+ * Modified At: 2023-03-27 22:54:27
  * Modified By: thepoy
  */
 
@@ -20,4 +20,5 @@ declare interface Config {
   openApiKey: string
   imageScale: number
   useContext: boolean
+  useStream: boolean
 }

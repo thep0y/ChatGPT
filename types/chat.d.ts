@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   chat.d.ts
  * Created At:  2023-03-21 20:38:24
- * Modified At: 2023-03-27 20:18:40
+ * Modified At: 2023-03-27 22:42:03
  * Modified By: thepoy
  */
 
@@ -36,18 +36,30 @@ interface Choice {
   finish_reason: string
 }
 
+interface StreamChoiceDelta {
+  role?: Role
+  content?: string
+}
+
+interface StreamChoice {
+  delta: StreamChoiceDelta
+  index: number
+  finish_reason: string
+}
+
 interface Usage {
   prompt_tokens: number
   completion_tokens: number
   total_tokens: number
 }
 
-declare interface ChatGPTResponse {
+declare interface ChatGPTResponse<T = Choice | StreamChoice> {
   id: string
   object: string
   created: number
-  choices: Choice[]
+  choices: T[]
   usage: Usage
+  model: string
 }
 
 declare interface Saving {

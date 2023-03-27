@@ -12,16 +12,16 @@ mod logger;
 extern crate log;
 extern crate simplelog;
 
+use crate::error::Result;
+use crate::logger::{log_level, logger_config};
+use chat::chat::{chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse};
+use chat::models::{get_chat_models, ModelResponse};
 use config::{Config, Proxy, APP_CONFIG_DIR};
+use futures_util::StreamExt;
+use simplelog::{ColorChoice, CombinedLogger, TermLogger, TerminalMode, WriteLogger};
 use std::fs as SysFS;
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncWriteExt, BufWriter};
-
-use crate::error::Result;
-use crate::logger::{log_level, logger_config};
-use chat::chat::{chat_gpt_client, ChatGPTRequest, ChatGPTResponse};
-use chat::models::{get_chat_models, ModelResponse};
-use simplelog::{ColorChoice, CombinedLogger, TermLogger, TerminalMode, WriteLogger};
 
 // use tauri::Manager;
 // use window_shadows::set_shadow;
@@ -74,6 +74,7 @@ async fn read_config() -> Result<Config> {
             open_api_key: "".to_string(),
             image_scale: 4,
             use_context: false,
+            use_stream: Some(true),
         }),
     };
 
@@ -99,6 +100,27 @@ async fn chat_gpt(
 ) -> Result<ChatGPTResponse> {
     debug!("发送的消息：{:?}", request);
     chat_gpt_client(&proxy, &api_key, request).await
+}
+
+#[tauri::command]
+async fn chat_gpt_stream(
+    window: tauri::Window,
+    proxy: String,
+    api_key: String,
+    request: ChatGPTRequest,
+) -> Result<()> {
+    debug!("发送的消息：{:?}", request);
+    let response = chat_gpt_steam_client(&proxy, &api_key, request).await;
+    let mut stream = response.bytes_stream();
+
+    while let Some(item) = stream.next().await {
+        let bytes = item.map_err(|e| e.to_string())?;
+        let chunk = String::from_utf8_lossy(&bytes);
+
+        debug!("chunk: {}", chunk);
+        window.emit("stream", chunk).unwrap();
+    }
+    Ok(())
 }
 
 #[tokio::main]
@@ -130,6 +152,7 @@ async fn main() {
         // })
         .invoke_handler(tauri::generate_handler![
             chat_gpt,
+            chat_gpt_stream,
             get_models,
             export_to_file,
             read_config,

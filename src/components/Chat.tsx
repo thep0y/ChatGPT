@@ -41,13 +41,15 @@ const MessageList: React.FC<MessageListProps> = memo(({ messages }) => (
 MessageList.displayName = 'MessageList'
 
 interface MessageInputProps {
-  onSendMessage: (message: string) => void
+  onSendMessage: (message: string, stream: boolean) => void
   waiting: boolean
+  config: Config
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({
   onSendMessage,
-  waiting
+  waiting,
+  config
 }) => {
   const [message, setMessage] = useState('')
 
@@ -57,7 +59,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
   const handleEnter = (): void => {
     if (message.trim() !== '') {
-      onSendMessage(addNewLine(message))
+      onSendMessage(addNewLine(message), config.useStream)
       setMessage('')
     }
   }
@@ -86,7 +88,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   )
 }
 
-type ChatProps = MessageListProps & MessageInputProps & { config: Config }
+type ChatProps = MessageListProps & MessageInputProps
 
 const MESSAGE_SAVEING_FILTER_OPTION: SaveDialogOptions = {
   filters: [
@@ -237,7 +239,7 @@ const Chat: React.FC<ChatProps> = memo(
             : null}
         </div>
 
-        <MessageInput onSendMessage={onSendMessage} waiting={waiting} />
+        <MessageInput onSendMessage={onSendMessage} waiting={waiting} config={config} />
       </>
     )
   }

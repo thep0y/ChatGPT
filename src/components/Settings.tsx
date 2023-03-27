@@ -62,6 +62,7 @@ const Settings: React.FC<SettingsProps> = ({
   const [openApiKey, setOpenApiKey] = useState(config.openApiKey)
   const [imageScale, setImageScale] = useState(config.imageScale)
   const [useContext, setUseContext] = useState(config.useContext)
+  const [useStream, setUseStream] = useState(config.useStream)
 
   const onProxyInputChange = useCallback((
     key: keyof Proxy,
@@ -89,18 +90,22 @@ const Settings: React.FC<SettingsProps> = ({
     setUseContext(false)
   }, [])
 
+  const onUseStreamChange = useCallback((status: boolean): void => {
+    setUseStream(status)
+  }, [])
+
   const onFinish = useCallback(async (): Promise<void> => {
     try {
       await form.validateFields()
       form.resetFields()
 
-      const newSettings: Config = { proxy, imageScale, useContext, openApiKey }
+      const newSettings: Config = { proxy, imageScale, useContext, openApiKey, useStream }
 
       onConfigChange(newSettings)
     } catch (info) {
       console.log('Validate Failed:', info)
     }
-  }, [proxy, imageScale, useContext, openApiKey])
+  }, [proxy, imageScale, useContext, openApiKey, useStream])
 
   const protocolOptions = useMemo(
     () =>
@@ -221,6 +226,17 @@ const Settings: React.FC<SettingsProps> = ({
               />
             </Col>
           </Row>
+        </Form.Item>
+
+        <Form.Item
+          name="use-stream"
+          label="是否使用流式响应"
+          className="collection-create-form_last-form-item"
+        >
+          <Switch
+            checked={useStream}
+            onChange={onUseStreamChange}
+          />
         </Form.Item>
 
         <Form.Item

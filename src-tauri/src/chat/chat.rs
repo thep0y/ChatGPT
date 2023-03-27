@@ -96,3 +96,25 @@ pub async fn chat_gpt_client(
     debug!("response {:?}", response);
     Ok(serde_json::from_value(response).map_err(|e| e.to_string())?)
 }
+
+// ChatGPT API客户端
+pub async fn chat_gpt_steam_client(
+    proxy: &str,
+    api_key: &str,
+    request: ChatGPTRequest,
+) -> reqwest::Response {
+    let client = new_http_client(proxy).unwrap();
+
+    let url = format!("{}{}", API_BASE_URL, API);
+
+    let mut headers = create_headers(api_key);
+    headers.append("Content-Type", "application/json".parse().unwrap());
+
+    client
+        .post(&url)
+        .headers(headers)
+        .json(&request)
+        .send()
+        .await
+        .unwrap()
+}

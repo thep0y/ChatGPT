@@ -6,6 +6,7 @@ import { isEqual, now, proxyToString, readConfig, saveConfig } from '~/lib'
 import '~/styles/ChatPage.scss'
 import { addNewLine } from '~/lib/message'
 import { smoothScrollTo } from '~/components/scrollbar'
+import { appWindow } from '@tauri-apps/api/window'
 
 const Chat = lazy(async () => await import('~/components/Chat'))
 const Scrollbar = lazy(async () => await import('~/components/scrollbar/Scrollbar'))
@@ -51,7 +52,7 @@ const ChatPage: React.FC = () => {
     scrollToBottom()
   }, [messages, scrollToBottom])
 
-  const handleSendMessage = useCallback(async (content: string): Promise<void> => {
+  const handleSendMessage = useCallback(async (content: string, stream: boolean = true): Promise<void> => {
     setMessages((prevMessages) => [
       ...prevMessages,
       { content, role: 'user', time: now() }
@@ -66,23 +67,67 @@ const ChatPage: React.FC = () => {
           role: 'user',
           content
         }],
-        model: 'gpt-3.5-turbo'
+        model: 'gpt-3.5-turbo',
+        stream
       }
-      const resp = await invoke<ChatGPTResponse>('chat_gpt', {
-        proxy: proxyToString(config?.proxy),
-        apiKey: config?.openApiKey,
-        request
-      })
 
-      // chatgpt 的响应的时间戳是精确到秒的，需要 x1000 js 才能正确识别
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          content: addNewLine(resp.choices[0].message.content),
-          role: resp.choices[0].message.role,
-          time: resp.created * 1000
-        }
-      ])
+      if (stream) {
+        const unlisten = await appWindow.listen<string>('stream', (v) => {
+          const slices = v.payload.split('\n')
+
+          const chunk = JSON.parse(slices[0].slice(6)) as ChatGPTResponse<StreamChoice>
+
+          if (chunk.choices[0].delta.role != null) {
+            setMessages((prevMessages) => [
+              ...prevMessages,
+              {
+                content: '',
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                role: chunk.choices[0].delta.role!,
+                time: chunk.created * 1000
+              }
+            ])
+          }
+          if (chunk.choices[0].delta.content != null) {
+            setMessages((prevMessages) => [
+              ...prevMessages.slice(0, prevMessages.length - 1),
+              {
+                ...prevMessages[prevMessages.length - 1],
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                content: prevMessages[prevMessages.length - 1].content + chunk.choices[0].delta.content!
+              }
+            ])
+          }
+
+          if (chunk.choices[0].finish_reason != null && chunk.choices[0].finish_reason !== 'stop') {
+            void message.error('网络异常，消息未接收完整')
+          }
+        })
+
+        await invoke('chat_gpt_stream', {
+          proxy: proxyToString(config?.proxy),
+          apiKey: config?.openApiKey,
+          request
+        })
+
+        unlisten()
+      } else {
+        const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', {
+          proxy: proxyToString(config?.proxy),
+          apiKey: config?.openApiKey,
+          request
+        })
+
+        // chatgpt 的响应的时间戳是精确到秒的，需要 x1000 js 才能正确识别
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            content: addNewLine(resp.choices[0].message.content),
+            role: resp.choices[0].message.role,
+            time: resp.created * 1000
+          }
+        ])
+      }
     } catch (e) {
       await message.error((e as any))
     } finally {
