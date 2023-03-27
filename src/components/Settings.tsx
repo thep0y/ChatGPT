@@ -200,7 +200,7 @@ const Settings: React.FC<SettingsProps> = ({
           <Input.Password onChange={onInputOpenApiKey} />
         </Form.Item>
 
-        <Form.Item name="image-scale" label="导入图片的缩放比例">
+        <Form.Item name="image-scale" label="导出图片的缩放比例">
           <Row>
             <Col span={12}>
               <Slider
