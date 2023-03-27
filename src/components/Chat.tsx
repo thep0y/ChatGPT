@@ -201,36 +201,40 @@ const Chat: React.FC<ChatProps> = memo(
             <MessageList messages={messages} />
           </div>
 
-          <FloatButton.Group
-            trigger="hover"
-            style={{ right: 8, bottom: 100 }}
-            icon={<SaveOutlined />}
-          >
-            <FloatButton
-              key="save-txt"
-              tooltip="保存为 txt"
-              icon={<FileTextOutlined />}
-            />
+          {messages.length > 1
+            ? (
+              <FloatButton.Group
+                trigger="hover"
+                style={{ right: 8, bottom: 100 }}
+                icon={<SaveOutlined />}
+              >
+                <FloatButton
+                  key="save-txt"
+                  tooltip="保存为 txt"
+                  icon={<FileTextOutlined />}
+                />
 
-            <FloatButton
-              key="save-pdf"
-              tooltip="保存为 pdf"
-              icon={<FilePdfOutlined />}
-            />
+                <FloatButton
+                  key="save-pdf"
+                  tooltip="保存为 pdf"
+                  icon={<FilePdfOutlined />}
+                />
 
-            <FloatButton
-              key="save-markdown"
-              tooltip="保存为 markdown"
-              icon={<FileMarkdownOutlined />}
-            />
+                <FloatButton
+                  key="save-markdown"
+                  tooltip="保存为 markdown"
+                  icon={<FileMarkdownOutlined />}
+                />
 
-            <FloatButton
-              key="save-image"
-              onClick={handleSaveImage}
-              tooltip="保存为图片"
-              icon={<FileImageOutlined />}
-            />
-          </FloatButton.Group>
+                <FloatButton
+                  key="save-image"
+                  onClick={handleSaveImage}
+                  tooltip="保存为图片"
+                  icon={<FileImageOutlined />}
+                />
+              </FloatButton.Group>
+              )
+            : null}
         </div>
 
         <MessageInput onSendMessage={onSendMessage} waiting={waiting} />
