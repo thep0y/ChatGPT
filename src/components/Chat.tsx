@@ -190,7 +190,7 @@ const Chat: React.FC<ChatProps> = memo(
         setProgress(0)
         setSaving((pre) => ({ status: !pre.status, name: pre.name }))
       }
-    }, [messageListComponentRef, setSaving, setProgress, config])
+    }, [messageListComponentRef, messages, setSaving, setProgress, config])
 
     return (
       <>
