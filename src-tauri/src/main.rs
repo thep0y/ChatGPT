@@ -5,6 +5,7 @@
 
 mod chat;
 mod config;
+mod db;
 mod error;
 mod logger;
 
@@ -17,6 +18,7 @@ use crate::logger::{log_level, logger_config};
 use chat::chat::{chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse};
 use chat::models::{get_chat_models, ModelResponse};
 use config::{Config, Proxy, APP_CONFIG_DIR};
+use db::topic::init_topic;
 use futures_util::StreamExt;
 use simplelog::{ColorChoice, CombinedLogger, TermLogger, TerminalMode, WriteLogger};
 use std::fs as SysFS;
@@ -144,6 +146,8 @@ async fn main() {
         ),
     ])
     .unwrap();
+
+    init_topic();
 
     tauri::Builder::default()
         // .setup(|app| {

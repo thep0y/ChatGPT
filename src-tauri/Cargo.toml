@@ -19,13 +19,15 @@ tauri = { version = "1.2", features = ["dialog-open", "dialog-save", "fs-write-f
 tokio = { version = "1", features = ["full"] }
 log = "0.4"
 simplelog = "0.12"
-time = { version = "0.3", features = ['formatting'] }
+time = { version = "0.3", features = ['formatting', 'local-offset'] }
 dirs = "4.0"
 lazy_static = "1.4"
 reqwest = { version = "0.11", features = ["json", "socks", "stream"] }
 futures-util = "0.3"
 url = "2.3"
 toml = "0.7"
+rusqlite = { version = "0.29", features = ["bundled"] }
+
 
 # 无边框时使用的库
 # window-shadows = { git = "https://github.com/tauri-apps/window-shadows" }
