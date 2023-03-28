@@ -83,7 +83,7 @@ const ChatPage: React.FC = () => {
 
           const slices = payload.split('\n')
 
-          console.log(slices)
+          console.log('流式响应块', slices)
 
           if (slices.length === 3) {
             const first = JSON.parse(slices[0].slice(6)) as ChatGPTResponse<StreamChoice>

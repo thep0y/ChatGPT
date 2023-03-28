@@ -7,6 +7,12 @@ import '~/styles/index.scss'
 
 const ChatPage = lazy(async () => await import('~/components/ChatPage'))
 
+const tempLog = console.log
+
+console.log = (prefix: string, msg: any): void => {
+  tempLog.apply(console, [`[${new Date().toLocaleString()}]`, prefix, '>>>', msg])
+}
+
 const router = createBrowserRouter([
   {
     path: '/',
