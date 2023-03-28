@@ -215,7 +215,7 @@ const ChatPage: React.FC = () => {
         icon={<OrderedListOutlined />}
         style={{ right: 60 }}
         onClick={async () => {
-          const topics = await invoke('get_all_topics')
+          const topics = await invoke('get_topics')
 
           console.log(topics)
         }}

@@ -20,7 +20,7 @@ use chat::models::{get_chat_models, ModelResponse};
 use config::{Config, Proxy, APP_CONFIG_DIR};
 use db::conversation::init_conversation;
 use db::message::init_messages;
-use db::topic::{get_topics, init_topic, Topic};
+use db::topic::{get_all_topics, init_topic, Topic};
 use futures_util::StreamExt;
 use simplelog::{ColorChoice, CombinedLogger, TermLogger, TerminalMode, WriteLogger};
 use std::fs as SysFS;
@@ -128,8 +128,8 @@ async fn chat_gpt_stream(
 }
 
 #[tauri::command]
-async fn get_all_topics() -> Result<Vec<Topic>> {
-    let topics = get_topics()?;
+async fn get_topics() -> Result<Vec<Topic>> {
+    let topics = get_all_topics(None)?;
 
     debug!("获取到全部主题：{:?}", topics);
 
@@ -176,7 +176,7 @@ async fn main() -> Result<()> {
         .invoke_handler(tauri::generate_handler![
             chat_gpt,
             chat_gpt_stream,
-            get_all_topics,
+            get_topics,
             get_models,
             export_to_file,
             read_config,

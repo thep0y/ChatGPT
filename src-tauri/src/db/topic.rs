@@ -69,15 +69,6 @@ pub(crate) fn init_topic() -> Result<()> {
         return Ok(());
     }
 
-    // match conn.execute("SELECT id FROM topic WHERE name = ?1", [free_name]) {
-    //     Ok(i) => {
-    //         if i > 0 {
-    //             return Ok(());
-    //         };
-    //     }
-    //     Err(_) => {}
-    // };
-
     let free = Topic {
         id: 0,
         name: free_name.into(),
@@ -95,8 +86,7 @@ const SELECT_ALL_TOPICS: &str = r#"
     SELECT id, name, created_at FROM topic
 "#;
 
-pub fn get_topics() -> Result<Vec<Topic>> {
-    let conn = new_connection().map_err(|e| e.to_string())?;
+fn get_topics(conn: &Connection) -> Result<Vec<Topic>> {
     let mut stmt = conn.prepare(SELECT_ALL_TOPICS).map_err(|e| e.to_string())?;
     let topics_iter = stmt
         .query_map([], |row| {
@@ -114,4 +104,29 @@ pub fn get_topics() -> Result<Vec<Topic>> {
     }
 
     Ok(topics)
+}
+
+/// 返回包含所有话题的 Result<Vec<Topic>>
+///
+/// # Params
+///
+/// - `conn`: 一个连接到 chat.db 的引用。
+/// 如果没有传入 conn，则新建一个 conn。
+///
+/// # Returns
+///
+/// 包含所有话题的 Result<Vec<Topic>>
+///
+/// # Error
+///
+/// 返回 Rusqlite 的错误信息
+pub fn get_all_topics<'a, T: Into<Option<&'a Connection>>>(conn: T) -> Result<Vec<Topic>> {
+    match conn.into() {
+        Some(conn) => get_topics(conn),
+        None => {
+            let conn = new_connection().map_err(|e| e.to_string())?;
+
+            get_topics(&conn)
+        }
+    }
 }
