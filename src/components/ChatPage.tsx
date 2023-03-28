@@ -1,6 +1,6 @@
 import React, { useState, lazy, useEffect, useCallback } from 'react'
 import { Layout, FloatButton, Spin, message } from 'antd'
-import { SettingOutlined } from '@ant-design/icons'
+import { SettingOutlined, OrderedListOutlined } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { isEqual, now, proxyToString, readConfig, saveConfig } from '~/lib'
 import '~/styles/ChatPage.scss'
@@ -208,6 +208,16 @@ const ChatPage: React.FC = () => {
         style={{ right: 8 }}
         onClick={() => {
           setOpenSetting(true)
+        }}
+      />
+
+      <FloatButton
+        icon={<OrderedListOutlined />}
+        style={{ right: 60 }}
+        onClick={async () => {
+          const topics = await invoke('get_all_topics')
+
+          console.log(topics)
         }}
       />
 

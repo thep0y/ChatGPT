@@ -1,10 +1,12 @@
 pub mod conversation;
-mod message;
+pub mod message;
 pub mod topic;
 
 use rusqlite::{Connection, Result};
 
 use crate::config::APP_CONFIG_DIR;
+
+use self::{conversation::init_conversation, message::init_messages, topic::init_topic};
 
 /// 创建一个 sqlite 连接。
 ///

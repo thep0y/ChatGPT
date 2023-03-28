@@ -18,7 +18,9 @@ use crate::logger::{log_level, logger_config};
 use chat::chat::{chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse};
 use chat::models::{get_chat_models, ModelResponse};
 use config::{Config, Proxy, APP_CONFIG_DIR};
-use db::topic::init_topic;
+use db::conversation::init_conversation;
+use db::message::init_messages;
+use db::topic::{get_topics, init_topic, Topic};
 use futures_util::StreamExt;
 use simplelog::{ColorChoice, CombinedLogger, TermLogger, TerminalMode, WriteLogger};
 use std::fs as SysFS;
@@ -125,8 +127,25 @@ async fn chat_gpt_stream(
     Ok(())
 }
 
+#[tauri::command]
+async fn get_all_topics() -> Result<Vec<Topic>> {
+    let topics = get_topics()?;
+
+    debug!("获取到全部主题：{:?}", topics);
+
+    Ok(topics)
+}
+
+pub fn init_database() -> Result<()> {
+    init_topic()?;
+    init_conversation();
+    init_messages();
+
+    Ok(())
+}
+
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     #[cfg(target_os = "linux")]
     set_gtk_scale_env();
 
@@ -147,7 +166,7 @@ async fn main() {
     ])
     .unwrap();
 
-    init_topic();
+    init_database()?;
 
     tauri::Builder::default()
         // .setup(|app| {
@@ -157,6 +176,7 @@ async fn main() {
         .invoke_handler(tauri::generate_handler![
             chat_gpt,
             chat_gpt_stream,
+            get_all_topics,
             get_models,
             export_to_file,
             read_config,
@@ -164,4 +184,6 @@ async fn main() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    Ok(())
 }
