@@ -55,6 +55,7 @@
     "stylelint": "^15.3.0",
     "stylelint-scss": "^4.6.0",
     "typescript": "^5.0.2",
-    "vite": "^4.2.1"
+    "vite": "^4.2.1",
+    "vite-plugin-remove-console": "^2.1.0"
   }
 }

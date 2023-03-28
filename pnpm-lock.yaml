@@ -41,6 +41,7 @@ specifiers:
   stylelint-scss: ^4.6.0
   typescript: ^5.0.2
   vite: ^4.2.1
+  vite-plugin-remove-console: ^2.1.0
 
 dependencies:
   '@ant-design/icons': 5.0.1_biqbaboplfbrettd7655fr4n2y
@@ -85,6 +86,7 @@ devDependencies:
   stylelint-scss: 4.6.0_stylelint@15.3.0
   typescript: 5.0.2
   vite: 4.2.1_jbbgimbprg6gc6g7l5xgp24u3u
+  vite-plugin-remove-console: 2.1.0
 
 packages:
 
@@ -5066,6 +5068,10 @@ packages:
       unist-util-stringify-position: 3.0.3
       vfile-message: 3.1.4
     dev: false
+
+  /vite-plugin-remove-console/2.1.0:
+    resolution: {integrity: sha512-cil+h4rX3fDnnKMt73fexMGkwRSOV08+lTAzLGTRjGyxs9Ync3fqPWxnGrngJY7LyMMt3kEKf0hNOi+1DQ0j2g==}
+    dev: true
 
   /vite/4.2.1_jbbgimbprg6gc6g7l5xgp24u3u:
     resolution: {integrity: sha512-7MKhqdy0ISo4wnvwtqZkjke6XN4taqQ2TBaTccLIpOKv7Vp2h4Y+NpmWCnGDeSvvn45KxvWgGyb0MkHvY1vgbg==}
