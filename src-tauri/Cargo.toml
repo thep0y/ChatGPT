@@ -15,23 +15,7 @@ tauri-build = { version = "1.2", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.2", features = [
-    "dialog-open",
-    "dialog-save",
-    "fs-write-file",
-    "os-all",
-    "path-all",
-    "protocol-asset",
-    "shell-open",
-    "window-close",
-    "window-hide",
-    "window-maximize",
-    "window-minimize",
-    "window-show",
-    "window-start-dragging",
-    "window-unmaximize",
-    "window-unminimize",
-] }
+tauri = { version = "1.2", features = ["dialog-open", "dialog-save", "fs-write-file", "os-all", "path-all", "protocol-asset", "shell-open", "window-close", "window-hide", "window-maximize", "window-minimize", "window-show", "window-start-dragging", "window-unmaximize", "window-unminimize"] }
 tokio = { version = "1", features = ["full"] }
 log = "0.4"
 simplelog = "0.12"

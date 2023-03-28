@@ -83,17 +83,21 @@ const ChatPage: React.FC = () => {
 
           const slices = payload.split('\n')
 
+          console.log(slices)
+
           if (slices.length === 3) {
             const first = JSON.parse(slices[0].slice(6)) as ChatGPTResponse<StreamChoice>
 
             // slices 为 3 且 role 存在时会包含部分有效信息
             if (first.choices[0].delta.role != null) {
               role = first.choices[0].delta.role
+              const second = JSON.parse(slices[2].slice(6)) as ChatGPTResponse<StreamChoice>
+
               setMessages((prevMessages) => [
                 ...prevMessages,
                 {
                   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                  content: first.choices[2].delta.content!,
+                  content: second.choices[0].delta.content!,
                   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                   role,
                   time: first.created * 1000
@@ -109,7 +113,7 @@ const ChatPage: React.FC = () => {
               {
                 ...prevMessages[prevMessages.length - 1],
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                content: prevMessages[prevMessages.length - 1].content + first.choices[0].delta.content!
+                content: prevMessages[prevMessages.length - 1].content + (first.choices[0].delta.content ?? '')
               }
             ])
 
