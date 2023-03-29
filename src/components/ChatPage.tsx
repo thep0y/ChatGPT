@@ -11,9 +11,10 @@ import { appWindow } from '@tauri-apps/api/window'
 const Chat = lazy(async () => await import('~/components/Chat'))
 const Scrollbar = lazy(async () => await import('~/components/scrollbar/Scrollbar'))
 const Settings = lazy(async () => await import('~/components/Settings'))
+const Menu = lazy(async () => await import('~/components/Menu'))
 
 // const { Header, Content } = Layout
-const { Content } = Layout
+const { Content, Sider } = Layout
 
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>(
@@ -203,6 +204,7 @@ const ChatPage: React.FC = () => {
 
   return (
     <>
+
       <FloatButton
         icon={<SettingOutlined />}
         style={{ right: 8 }}
@@ -233,6 +235,12 @@ const ChatPage: React.FC = () => {
         {/* <Header className="chat-title">
         <h2> 这是对话标题，使用上下文时此处显示对话主题 </h2>
       </Header> */}
+
+        <Sider>
+          <React.Suspense fallback={null}>
+            <Menu />
+          </React.Suspense>
+        </Sider>
 
         <Content>
           <React.Suspense fallback={null}>

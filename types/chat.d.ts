@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   chat.d.ts
  * Created At:  2023-03-21 20:38:24
- * Modified At: 2023-03-27 22:42:03
+ * Modified At: 2023-03-29 19:54:32
  * Modified By: thepoy
  */
 
@@ -65,4 +65,9 @@ declare interface ChatGPTResponse<T = Choice | StreamChoice> {
 declare interface Saving {
   name: string
   status: boolean
+}
+
+declare interface Topic {
+  id: number
+  name: string
 }
