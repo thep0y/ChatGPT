@@ -18,7 +18,7 @@ use crate::logger::{log_level, logger_config};
 use chat::chat::{chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse};
 use chat::models::{get_chat_models, ModelResponse};
 use config::{Config, Proxy, APP_CONFIG_DIR};
-use db::conversation::init_conversation;
+use db::manager::SqliteConnectionManager;
 use db::message::init_messages;
 use db::topic::{get_all_topics, init_topic, Topic};
 use futures_util::StreamExt;
@@ -29,6 +29,8 @@ use tokio::io::{AsyncWriteExt, BufWriter};
 
 // use tauri::Manager;
 // use window_shadows::set_shadow;
+
+type SQLitePool = r2d2::Pool<SqliteConnectionManager>;
 
 #[cfg(target_os = "linux")]
 fn set_gtk_scale_env() {
@@ -128,18 +130,20 @@ async fn chat_gpt_stream(
 }
 
 #[tauri::command]
-async fn get_topics() -> Result<Vec<Topic>> {
-    let topics = get_all_topics(None)?;
+async fn get_topics(pool: tauri::State<'_, SQLitePool>) -> Result<Vec<Topic>> {
+    let conn = pool.get().map_err(|e| e.to_string())?;
+    let topics = get_all_topics(&conn)?;
 
     debug!("获取到全部主题：{:?}", topics);
 
     Ok(topics)
 }
 
-pub fn init_database() -> Result<()> {
-    init_topic()?;
-    init_conversation();
-    init_messages();
+fn init_database(pool: &SQLitePool) -> Result<()> {
+    let conn = pool.get().map_err(|e| e.to_string())?;
+
+    init_topic(&conn)?;
+    init_messages(&conn)?;
 
     Ok(())
 }
@@ -166,13 +170,17 @@ async fn main() -> Result<()> {
     ])
     .unwrap();
 
-    init_database()?;
+    let manager = SqliteConnectionManager::file(APP_CONFIG_DIR.join("chat.db"));
+    let pool: SQLitePool = r2d2::Pool::new(manager).unwrap();
+
+    init_database(&pool)?;
 
     tauri::Builder::default()
         // .setup(|app| {
         //     // let window = app.get_window("main").unwrap();
         //     Ok(())
         // })
+        .manage(pool)
         .invoke_handler(tauri::generate_handler![
             chat_gpt,
             chat_gpt_stream,

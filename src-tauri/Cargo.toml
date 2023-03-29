@@ -27,7 +27,7 @@ futures-util = "0.3"
 url = "2.3"
 toml = "0.7"
 rusqlite = { version = "0.29", features = ["bundled"] }
-
+r2d2 = "0.8"
 
 # 无边框时使用的库
 # window-shadows = { git = "https://github.com/tauri-apps/window-shadows" }

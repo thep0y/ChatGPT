@@ -1,4 +1,3 @@
-use super::new_connection;
 use crate::error::Result;
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
@@ -35,11 +34,6 @@ impl Topic {
     fn insert(&self, conn: &Connection) -> Result<usize> {
         conn.execute(TOPIC_INSERT, (&self.name, self.created_at))
             .map_err(|e| e.to_string())
-    }
-
-    pub fn insert_with_new_conn(&self) -> Result<usize> {
-        let conn = new_connection().map_err(|e| e.to_string())?;
-        self.insert(&conn)
     }
 }
 
