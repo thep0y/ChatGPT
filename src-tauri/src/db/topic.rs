@@ -32,11 +32,20 @@ impl Topic {
         };
     }
 
-    pub fn insert(self) -> Result<usize> {
-        let conn = new_connection().unwrap();
-
+    fn _insert(self, conn: &Connection) -> Result<usize> {
         conn.execute(TOPIC_INSERT, (self.name, self.created_at))
             .map_err(|e| e.to_string())
+    }
+
+    pub fn insert<'a, T: Into<Option<&'a Connection>>>(self, conn: T) -> Result<usize> {
+        match conn.into() {
+            Some(conn) => Self::_insert(self, conn),
+            None => {
+                let conn = new_connection().map_err(|e| e.to_string())?;
+
+                Self::_insert(self, &conn)
+            }
+        }
     }
 }
 
