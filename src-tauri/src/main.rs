@@ -132,15 +132,15 @@ async fn chat_gpt_stream(
 #[tauri::command]
 async fn get_topics(pool: tauri::State<'_, SQLitePool>) -> Result<Vec<Topic>> {
     let conn = pool.get().map_err(|e| e.to_string())?;
-    let topics = get_all_topics(&conn)?;
+    let topics = get_all_topics(&conn).map_err(|e| e.to_string())?;
 
     debug!("获取到全部主题：{:?}", topics);
 
     Ok(topics)
 }
 
-fn init_database(pool: &SQLitePool) -> Result<()> {
-    let conn = pool.get().map_err(|e| e.to_string())?;
+fn init_database(pool: &SQLitePool) -> anyhow::Result<()> {
+    let conn = pool.get()?;
 
     init_topic(&conn)?;
     init_messages(&conn)?;
@@ -149,7 +149,7 @@ fn init_database(pool: &SQLitePool) -> Result<()> {
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> anyhow::Result<()> {
     #[cfg(target_os = "linux")]
     set_gtk_scale_env();
 

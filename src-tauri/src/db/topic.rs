@@ -1,4 +1,4 @@
-use crate::error::Result;
+use anyhow::{Context, Ok, Result};
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
@@ -32,8 +32,11 @@ impl Topic {
     }
 
     fn insert(&self, conn: &Connection) -> Result<usize> {
-        conn.execute(TOPIC_INSERT, (&self.name, self.created_at))
-            .map_err(|e| e.to_string())
+        let count = conn
+            .execute(TOPIC_INSERT, (&self.name, self.created_at))
+            .with_context(|| format!("插入主题时出错：name={}", self.name))?;
+
+        Ok(count)
     }
 }
 
@@ -41,7 +44,7 @@ pub fn topic_exists(conn: &Connection, topic_id: u32) -> Result<bool> {
     let query = "SELECT EXISTS(SELECT 1 FROM topic WHERE id = ? LIMIT 1)";
     let exists = conn
         .query_row(query, params![topic_id], |row| row.get(0))
-        .map_err(|e| e.to_string())?;
+        .with_context(|| format!("查询主题时出错：id={}", topic_id))?;
     Ok(exists)
 }
 
@@ -49,14 +52,15 @@ pub fn topic_exists_by_name(conn: &Connection, name: &str) -> Result<bool> {
     let query = "SELECT EXISTS(SELECT 1 FROM topic WHERE name = ? LIMIT 1)";
     let exists = conn
         .query_row(query, params![name], |row| row.get(0))
-        .map_err(|e| e.to_string())?;
+        .with_context(|| format!("查询主题时出错：name={}", name))?;
     Ok(exists)
 }
 
 const FREE_TOPIC_NAME: &str = "自由对话";
 
 pub(crate) fn init_topic(conn: &Connection) -> Result<()> {
-    conn.execute(TOPIC_TABLE, ()).map_err(|e| e.to_string())?;
+    conn.execute(TOPIC_TABLE, ())
+        .with_context(|| format!("创建主题表时出错"))?;
 
     if topic_exists_by_name(&conn, FREE_TOPIC_NAME)? {
         debug!("自由对话主题已存在");
@@ -67,7 +71,7 @@ pub(crate) fn init_topic(conn: &Connection) -> Result<()> {
         id: 0,
         name: FREE_TOPIC_NAME.to_string(),
         created_at: OffsetDateTime::now_local()
-            .map_err(|e| e.to_string())?
+            .with_context(|| format!("插入自由主题时出错"))?
             .unix_timestamp() as u64,
     };
 
@@ -81,18 +85,20 @@ const SELECT_ALL_TOPICS: &str = r#"
 "#;
 
 pub fn get_all_topics(conn: &Connection) -> Result<Vec<Topic>> {
-    let mut stmt = conn.prepare(SELECT_ALL_TOPICS).map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(SELECT_ALL_TOPICS)
+        .with_context(|| format!("准备所有主题查询语句时出错"))?;
     let topics = stmt
         .query_map([], |row| {
-            Ok(Topic {
+            std::result::Result::Ok(Topic {
                 id: row.get(0)?,
                 name: row.get(1)?,
                 created_at: row.get(2)?,
             })
         })
-        .map_err(|e| e.to_string())?
+        .with_context(|| format!("获取所有主题时出错"))?
         .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| e.to_string())?;
+        .with_context(|| format!("收集所有主题时出错"))?;
 
     Ok(topics)
 }
