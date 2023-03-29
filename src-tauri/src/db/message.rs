@@ -53,28 +53,23 @@ impl UserMessage {
     }
 
     pub fn insert(&self, conn: &Connection) -> Result<usize> {
-        let count = conn
-            .execute(
-                USER_MESSAGE_INSERT,
-                (&self.message, &self.created_at, &self.topic_id),
+        conn.execute(
+            USER_MESSAGE_INSERT,
+            (&self.message, &self.created_at, &self.topic_id),
+        )
+        .with_context(|| {
+            format!(
+                "插入 user_message 失败：topic_id={}, message={}",
+                self.topic_id, self.message
             )
-            .with_context(|| {
-                format!(
-                    "插入 user_message 失败：topic_id={}, message={}",
-                    self.topic_id, self.message
-                )
-            })?;
-
-        Ok(count)
+        })
     }
 }
 
 pub fn user_message_exists(conn: &Connection, user_message_id: u32) -> Result<bool> {
     let query = "SELECT EXISTS(SELECT 1 FROM user_message WHERE id = ? LIMIT 1)";
-    let exists = conn
-        .query_row(query, [user_message_id], |row| row.get(0))
-        .with_context(|| format!("查询 user_message 失败：id={}", user_message_id))?;
-    Ok(exists)
+    conn.query_row(query, [user_message_id], |row| row.get(0))
+        .with_context(|| format!("查询 user_message 失败：id={}", user_message_id))
 }
 
 pub struct ChatGPTMessage {
@@ -95,28 +90,23 @@ impl ChatGPTMessage {
     }
 
     pub fn insert(&self, conn: &Connection) -> Result<usize> {
-        let count = conn
-            .execute(
-                CHATGPT_MESSAGE_INSERT,
-                (&self.message, &self.created_at, &self.user_message_id),
+        conn.execute(
+            CHATGPT_MESSAGE_INSERT,
+            (&self.message, &self.created_at, &self.user_message_id),
+        )
+        .with_context(|| {
+            format!(
+                "插入 chatgpt_message 失败：user_message_id={}, message={}",
+                self.user_message_id, self.message
             )
-            .with_context(|| {
-                format!(
-                    "插入 chatgpt_message 失败：user_message_id={}, message={}",
-                    self.user_message_id, self.message
-                )
-            })?;
-
-        Ok(count)
+        })
     }
 }
 
 pub fn chatgpt_message_exists(conn: &Connection, chatgpt_message_id: u32) -> Result<bool> {
     let query = "SELECT EXISTS(SELECT 1 FROM chatgpt_message WHERE id = ? LIMIT 1)";
-    let exists = conn
-        .query_row(query, [chatgpt_message_id], |row| row.get(0))
-        .with_context(|| format!("查询 chatgpt_message 失败：id={}", chatgpt_message_id))?;
-    Ok(exists)
+    conn.query_row(query, [chatgpt_message_id], |row| row.get(0))
+        .with_context(|| format!("查询 chatgpt_message 失败：id={}", chatgpt_message_id))
 }
 
 pub fn init_messages(conn: &Connection) -> Result<()> {
