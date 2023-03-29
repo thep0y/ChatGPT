@@ -1,1 +1,1 @@
-pub type Result<T> = std::result::Result<T, std::string::String>;
+pub type Result<T, E = String> = std::result::Result<T, E>;
