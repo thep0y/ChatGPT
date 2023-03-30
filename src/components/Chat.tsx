@@ -31,7 +31,6 @@ const MESSAGE_SAVEING_FILTER_OPTION: SaveDialogOptions = {
       extensions: ['png']
     }
   ] as DialogFilter[]
-  // defaultPath: `ChatGPT 对话-${now()}.png`
 } as const
 
 const handleSaveError = (

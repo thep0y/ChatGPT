@@ -21,7 +21,7 @@ const MessageInput: React.FC<MessageInputProps> = memo(
 
     return (
       <div id="input-message">
-        <Affix offsetBottom={10} style={{ width: '90%', maxWidth: '800px' }}>
+        <Affix style={{ width: '90%', maxWidth: 800 }}>
           <Space.Compact block>
             <Input
               value={message}

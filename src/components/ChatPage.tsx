@@ -12,6 +12,7 @@ const Chat = lazy(async () => await import('~/components/Chat'))
 const Scrollbar = lazy(async () => await import('~/components/scrollbar/Scrollbar'))
 const Settings = lazy(async () => await import('~/components/Settings'))
 const Menu = lazy(async () => await import('~/components/Menu'))
+const MessageInput = lazy(async () => await import('~/components/message/Input'))
 
 // const { Header, Content } = Layout
 const { Content, Sider } = Layout
@@ -58,7 +59,6 @@ const ChatPage: React.FC = () => {
       ...prevMessages,
       { content, role: 'user', time: now() }
     ])
-    // TODO: 使用 Tauri API 发送消息并接收 ChatGPT 的回复
 
     setWaiting(true)
 
@@ -75,7 +75,19 @@ const ChatPage: React.FC = () => {
       if (stream) {
         let role: Role = 'assistant'
 
-        const unlisten = await appWindow.listen<string>('stream', (v) => {
+        const unlisten = await appWindow.listen<string>('stream', async (v) => {
+          // 判断是否出错
+          if (v.payload.includes('"error":{')) {
+            const err = JSON.parse(v.payload)
+
+            await message.error(err.error)
+
+            // TODO: 处理最后一条用户消息，暂时选择删除
+            setMessages((prevMessages) => prevMessages.slice(0, prevMessages.length - 1))
+
+            return
+          }
+
           const payload = v.payload.trim()
 
           if (payload === 'data: [DONE]') {
@@ -231,7 +243,7 @@ const ChatPage: React.FC = () => {
         onConfigChange={handleConfigChange}
       />
 
-      <Layout>
+      <Layout className='layout'>
         {/* <Header className="chat-title">
         <h2> 这是对话标题，使用上下文时此处显示对话主题 </h2>
       </Header> */}
@@ -252,6 +264,10 @@ const ChatPage: React.FC = () => {
                 config={config}
               />
             </Scrollbar>
+          </React.Suspense>
+
+          <React.Suspense fallback={null}>
+            <MessageInput onSendMessage={handleSendMessage} waiting={waiting} config={config} />
           </React.Suspense>
         </Content>
       </Layout>

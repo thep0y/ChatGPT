@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   ChatPage.scss
  * Created At:  2023-03-22 22:18:57
- * Modified At: 2023-03-22 22:23:41
+ * Modified At: Thu Mar 30 2023
  * Modified By: thepoy
  */
 
@@ -14,5 +14,14 @@
 
   h2 {
     margin: 0;
+  }
+}
+
+#root .layout {
+  height: 100%;
+  overflow: hidden;
+
+  .ant-layout-content {
+    position: relative;
   }
 }
