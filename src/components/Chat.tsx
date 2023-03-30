@@ -142,7 +142,7 @@ const Chat: React.FC<ChatProps> = memo(
             ? (
               <FloatButton.Group
                 trigger="hover"
-                style={{ right: 8, bottom: 100 }}
+                style={{ right: 8, bottom: 160 }}
                 icon={<SaveOutlined />}
               >
                 <FloatButton

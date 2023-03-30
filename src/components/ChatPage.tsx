@@ -1,6 +1,6 @@
 import React, { useState, lazy, useEffect, useCallback } from 'react'
 import { Layout, FloatButton, Spin, message } from 'antd'
-import { SettingOutlined, OrderedListOutlined } from '@ant-design/icons'
+import { SettingOutlined, MenuOutlined } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { isEqual, now, proxyToString, readConfig, saveConfig } from '~/lib'
 import '~/styles/ChatPage.scss'
@@ -9,10 +9,14 @@ import { smoothScrollTo } from '~/components/scrollbar'
 import { appWindow } from '@tauri-apps/api/window'
 
 const Chat = lazy(async () => await import('~/components/Chat'))
-const Scrollbar = lazy(async () => await import('~/components/scrollbar/Scrollbar'))
+const Scrollbar = lazy(
+  async () => await import('~/components/scrollbar/Scrollbar')
+)
 const Settings = lazy(async () => await import('~/components/Settings'))
 const Menu = lazy(async () => await import('~/components/Menu'))
-const MessageInput = lazy(async () => await import('~/components/message/Input'))
+const MessageInput = lazy(
+  async () => await import('~/components/message/Input')
+)
 
 // const { Header, Content } = Layout
 const { Content, Sider } = Layout
@@ -23,6 +27,7 @@ const ChatPage: React.FC = () => {
   )
   const [waiting, setWaiting] = useState<boolean>(false)
   const [openSetting, setOpenSetting] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
   const [config, setConfig] = useState<Config | null>(null)
 
   useEffect(() => {
@@ -54,144 +59,166 @@ const ChatPage: React.FC = () => {
     scrollToBottom()
   }, [messages, scrollToBottom])
 
-  const handleSendMessage = useCallback(async (content: string, stream: boolean = true): Promise<void> => {
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { content, role: 'user', time: now() }
-    ])
+  const handleSendMessage = useCallback(
+    async (content: string, stream: boolean = true): Promise<void> => {
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { content, role: 'user', time: now() }
+      ])
 
-    setWaiting(true)
+      setWaiting(true)
 
-    try {
-      const request: ChatGPTRequest = {
-        messages: [{
-          role: 'user',
-          content
-        }],
-        model: 'gpt-3.5-turbo',
-        stream
-      }
-
-      if (stream) {
-        let role: Role = 'assistant'
-
-        const unlisten = await appWindow.listen<string>('stream', async (v) => {
-          // 判断是否出错
-          if (v.payload.includes('"error":{')) {
-            const err = JSON.parse(v.payload)
-
-            await message.error(err.error)
-
-            // TODO: 处理最后一条用户消息，暂时选择删除
-            setMessages((prevMessages) => prevMessages.slice(0, prevMessages.length - 1))
-
-            return
-          }
-
-          const payload = v.payload.trim()
-
-          if (payload === 'data: [DONE]') {
-            return
-          }
-
-          const slices = payload.split('\n')
-
-          console.log('流式响应块', slices)
-
-          if (slices.length === 3) {
-            const first = JSON.parse(slices[0].slice(6)) as ChatGPTResponse<StreamChoice>
-
-            // slices 为 3 且 role 存在时会包含部分有效信息
-            if (first.choices[0].delta.role != null) {
-              role = first.choices[0].delta.role
-              const second = JSON.parse(slices[2].slice(6)) as ChatGPTResponse<StreamChoice>
-
-              setMessages((prevMessages) => [
-                ...prevMessages,
-                {
-                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                  content: second.choices[0].delta.content!,
-                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                  role,
-                  time: first.created * 1000
-                }
-              ])
-
-              return
+      try {
+        const request: ChatGPTRequest = {
+          messages: [
+            {
+              role: 'user',
+              content
             }
+          ],
+          model: 'gpt-3.5-turbo',
+          stream
+        }
 
-            // slices 为 3 且第一个不是 role 时将其 content 追加到队列的最后一个消息中
-            setMessages((prevMessages) => [
-              ...prevMessages.slice(0, prevMessages.length - 1),
-              {
-                ...prevMessages[prevMessages.length - 1],
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                content: prevMessages[prevMessages.length - 1].content + (first.choices[0].delta.content ?? '')
+        if (stream) {
+          let role: Role = 'assistant'
+
+          const unlisten = await appWindow.listen<string>(
+            'stream',
+            async (v) => {
+              // 判断是否出错
+              if (v.payload.includes('"error":{')) {
+                const err = JSON.parse(v.payload)
+
+                await message.error(err.error)
+
+                // TODO: 处理最后一条用户消息，暂时选择删除
+                setMessages((prevMessages) =>
+                  prevMessages.slice(0, prevMessages.length - 1))
+
+                return
               }
-            ])
 
-            return
-          }
+              const payload = v.payload.trim()
 
-          const chunk = JSON.parse(slices[0].slice(6)) as ChatGPTResponse<StreamChoice>
-
-          if (chunk.choices[0].delta.role != null) {
-            setMessages((prevMessages) => [
-              ...prevMessages,
-              {
-                content: '',
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                role: chunk.choices[0].delta.role!,
-                time: chunk.created * 1000
+              if (payload === 'data: [DONE]') {
+                return
               }
-            ])
-          }
-          if (chunk.choices[0].delta.content != null) {
-            setMessages((prevMessages) => [
-              ...prevMessages.slice(0, prevMessages.length - 1),
-              {
-                ...prevMessages[prevMessages.length - 1],
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                content: prevMessages[prevMessages.length - 1].content + chunk.choices[0].delta.content!
+
+              const slices = payload.split('\n')
+
+              console.log('流式响应块', slices)
+
+              if (slices.length === 3) {
+                const first = JSON.parse(
+                  slices[0].slice(6)
+                ) as ChatGPTResponse<StreamChoice>
+
+                // slices 为 3 且 role 存在时会包含部分有效信息
+                if (first.choices[0].delta.role != null) {
+                  role = first.choices[0].delta.role
+                  const second = JSON.parse(
+                    slices[2].slice(6)
+                  ) as ChatGPTResponse<StreamChoice>
+
+                  setMessages((prevMessages) => [
+                    ...prevMessages,
+                    {
+                      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                      content: second.choices[0].delta.content!,
+                      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                      role,
+                      time: first.created * 1000
+                    }
+                  ])
+
+                  return
+                }
+
+                // slices 为 3 且第一个不是 role 时将其 content 追加到队列的最后一个消息中
+                setMessages((prevMessages) => [
+                  ...prevMessages.slice(0, prevMessages.length - 1),
+                  {
+                    ...prevMessages[prevMessages.length - 1],
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    content:
+                      prevMessages[prevMessages.length - 1].content +
+                      (first.choices[0].delta.content ?? '')
+                  }
+                ])
+
+                return
               }
-            ])
-          }
 
-          if (chunk.choices[0].finish_reason != null && chunk.choices[0].finish_reason !== 'stop') {
-            void message.error('网络异常，消息未接收完整')
-          }
-        })
+              const chunk = JSON.parse(
+                slices[0].slice(6)
+              ) as ChatGPTResponse<StreamChoice>
 
-        await invoke('chat_gpt_stream', {
-          proxy: proxyToString(config?.proxy),
-          apiKey: config?.openApiKey,
-          request
-        })
+              if (chunk.choices[0].delta.role != null) {
+                setMessages((prevMessages) => [
+                  ...prevMessages,
+                  {
+                    content: '',
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    role: chunk.choices[0].delta.role!,
+                    time: chunk.created * 1000
+                  }
+                ])
+              }
+              if (chunk.choices[0].delta.content != null) {
+                setMessages((prevMessages) => [
+                  ...prevMessages.slice(0, prevMessages.length - 1),
+                  {
+                    ...prevMessages[prevMessages.length - 1],
+                    content:
+                      prevMessages[prevMessages.length - 1].content +
+                      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                      chunk.choices[0].delta.content!
+                  }
+                ])
+              }
 
-        unlisten()
-      } else {
-        const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', {
-          proxy: proxyToString(config?.proxy),
-          apiKey: config?.openApiKey,
-          request
-        })
+              if (
+                chunk.choices[0].finish_reason != null &&
+                chunk.choices[0].finish_reason !== 'stop'
+              ) {
+                void message.error('网络异常，消息未接收完整')
+              }
+            }
+          )
 
-        // chatgpt 的响应的时间戳是精确到秒的，需要 x1000 js 才能正确识别
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            content: addNewLine(resp.choices[0].message.content),
-            role: resp.choices[0].message.role,
-            time: resp.created * 1000
-          }
-        ])
+          await invoke('chat_gpt_stream', {
+            proxy: proxyToString(config?.proxy),
+            apiKey: config?.openApiKey,
+            request
+          })
+
+          unlisten()
+        } else {
+          const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', {
+            proxy: proxyToString(config?.proxy),
+            apiKey: config?.openApiKey,
+            request
+          })
+
+          // chatgpt 的响应的时间戳是精确到秒的，需要 x1000 js 才能正确识别
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            {
+              content: addNewLine(resp.choices[0].message.content),
+              role: resp.choices[0].message.role,
+              time: resp.created * 1000
+            }
+          ])
+        }
+      } catch (e) {
+        await message.error(e as any)
+      } finally {
+        setWaiting(false)
       }
-    } catch (e) {
-      await message.error((e as any))
-    } finally {
-      setWaiting(false)
-    }
-  }, [config])
+    },
+    [config]
+  )
 
   const handleConfigChange = (newConfig: Config): void => {
     setConfig(newConfig)
@@ -216,16 +243,23 @@ const ChatPage: React.FC = () => {
 
   return (
     <>
-
       <FloatButton
         icon={<SettingOutlined />}
-        style={{ right: 8 }}
+        style={{ right: 8, bottom: 110 }}
         onClick={() => {
           setOpenSetting(true)
         }}
       />
 
       <FloatButton
+        icon={<MenuOutlined />}
+        style={{ right: 8 }}
+        onClick={() => {
+          setShowMenu((pre) => !pre)
+        }}
+      />
+
+      {/* <FloatButton
         icon={<OrderedListOutlined />}
         style={{ right: 60 }}
         onClick={async () => {
@@ -233,7 +267,7 @@ const ChatPage: React.FC = () => {
 
           console.log('主题列表', topics)
         }}
-      />
+      /> */}
 
       <Settings
         config={config}
@@ -243,16 +277,20 @@ const ChatPage: React.FC = () => {
         onConfigChange={handleConfigChange}
       />
 
-      <Layout className='layout'>
+      <Layout className="layout">
         {/* <Header className="chat-title">
         <h2> 这是对话标题，使用上下文时此处显示对话主题 </h2>
       </Header> */}
 
-        <Sider>
-          <React.Suspense fallback={null}>
-            <Menu />
-          </React.Suspense>
-        </Sider>
+        {showMenu
+          ? (
+            <Sider>
+              <React.Suspense fallback={null}>
+                <Menu />
+              </React.Suspense>
+            </Sider>
+            )
+          : null}
 
         <Content>
           <React.Suspense fallback={null}>
@@ -267,7 +305,11 @@ const ChatPage: React.FC = () => {
           </React.Suspense>
 
           <React.Suspense fallback={null}>
-            <MessageInput onSendMessage={handleSendMessage} waiting={waiting} config={config} />
+            <MessageInput
+              onSendMessage={handleSendMessage}
+              waiting={waiting}
+              config={config}
+            />
           </React.Suspense>
         </Content>
       </Layout>
