@@ -7,26 +7,7 @@ ChatGPT 客户端
 
 ## 2 配置
 
-现在的版本是通过环境变量使用 **OPEN_API_KEY** 的。
-
-假设你的 OPEN_API_KEY 是`123456`，需要做如下配置：
-
-**Linux**
-
-```bash
-# bash
-echo 'export OPEN_API_KEY=123456' >> ~/.bashrc
-# zsh
-echo 'export OPEN_API_KEY=123456' >> ~/.zshenv
-# fish
-echo 'set -x OPEN_API_KEY 123456' >> ~/.config/fish/config.fish
-```
-
-**Windows**
-
-Windows 平台中无法使用命令快速固化环境变量，需要通过**系统属性 > 环境变量 > 用户变量**添加，如下图：
-
-![image-20230324215543612](https://i.imgtg.com/2023/03/24/93DtN.png)
+点击设置按钮配置代理和 API KEY 后即可与 ChatGPT 进行交流。
 
 ## 3 运行
 

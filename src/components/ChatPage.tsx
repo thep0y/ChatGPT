@@ -219,7 +219,7 @@ const ChatPage: React.FC = () => {
         onClick={async () => {
           const topics = await invoke('get_topics')
 
-          console.log(topics)
+          console.log('主题列表', topics)
         }}
       />
 

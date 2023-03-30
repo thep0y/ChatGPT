@@ -1,9 +1,7 @@
 /* eslint-disable react/prop-types */
-import React, { useState, memo, lazy, useRef, useCallback } from 'react'
-import { Input, Affix, Button, Space, FloatButton, message } from 'antd'
+import React, { useState, memo, useRef, useCallback, lazy } from 'react'
+import { FloatButton, message } from 'antd'
 import {
-  SendOutlined,
-  LoadingOutlined,
   SaveOutlined,
   FileImageOutlined,
   FileMarkdownOutlined,
@@ -18,75 +16,11 @@ import {
 } from '@tauri-apps/api/dialog'
 
 import '~/styles/Chat.scss'
-import { addNewLine, now } from '~/lib'
 import { saveFile } from '~/lib/fs'
 import Progress from '~/components/Progress'
+import { now } from '~/lib'
 
-const Message = lazy(async () => await import('~/components/Message'))
-
-interface MessageListProps {
-  messages: Message[]
-}
-
-const MessageList: React.FC<MessageListProps> = memo(({ messages }) => (
-  <ol className="list">
-    {messages.map(({ content, role, time }) => (
-      <React.Suspense fallback={null} key={time}>
-        <Message content={content} role={role} time={time} />
-      </React.Suspense>
-    ))}
-  </ol>
-))
-
-MessageList.displayName = 'MessageList'
-
-interface MessageInputProps {
-  onSendMessage: (message: string, stream: boolean) => void
-  waiting: boolean
-  config: Config
-}
-
-const MessageInput: React.FC<MessageInputProps> = ({
-  onSendMessage,
-  waiting,
-  config
-}) => {
-  const [message, setMessage] = useState('')
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setMessage(e.target.value)
-  }
-
-  const handleEnter = (): void => {
-    if (message.trim() !== '') {
-      onSendMessage(addNewLine(message), config.useStream)
-      setMessage('')
-    }
-  }
-
-  return (
-    <div id="input-message">
-      <Affix offsetBottom={10} style={{ width: '90%', maxWidth: '800px' }}>
-        <Space.Compact block>
-          <Input
-            value={message}
-            placeholder="输入你要发送给 ChatGPT 的消息"
-            onChange={handleChange}
-            onPressEnter={handleEnter}
-          />
-
-          <Button
-            type="primary"
-            onClick={handleEnter}
-            disabled={waiting || message.trim() === ''}
-          >
-            {waiting ? <LoadingOutlined /> : <SendOutlined />}
-          </Button>
-        </Space.Compact>
-      </Affix>
-    </div>
-  )
-}
+const MessageList = lazy(async () => await import('~/components/message/List'))
 
 type ChatProps = MessageListProps & MessageInputProps
 
@@ -200,7 +134,9 @@ const Chat: React.FC<ChatProps> = memo(
 
         <div id="chat">
           <div ref={messageListComponentRef}>
-            <MessageList messages={messages} />
+            <React.Suspense fallback={null}>
+              <MessageList messages={messages} />
+            </React.Suspense>
           </div>
 
           {messages.length > 1
@@ -239,7 +175,7 @@ const Chat: React.FC<ChatProps> = memo(
             : null}
         </div>
 
-        <MessageInput onSendMessage={onSendMessage} waiting={waiting} config={config} />
+        {/* <MessageInput onSendMessage={onSendMessage} waiting={waiting} config={config} /> */}
       </>
     )
   }
