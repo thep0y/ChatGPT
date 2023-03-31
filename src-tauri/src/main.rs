@@ -25,6 +25,7 @@ use db::topic::{get_all_topics, init_topic, Topic};
 use futures_util::StreamExt;
 use simplelog::{ColorChoice, CombinedLogger, TermLogger, TerminalMode, WriteLogger};
 use std::fs as SysFS;
+use std::sync::{Arc, Mutex};
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncWriteExt, BufWriter};
 
@@ -122,6 +123,13 @@ async fn chat_gpt_stream(
 
     let mut chunk_messages = Vec::<MessageChunk>::new();
 
+    let flag = Arc::new(Mutex::new(false));
+    let flag_clone = Arc::clone(&flag);
+    let id = window.listen("abort-stream", move |_| {
+        let mut flag = flag_clone.lock().unwrap();
+        *flag = true;
+    });
+
     while let Some(item) = stream.next().await {
         let bytes = item.map_err(|e| e.to_string())?;
         let mut chunk = std::str::from_utf8(&bytes).map_err(|e| e.to_string())?;
@@ -130,6 +138,11 @@ async fn chat_gpt_stream(
         chunk = chunk.trim();
         let slices: Vec<&str> = chunk.split("\n\n").collect();
         trace!("slices: {:?}", slices);
+
+        let flag_clone = Arc::clone(&flag);
+        if *flag_clone.lock().unwrap() {
+            break;
+        }
 
         for item in slices.iter() {
             let body = &item[6..];
@@ -147,6 +160,8 @@ async fn chat_gpt_stream(
         }
     }
     trace!("chunk_messages: {:?}", chunk_messages);
+
+    window.unlisten(id);
     Ok(())
 }
 
