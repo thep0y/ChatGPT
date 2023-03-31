@@ -3,11 +3,13 @@
  * Email:       thepoy@163.com
  * File Name:   chat.d.ts
  * Created At:  2023-03-21 20:38:24
- * Modified At: 2023-03-29 19:54:32
+ * Modified At: Fri Mar 31 2023
  * Modified By: thepoy
  */
 
 type Role = 'user' | 'assistant'
+
+type FinishReason = 'stop' | 'length' | 'content_filter' | null
 
 declare interface ChatMessage {
   role: Role
@@ -33,7 +35,7 @@ declare interface ChatGPTRequest {
 interface Choice {
   index: number
   message: ChatMessage
-  finish_reason: string
+  finish_reason: FinishReason
 }
 
 interface StreamChoiceDelta {
@@ -44,7 +46,7 @@ interface StreamChoiceDelta {
 interface StreamChoice {
   delta: StreamChoiceDelta
   index: number
-  finish_reason: string
+  finish_reason: FinishReason
 }
 
 interface Usage {
@@ -70,4 +72,16 @@ declare interface Saving {
 declare interface Topic {
   id: number
   name: string
+}
+
+declare interface MessageChunk {
+  id: string
+  model: string
+  object: string
+  created: number
+  choices: Array<{
+    delta: { content?: string, role?: Role }
+    finish_reason: FinishReason
+    index: number
+  }>
 }

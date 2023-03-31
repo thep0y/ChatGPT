@@ -13,6 +13,7 @@ mod logger;
 extern crate log;
 extern crate simplelog;
 
+use crate::chat::chat::MessageChunk;
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
 use chat::chat::{chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse};
@@ -119,13 +120,33 @@ async fn chat_gpt_stream(
     let response = chat_gpt_steam_client(&proxy, &api_key, request).await;
     let mut stream = response.bytes_stream();
 
+    let mut chunk_messages = Vec::<MessageChunk>::new();
+
     while let Some(item) = stream.next().await {
         let bytes = item.map_err(|e| e.to_string())?;
-        let chunk = String::from_utf8_lossy(&bytes);
-
+        let mut chunk = std::str::from_utf8(&bytes).map_err(|e| e.to_string())?;
         debug!("chunk: {}", chunk);
-        window.emit("stream", chunk).unwrap();
+
+        chunk = chunk.trim();
+        let slices: Vec<&str> = chunk.split("\n\n").collect();
+        trace!("slices: {:?}", slices);
+
+        for item in slices.iter() {
+            let body = &item[6..];
+            if body == "[DONE]" {
+                window.emit("stream", "done").unwrap();
+                break;
+            }
+
+            let chunk_message: MessageChunk =
+                serde_json::from_str(body).map_err(|e| e.to_string())?;
+
+            chunk_messages.push(chunk_message.clone());
+
+            window.emit("stream", chunk_message).unwrap();
+        }
     }
+    trace!("chunk_messages: {:?}", chunk_messages);
     Ok(())
 }
 

@@ -2,6 +2,7 @@ import React, { useState, lazy, useEffect, useCallback } from 'react'
 import { Layout, FloatButton, Spin, message } from 'antd'
 import { SettingOutlined, MenuOutlined } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
+import { type Event } from '@tauri-apps/api/event'
 import { isEqual, now, proxyToString, readConfig, saveConfig } from '~/lib'
 import '~/styles/ChatPage.scss'
 import { addNewLine } from '~/lib/message'
@@ -20,6 +21,63 @@ const MessageInput = lazy(
 
 // const { Header, Content } = Layout
 const { Content, Sider } = Layout
+
+const handleStreamResponse = async (e: Event<string | MessageChunk>, setMessages: React.Dispatch<React.SetStateAction<Message[]>>): Promise<void> => {
+  const payload = e.payload
+
+  if (typeof payload === 'string') {
+    if (payload === 'done') {
+      await message.success('文字流接收完成')
+    } else {
+      // 应该不存在其他文字的可能性
+    }
+
+    return
+  }
+
+  const choice = payload.choices[0]
+
+  if (choice.delta.role != null) {
+    void message.success('开始接收文字流')
+
+    // 消息列表里添加一条消息
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        content: '',
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        role: choice.delta.role!,
+        time: payload.created * 1000
+      }
+    ])
+
+    console.log('流消息', '添加一条消息')
+
+    return
+  }
+
+  if (choice.finish_reason === null) {
+    setMessages((prevMessages) => [
+      ...prevMessages.slice(0, prevMessages.length - 1),
+      {
+        ...prevMessages[prevMessages.length - 1],
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        content: prevMessages[prevMessages.length - 1].content + choice.delta.content!
+      }
+    ])
+
+    console.log('流消息', '向最后一条消息的 content 中添加文字')
+
+    return
+  }
+
+  if (choice.finish_reason === 'stop') {
+    // 结束
+  } else {
+    // 其他异常:https://platform.openai.com/docs/guides/chat/response-format
+    await message.error('网络异常，消息未接收完整')
+  }
+}
 
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>(
@@ -81,110 +139,11 @@ const ChatPage: React.FC = () => {
         }
 
         if (stream) {
-          let role: Role = 'assistant'
+          // const role: Role = 'assistant'
 
           const unlisten = await appWindow.listen<string>(
             'stream',
-            async (v) => {
-              // 判断是否出错
-              if (v.payload.includes('"error":{')) {
-                const err = JSON.parse(v.payload)
-
-                await message.error(err.error)
-
-                // TODO: 处理最后一条用户消息，暂时选择删除
-                setMessages((prevMessages) =>
-                  prevMessages.slice(0, prevMessages.length - 1))
-
-                return
-              }
-
-              const payload = v.payload.trim()
-
-              if (payload === 'data: [DONE]') {
-                return
-              }
-
-              const slices = payload.split('\n')
-
-              console.log('流式响应块', slices)
-
-              if (slices.length === 3) {
-                const first = JSON.parse(
-                  slices[0].slice(6)
-                ) as ChatGPTResponse<StreamChoice>
-
-                // slices 为 3 且 role 存在时会包含部分有效信息
-                if (first.choices[0].delta.role != null) {
-                  role = first.choices[0].delta.role
-                  const second = JSON.parse(
-                    slices[2].slice(6)
-                  ) as ChatGPTResponse<StreamChoice>
-
-                  setMessages((prevMessages) => [
-                    ...prevMessages,
-                    {
-                      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                      content: second.choices[0].delta.content!,
-                      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                      role,
-                      time: first.created * 1000
-                    }
-                  ])
-
-                  return
-                }
-
-                // slices 为 3 且第一个不是 role 时将其 content 追加到队列的最后一个消息中
-                setMessages((prevMessages) => [
-                  ...prevMessages.slice(0, prevMessages.length - 1),
-                  {
-                    ...prevMessages[prevMessages.length - 1],
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    content:
-                      prevMessages[prevMessages.length - 1].content +
-                      (first.choices[0].delta.content ?? '')
-                  }
-                ])
-
-                return
-              }
-
-              const chunk = JSON.parse(
-                slices[0].slice(6)
-              ) as ChatGPTResponse<StreamChoice>
-
-              if (chunk.choices[0].delta.role != null) {
-                setMessages((prevMessages) => [
-                  ...prevMessages,
-                  {
-                    content: '',
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    role: chunk.choices[0].delta.role!,
-                    time: chunk.created * 1000
-                  }
-                ])
-              }
-              if (chunk.choices[0].delta.content != null) {
-                setMessages((prevMessages) => [
-                  ...prevMessages.slice(0, prevMessages.length - 1),
-                  {
-                    ...prevMessages[prevMessages.length - 1],
-                    content:
-                      prevMessages[prevMessages.length - 1].content +
-                      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                      chunk.choices[0].delta.content!
-                  }
-                ])
-              }
-
-              if (
-                chunk.choices[0].finish_reason != null &&
-                chunk.choices[0].finish_reason !== 'stop'
-              ) {
-                void message.error('网络异常，消息未接收完整')
-              }
-            }
+            async (e) => { await handleStreamResponse(e, setMessages) }
           )
 
           await invoke('chat_gpt_stream', {
@@ -217,7 +176,7 @@ const ChatPage: React.FC = () => {
         setWaiting(false)
       }
     },
-    [config]
+    [config, messages]
   )
 
   const handleConfigChange = (newConfig: Config): void => {

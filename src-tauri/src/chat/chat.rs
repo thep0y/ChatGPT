@@ -118,3 +118,27 @@ pub async fn chat_gpt_steam_client(
         .await
         .unwrap()
 }
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct MessageChunkChoiceDelta {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub role: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct MessageChunkChoice {
+    pub delta: MessageChunkChoiceDelta,
+    pub index: u8,
+    pub finish_reason: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct MessageChunk {
+    pub id: String,
+    pub object: String,
+    pub created: u64,
+    pub model: String,
+    pub choices: Vec<MessageChunkChoice>,
+}
