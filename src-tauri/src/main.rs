@@ -116,8 +116,8 @@ async fn chat_gpt(
 async fn chat_gpt_stream(
     pool: tauri::State<'_, SQLitePool>,
     window: tauri::Window,
-    proxy: String,
-    api_key: String,
+    proxy: &str,
+    api_key: &str,
     request: ChatGPTRequest,
     created: u64,
 ) -> Result<u32> {
@@ -125,16 +125,18 @@ async fn chat_gpt_stream(
 
     let user_message_content = &request.messages[0].content.clone();
 
-    let response = chat_gpt_steam_client(&proxy, &api_key, request).await;
+    let response = chat_gpt_steam_client(proxy, api_key, request).await;
     let mut stream = response.bytes_stream();
 
-    let mut message_parts = Vec::<String>::new();
+    let mut message_parts = Vec::new();
 
     let abort_flag = Arc::new(AtomicBool::new(false));
-    let abort_flag_clone = Arc::clone(&abort_flag);
-    let id = window.listen("abort-stream", move |_| {
-        info!("中断流式消息");
-        abort_flag_clone.store(true, Ordering::Relaxed);
+    let id = window.listen("abort-stream", {
+        let abort_flag = Arc::clone(&abort_flag);
+        move |_| {
+            info!("中断流式消息");
+            abort_flag.store(true, Ordering::Relaxed);
+        }
     });
 
     let mut done_flag = true;
@@ -143,16 +145,16 @@ async fn chat_gpt_stream(
     while let Some(item) = stream.next().await {
         let bytes = item.map_err(|e| e.to_string())?;
         let mut chunk = std::str::from_utf8(&bytes).map_err(|e| e.to_string())?;
+
         debug!("chunk: {}", chunk);
 
         chunk = chunk.trim();
-        let slices: Vec<&str> = chunk.split("\n\n").collect();
-        trace!("slices: {:?}", slices);
+        let slices = chunk.split("\n\n");
 
-        for item in slices.iter() {
+        for item in slices {
             let body = &item[6..];
             if body == "[DONE]" {
-                window.emit("stream", "done").unwrap();
+                window.emit("stream", "done").map_err(|e| e.to_string())?;
                 break;
             }
 
@@ -163,11 +165,13 @@ async fn chat_gpt_stream(
                 response_time = chunk_message.created;
             }
 
-            if let Some(part) = &chunk_message.clone().choices[0].delta.content {
+            if let Some(part) = &chunk_message.choices[0].delta.content {
                 message_parts.push(part.to_string());
             }
 
-            window.emit("stream", chunk_message).unwrap();
+            window
+                .emit("stream", chunk_message)
+                .map_err(|e| e.to_string())?;
         }
 
         if abort_flag.load(Ordering::Relaxed) {
@@ -197,7 +201,6 @@ async fn chat_gpt_stream(
     window.unlisten(id);
     Ok(user_message_id)
 }
-
 #[tauri::command]
 async fn get_topics(pool: tauri::State<'_, SQLitePool>) -> Result<Vec<Topic>> {
     let conn = pool.get().map_err(|e| e.to_string())?;
