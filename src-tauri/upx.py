@@ -4,7 +4,7 @@
 # @Email:       thepoy@163.com
 # @File Name:   upx.py
 # @Created At:  2023-03-19 21:31:57
-# @Modified At: 2023-03-21 17:47:41
+# @Modified At: 2023-04-01 22:58:06
 # @Modified By: thepoy
 
 import shutil
@@ -89,6 +89,10 @@ def download_upx(version: str, url: str):
 
 
 def compress():
+    NPM_LIFECYCLE_SCRIPT = os.getenv("NPM_LIFECYCLE_SCRIPT")
+    if NPM_LIFECYCLE_SCRIPT and NPM_LIFECYCLE_SCRIPT.startswith("tauri build "):
+        return
+
     if cmd_exists("upx"):
         print("使用环境变量中的 upx 命令")
         cmd = "upx"
