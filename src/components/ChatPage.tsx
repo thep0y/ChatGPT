@@ -22,7 +22,10 @@ const MessageInput = lazy(
 // const { Header, Content } = Layout
 const { Content, Sider } = Layout
 
-const handleStreamResponse = async (e: Event<string | MessageChunk>, setMessages: React.Dispatch<React.SetStateAction<Message[]>>): Promise<void> => {
+const handleStreamResponse = async (
+  e: Event<string | MessageChunk>,
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+): Promise<void> => {
   const payload = e.payload
 
   if (typeof payload === 'string') {
@@ -61,8 +64,9 @@ const handleStreamResponse = async (e: Event<string | MessageChunk>, setMessages
       ...prevMessages.slice(0, prevMessages.length - 1),
       {
         ...prevMessages[prevMessages.length - 1],
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        content: prevMessages[prevMessages.length - 1].content + choice.delta.content!
+        content:
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          prevMessages[prevMessages.length - 1].content + choice.delta.content!
       }
     ])
 
@@ -80,9 +84,7 @@ const handleStreamResponse = async (e: Event<string | MessageChunk>, setMessages
 }
 
 const ChatPage: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>(
-    JSON.parse(import.meta.env.VITE_MESSAGES)
-  )
+  const [messages, setMessages] = useState<Message[]>([])
   const [waiting, setWaiting] = useState<boolean>(false)
   const [openSetting, setOpenSetting] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
@@ -105,9 +107,25 @@ const ChatPage: React.FC = () => {
 
   useEffect(() => {
     const getMessagesByTopic = async (): Promise<void> => {
-      const conversations = await invoke('get_messages_by_topic_id', { topicId: 1 })
+      const conversations = await invoke<Conversation[]>(
+        'get_messages_by_topic_id',
+        { topicId: 1 }
+      )
 
-      console.log(conversations)
+      for (const c of conversations) {
+        const userMessage: Message = {
+          content: c.user.message,
+          time: c.user.created_at,
+          role: 'user'
+        }
+        const assistantMessage: Message = {
+          content: c.assistant.message,
+          time: c.assistant.created_at * 1000,
+          role: 'assistant'
+        }
+
+        setMessages((pre) => [...pre, userMessage, assistantMessage])
+      }
     }
 
     void getMessagesByTopic()
@@ -155,7 +173,9 @@ const ChatPage: React.FC = () => {
 
           const unlisten = await appWindow.listen<string>(
             'stream',
-            async (e) => { await handleStreamResponse(e, setMessages) }
+            async (e) => {
+              await handleStreamResponse(e, setMessages)
+            }
           )
 
           const messageID = await invoke<number>('chat_gpt_stream', {

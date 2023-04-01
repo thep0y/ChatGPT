@@ -18,8 +18,8 @@ const USER_MESSAGE_INSERT: &str = r#"
     VALUES (?1, ?2, ?3);
     "#;
 
-const CHATGPT_MESSAGE_TABLE: &str = r#"
-    CREATE TABLE IF NOT EXISTS chatgpt_message (
+const ASSISTANT_MESSAGE_TABLE: &str = r#"
+    CREATE TABLE IF NOT EXISTS assistant_message (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             message TEXT NOT NULL,
             created_at INTEGER NOT NULL,
@@ -30,15 +30,15 @@ const CHATGPT_MESSAGE_TABLE: &str = r#"
         )
         "#;
 
-const CHATGPT_MESSAGE_INSERT: &str = r#"
-        INSERT INTO chatgpt_message (message, created_at, user_message_id)
+const ASSISTANT_MESSAGE_INSERT: &str = r#"
+        INSERT INTO assistant_message (message, created_at, user_message_id)
         VALUES (?1, ?2, ?3);
         "#;
 
 const SELECT_ALL_MESSAGES: &str = r#"
     SELECT um.id, um.message, um.created_at, am.id, am.message, am.created_at, am.user_message_id
     FROM user_message um
-    INNER JOIN chatgpt_message am ON um.id = am.user_message_id
+    INNER JOIN assistant_message am ON um.id = am.user_message_id
     WHERE um.topic_id = ?;
 "#;
 
@@ -100,29 +100,29 @@ impl AssistantMessage {
 
     pub fn insert(&self, conn: &Connection) -> Result<usize> {
         conn.execute(
-            CHATGPT_MESSAGE_INSERT,
+            ASSISTANT_MESSAGE_INSERT,
             (&self.message, &self.created_at, &self.user_message_id),
         )
         .with_context(|| {
             format!(
-                "插入 chatgpt_message 失败：user_message_id={}, message={}",
+                "插入 assistant_message 失败：user_message_id={}, message={}",
                 self.user_message_id, self.message
             )
         })
     }
 }
 
-pub fn chatgpt_message_exists(conn: &Connection, chatgpt_message_id: u32) -> Result<bool> {
-    let query = "SELECT EXISTS(SELECT 1 FROM chatgpt_message WHERE id = ? LIMIT 1)";
-    conn.query_row(query, [chatgpt_message_id], |row| row.get(0))
-        .with_context(|| format!("查询 chatgpt_message 失败：id={}", chatgpt_message_id))
+pub fn assistant_message_exists(conn: &Connection, assistant_message_id: u32) -> Result<bool> {
+    let query = "SELECT EXISTS(SELECT 1 FROM assistant_message WHERE id = ? LIMIT 1)";
+    conn.query_row(query, [assistant_message_id], |row| row.get(0))
+        .with_context(|| format!("查询 assistant_message 失败：id={}", assistant_message_id))
 }
 
 pub fn init_messages(conn: &Connection) -> Result<()> {
     conn.execute(USER_MESSAGE_TABLE, ())
         .with_context(|| format!("创建 user_message 表失败"))?;
-    conn.execute(CHATGPT_MESSAGE_TABLE, ())
-        .with_context(|| format!("创建 chatgpt_message 表失败"))?;
+    conn.execute(ASSISTANT_MESSAGE_TABLE, ())
+        .with_context(|| format!("创建 assistant_message 表失败"))?;
 
     Ok(())
 }

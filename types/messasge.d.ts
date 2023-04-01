@@ -20,3 +20,22 @@ declare interface Topic {
   name: string
   created_at: number
 }
+
+declare interface UserMessage {
+  id: number
+  message: string
+  created_at: number
+  topic_id: number
+}
+
+declare interface AssistantMessage {
+  id: number
+  message: string
+  created_at: number
+  user_message_id: number
+}
+
+declare interface Conversation {
+  user: UserMessage
+  assistant: AssistantMessage
+}
