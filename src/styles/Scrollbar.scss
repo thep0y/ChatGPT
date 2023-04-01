@@ -3,13 +3,14 @@
  * Email:       thepoy@163.com
  * File Name:   Scrollbar.scss
  * Created At:  2023-03-25 19:01:59
- * Modified At: 2023-03-29 21:25:30
+ * Modified At: 2023-04-01 10:23:57
  * Modified By: thepoy
  */
 
 .custom-scrollbar {
-  position: fixed;
+  position: absolute;
   height: 100%;
+  width: 100%;
 }
 
 .custom-scrollbar .ps__rail-x,
