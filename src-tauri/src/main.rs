@@ -25,10 +25,10 @@ use db::topic::{get_all_topics, init_topic, Topic};
 use futures_util::StreamExt;
 use simplelog::{ColorChoice, CombinedLogger, TermLogger, TerminalMode, WriteLogger};
 use std::fs as SysFS;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncWriteExt, BufWriter};
-
 // use tauri::Manager;
 // use window_shadows::set_shadow;
 
@@ -121,13 +121,12 @@ async fn chat_gpt_stream(
     let response = chat_gpt_steam_client(&proxy, &api_key, request).await;
     let mut stream = response.bytes_stream();
 
-    let mut chunk_messages = Vec::<MessageChunk>::new();
+    let mut message_parts = Vec::<String>::new();
 
-    let flag = Arc::new(Mutex::new(false));
-    let flag_clone = Arc::clone(&flag);
+    let abort_flag = Arc::new(AtomicBool::new(false));
+    let abort_flag_clone = Arc::clone(&abort_flag);
     let id = window.listen("abort-stream", move |_| {
-        let mut flag = flag_clone.lock().unwrap();
-        *flag = true;
+        abort_flag_clone.store(true, Ordering::Relaxed);
     });
 
     while let Some(item) = stream.next().await {
@@ -139,11 +138,6 @@ async fn chat_gpt_stream(
         let slices: Vec<&str> = chunk.split("\n\n").collect();
         trace!("slices: {:?}", slices);
 
-        let flag_clone = Arc::clone(&flag);
-        if *flag_clone.lock().unwrap() {
-            break;
-        }
-
         for item in slices.iter() {
             let body = &item[6..];
             if body == "[DONE]" {
@@ -154,12 +148,18 @@ async fn chat_gpt_stream(
             let chunk_message: MessageChunk =
                 serde_json::from_str(body).map_err(|e| e.to_string())?;
 
-            chunk_messages.push(chunk_message.clone());
+            if let Some(part) = &chunk_message.clone().choices[0].delta.content {
+                message_parts.push(part.to_string());
+            }
 
             window.emit("stream", chunk_message).unwrap();
         }
+
+        if abort_flag.load(Ordering::Relaxed) {
+            break;
+        }
     }
-    trace!("chunk_messages: {:?}", chunk_messages);
+    trace!("chunk_messages: {:?}", message_parts);
 
     window.unlisten(id);
     Ok(())
