@@ -31,7 +31,7 @@ const MessageInput: React.FC<MessageInputProps> = memo(
 
     const statusButton = (): React.ReactNode => {
       const disabled = waiting || chatMessage.trim() === ''
-      const icon = waiting ? <CloseCircleFilled /> : <SendOutlined />
+      const icon = waiting ? config.useStream ? <CloseCircleFilled /> : <LoadingOutlined /> : <SendOutlined />
       const commonBtnProps: ButtonProps = {
         type: 'primary',
         onClick: handleEnter,
@@ -44,14 +44,14 @@ const MessageInput: React.FC<MessageInputProps> = memo(
       }
 
       return (
-        config.useStream
+        (config.useStream && waiting)
           ? (
             <Tooltip title="中断流式响应">
               <Button {...streamBtnProps}>{icon}</Button>
             </Tooltip>
             )
           : (
-            <Button {...commonBtnProps}>{waiting ? <LoadingOutlined /> : undefined}</Button>
+            <Button {...commonBtnProps}>{icon}</Button>
             )
       )
     }
