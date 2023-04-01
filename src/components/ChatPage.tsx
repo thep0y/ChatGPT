@@ -119,9 +119,11 @@ const ChatPage: React.FC = () => {
 
   const handleSendMessage = useCallback(
     async (content: string, stream: boolean = true): Promise<void> => {
+      const created = now()
+
       setMessages((prevMessages) => [
         ...prevMessages,
-        { content, role: 'user', time: now() }
+        { content, role: 'user', time: created }
       ])
 
       setWaiting(true)
@@ -146,11 +148,14 @@ const ChatPage: React.FC = () => {
             async (e) => { await handleStreamResponse(e, setMessages) }
           )
 
-          await invoke('chat_gpt_stream', {
+          const messageID = await invoke<number>('chat_gpt_stream', {
             proxy: proxyToString(config?.proxy),
             apiKey: config?.openApiKey,
-            request
+            request,
+            created
           })
+
+          console.log('用户消息 id', messageID)
 
           unlisten()
         } else {

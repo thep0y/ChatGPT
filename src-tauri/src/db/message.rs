@@ -43,10 +43,10 @@ pub struct UserMessage {
 }
 
 impl UserMessage {
-    pub fn new(message: String, created_at: u64, topic_id: u32) -> Self {
+    pub fn new(message: &str, created_at: u64, topic_id: u32) -> Self {
         return UserMessage {
             id: 0,
-            message,
+            message: message.into(),
             created_at,
             topic_id,
         };

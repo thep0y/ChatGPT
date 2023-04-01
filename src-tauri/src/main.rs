@@ -14,6 +14,7 @@ extern crate log;
 extern crate simplelog;
 
 use crate::chat::chat::MessageChunk;
+use crate::db::message::{ChatGPTMessage, UserMessage};
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
 use chat::chat::{chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse};
@@ -105,6 +106,7 @@ async fn chat_gpt(
     proxy: String,
     api_key: String,
     request: ChatGPTRequest,
+    created: u64,
 ) -> Result<ChatGPTResponse> {
     debug!("发送的消息：{:?}", request);
     chat_gpt_client(&proxy, &api_key, request).await
@@ -112,12 +114,17 @@ async fn chat_gpt(
 
 #[tauri::command]
 async fn chat_gpt_stream(
+    pool: tauri::State<'_, SQLitePool>,
     window: tauri::Window,
     proxy: String,
     api_key: String,
     request: ChatGPTRequest,
-) -> Result<()> {
+    created: u64,
+) -> Result<u32> {
     debug!("发送的消息：{:?}", request);
+
+    let user_message_content = &request.messages[0].content.clone();
+
     let response = chat_gpt_steam_client(&proxy, &api_key, request).await;
     let mut stream = response.bytes_stream();
 
@@ -126,8 +133,12 @@ async fn chat_gpt_stream(
     let abort_flag = Arc::new(AtomicBool::new(false));
     let abort_flag_clone = Arc::clone(&abort_flag);
     let id = window.listen("abort-stream", move |_| {
+        info!("中断流式消息");
         abort_flag_clone.store(true, Ordering::Relaxed);
     });
+
+    let mut done_flag = true;
+    let mut response_time = 0u64;
 
     while let Some(item) = stream.next().await {
         let bytes = item.map_err(|e| e.to_string())?;
@@ -148,6 +159,10 @@ async fn chat_gpt_stream(
             let chunk_message: MessageChunk =
                 serde_json::from_str(body).map_err(|e| e.to_string())?;
 
+            if response_time == 0 {
+                response_time = chunk_message.created;
+            }
+
             if let Some(part) = &chunk_message.clone().choices[0].delta.content {
                 message_parts.push(part.to_string());
             }
@@ -156,13 +171,31 @@ async fn chat_gpt_stream(
         }
 
         if abort_flag.load(Ordering::Relaxed) {
+            done_flag = false;
             break;
         }
     }
-    trace!("chunk_messages: {:?}", message_parts);
+
+    let message = message_parts.join("");
+    trace!("chunk message: {:?}", message);
+
+    let mut user_message_id = 0u32;
+
+    if done_flag {
+        let user_message = UserMessage::new(user_message_content, created, 1);
+
+        let conn = pool.get().map_err(|e| e.to_string())?;
+        user_message.insert(&conn).map_err(|e| e.to_string())?;
+
+        user_message_id = conn.last_insert_rowid() as u32;
+
+        let chat_message = ChatGPTMessage::new(message, response_time, user_message_id);
+
+        chat_message.insert(&conn).map_err(|e| e.to_string())?;
+    }
 
     window.unlisten(id);
-    Ok(())
+    Ok(user_message_id)
 }
 
 #[tauri::command]
