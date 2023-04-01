@@ -27,6 +27,8 @@ const MessageInput: React.FC<MessageInputProps> = memo(
     const handleAbortStream = async (): Promise<void> => {
       await appWindow.emit('abort-stream')
       void message.info('已中断流式响应')
+
+      // TODO: 添加重试按钮快捷发送上一个问题。
     }
 
     const statusButton = (): React.ReactNode => {
