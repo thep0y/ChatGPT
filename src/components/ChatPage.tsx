@@ -83,6 +83,16 @@ const handleStreamResponse = async (
   }
 }
 
+const messageExists = (messages: Message[], time: number): boolean => {
+  for (const m of messages) {
+    if (m.time === time) {
+      return true
+    }
+  }
+
+  return false
+}
+
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [waiting, setWaiting] = useState<boolean>(false)
@@ -105,8 +115,8 @@ const ChatPage: React.FC = () => {
     void fetchConfig()
   }, [])
 
-  useEffect(() => {
-    const getMessagesByTopic = async (): Promise<void> => {
+  const getMessagesByTopic = async (): Promise<void> => {
+    try {
       const conversations = await invoke<Conversation[]>(
         'get_messages_by_topic_id',
         { topicId: 1 }
@@ -124,10 +134,20 @@ const ChatPage: React.FC = () => {
           role: 'assistant'
         }
 
-        setMessages((pre) => [...pre, userMessage, assistantMessage])
-      }
-    }
+        setMessages((pre) => {
+          if (!messageExists(pre, userMessage.time)) {
+            return [...pre, userMessage, assistantMessage]
+          }
 
+          return pre
+        })
+      }
+    } catch (e) {
+      void message.error((e as any).toString())
+    }
+  }
+
+  useEffect(() => {
     void getMessagesByTopic()
   }, [])
 
