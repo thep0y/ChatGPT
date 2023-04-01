@@ -44,6 +44,7 @@ const getTopics = (topics: MenuItem[]): MenuItem[] => {
 
 const ChatMenu: React.FC = () => {
   const [topics, setTopics] = useState<MenuItem[]>(getTopics([]))
+  const [freeKey, setFreeKey] = useState('')
 
   useEffect(() => {
     const fetchTopics = async (): Promise<void> => {
@@ -52,7 +53,13 @@ const ChatMenu: React.FC = () => {
 
         setTopics(
           getTopics(
-            topics.map((t) => getItem(t.name, t.id, <MessageOutlined />))
+            topics.map((t) => {
+              if (t.name === '自由对话') {
+                setFreeKey(t.id.toString())
+              }
+
+              return getItem(t.name, t.id, <MessageOutlined />)
+            })
           )
         )
       } catch (e) {
@@ -71,7 +78,16 @@ const ChatMenu: React.FC = () => {
     )
   }
 
-  return <Menu className="topic-list" mode="inline" items={topics} />
+  return (
+    <Menu
+      className="topic-list"
+      mode="inline"
+      items={topics}
+      onSelect={(e) => { console.log('选择主题', e) }}
+      onClick={(e) => { console.log('点击主题', e) }}
+      defaultSelectedKeys={[freeKey]}
+    />
+  )
 }
 
 export default ChatMenu
