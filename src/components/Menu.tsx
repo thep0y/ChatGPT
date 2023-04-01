@@ -1,15 +1,23 @@
-import React, { useState } from 'react'
-import type { MenuProps } from 'antd'
-import { Menu, Button } from 'antd'
-import { PlusOutlined, SettingOutlined, OrderedListOutlined, MessageOutlined } from '@ant-design/icons'
+import React, { useEffect, useState } from 'react'
+import { type MenuProps, Spin, Menu, Button, message } from 'antd'
+import {
+  PlusOutlined,
+  OrderedListOutlined,
+  MessageOutlined
+} from '@ant-design/icons'
+import '~/styles/Menu.scss'
+import { invoke } from '@tauri-apps/api'
+import { type MenuItemGroupType } from 'antd/es/menu/hooks/useItems'
 
 type MenuItem = Required<MenuProps>['items'][number]
 
-const getItem = (label: React.ReactNode,
+const getItem = (
+  label: React.ReactNode,
   key: React.Key,
   icon?: React.ReactNode,
   children?: MenuItem[],
-  type?: 'group'): MenuItem => {
+  type?: 'group'
+): MenuItem => {
   return {
     key,
     icon,
@@ -19,34 +27,51 @@ const getItem = (label: React.ReactNode,
   } satisfies MenuItem
 }
 
-const defaultMenuItems: MenuProps['items'] = [
-  getItem((<Button>
-    <PlusOutlined />
-    新主题
-  </Button>), 'grp', <OrderedListOutlined />, [
-    getItem('自由对话', '1', <MessageOutlined />),
-    getItem('Option 13', '2', <MessageOutlined />),
-    getItem('Option 14', '3', <MessageOutlined />)
-  ], 'group'),
-  { type: 'divider' },
-  getItem('设置', 'sub4', <SettingOutlined />, undefined)
-]
+const getTopics = (topics: MenuItem[]): MenuItem[] => {
+  return [
+    getItem(
+      <Button>
+        <PlusOutlined />
+        新主题
+      </Button>,
+      'grp',
+      <OrderedListOutlined />,
+      topics,
+      'group'
+    )
+  ]
+}
 
 const ChatMenu: React.FC = () => {
-  const [items, setItems] = useState<MenuProps['items']>(defaultMenuItems)
+  const [topics, setTopics] = useState<MenuItem[]>(getTopics([]))
 
-  //   setItems([getItem('Group', 'grp', null, [getItem('Option 13', '13'), getItem('Option 14', '14')], 'group')])
+  useEffect(() => {
+    const fetchTopics = async (): Promise<void> => {
+      try {
+        const topics = await invoke<Topic[]>('get_topics')
 
-  //   useEffect(() => {
+        setTopics(
+          getTopics(
+            topics.map((t) => getItem(t.name, t.id, <MessageOutlined />))
+          )
+        )
+      } catch (e) {
+        void message.error((e as any).toString())
+      }
+    }
 
-  //   })
+    void fetchTopics()
+  }, [])
 
-  return (
-    <Menu
-      mode="inline"
-      items={items}
-    />
-  )
+  if (!(topics[0] as MenuItemGroupType)?.children?.length) {
+    return (
+      <Spin tip="正在获取主题列表">
+        <div className="content" />
+      </Spin>
+    )
+  }
+
+  return <Menu className="topic-list" mode="inline" items={topics} />
 }
 
 export default ChatMenu

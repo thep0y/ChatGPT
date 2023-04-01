@@ -14,3 +14,9 @@ interface MessageInputProps {
   waiting: boolean
   config: Config
 }
+
+declare interface Topic {
+  id: number
+  name: string
+  created_at: number
+}

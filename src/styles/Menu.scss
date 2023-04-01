@@ -1,0 +1,29 @@
+/*
+ * Author:      thepoy
+ * Email:       thepoy@163.com
+ * File Name:   Menu.scss
+ * Created At:  2023-04-01 11:20:13
+ * Modified At: 2023-04-01 11:45:44
+ * Modified By: thepoy
+ */
+
+#root {
+  aside {
+    background-color: #fff;
+
+    .ant-layout-sider-children {
+      .ant-spin-nested-loading {
+        height: 100%;
+
+        > div > .ant-spin {
+          position: inherit;
+          height: 100%;
+        }
+      }
+    }
+  }
+}
+
+.topic-list {
+  height: 100%;
+}

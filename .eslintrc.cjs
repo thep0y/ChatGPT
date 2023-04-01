@@ -95,5 +95,7 @@ module.exports = {
     "react/no-access-state-in-setstate": ERROR,
     "react/jsx-first-prop-new-line": [WARNING, "multiline-multiprop"],
     "react/jsx-curly-brace-presence": WARNING,
+
+    "@typescript-eslint/strict-boolean-expressions": OFF,
   },
 };
