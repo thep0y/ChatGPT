@@ -14,14 +14,14 @@ extern crate log;
 extern crate simplelog;
 
 use crate::chat::chat::MessageChunk;
-use crate::db::message::{ChatGPTMessage, UserMessage};
+use crate::db::message::{AssistantMessage, UserMessage};
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
 use chat::chat::{chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse};
 use chat::models::{get_chat_models, ModelResponse};
 use config::{Config, Proxy, APP_CONFIG_DIR};
 use db::manager::SqliteConnectionManager;
-use db::message::init_messages;
+use db::message::{get_messages, init_messages, Conversation};
 use db::topic::{get_all_topics, init_topic, Topic};
 use futures_util::StreamExt;
 use simplelog::{ColorChoice, CombinedLogger, TermLogger, TerminalMode, WriteLogger};
@@ -193,7 +193,7 @@ async fn chat_gpt_stream(
 
         user_message_id = conn.last_insert_rowid() as u32;
 
-        let chat_message = ChatGPTMessage::new(message, response_time, user_message_id);
+        let chat_message = AssistantMessage::new(message, response_time, user_message_id);
 
         chat_message.insert(&conn).map_err(|e| e.to_string())?;
     }
@@ -201,6 +201,16 @@ async fn chat_gpt_stream(
     window.unlisten(id);
     Ok(user_message_id)
 }
+
+#[tauri::command]
+fn get_messages_by_topic_id(
+    pool: tauri::State<'_, SQLitePool>,
+    topic_id: u32,
+) -> Result<Vec<Conversation>> {
+    let conn = pool.get().map_err(|e| e.to_string())?;
+    get_messages(&conn, topic_id).map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 async fn get_topics(pool: tauri::State<'_, SQLitePool>) -> Result<Vec<Topic>> {
     let conn = pool.get().map_err(|e| e.to_string())?;
@@ -260,7 +270,8 @@ async fn main() -> anyhow::Result<()> {
             get_models,
             export_to_file,
             read_config,
-            write_config
+            write_config,
+            get_messages_by_topic_id
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,5 +1,6 @@
 use anyhow::{Context, Ok, Result};
 use rusqlite::Connection;
+use serde::{Deserialize, Serialize};
 
 const USER_MESSAGE_TABLE: &str = r#"
     CREATE TABLE IF NOT EXISTS user_message (
@@ -34,7 +35,14 @@ const CHATGPT_MESSAGE_INSERT: &str = r#"
         VALUES (?1, ?2, ?3);
         "#;
 
-#[derive(Debug)]
+const SELECT_ALL_MESSAGES: &str = r#"
+    SELECT um.id, um.message, um.created_at, am.id, am.message, am.created_at, am.user_message_id
+    FROM user_message um
+    INNER JOIN chatgpt_message am ON um.id = am.user_message_id
+    WHERE um.topic_id = ?;
+"#;
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct UserMessage {
     id: u32,
     message: String,
@@ -72,16 +80,17 @@ pub fn user_message_exists(conn: &Connection, user_message_id: u32) -> Result<bo
         .with_context(|| format!("查询 user_message 失败：id={}", user_message_id))
 }
 
-pub struct ChatGPTMessage {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct AssistantMessage {
     id: u32,
     message: String,
     created_at: u64,
     user_message_id: u32,
 }
 
-impl ChatGPTMessage {
+impl AssistantMessage {
     pub fn new(message: String, created_at: u64, user_message_id: u32) -> Self {
-        return ChatGPTMessage {
+        return AssistantMessage {
             id: 0,
             message,
             created_at,
@@ -116,4 +125,39 @@ pub fn init_messages(conn: &Connection) -> Result<()> {
         .with_context(|| format!("创建 chatgpt_message 表失败"))?;
 
     Ok(())
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Conversation {
+    user: UserMessage,
+    assistant: AssistantMessage,
+}
+
+pub fn get_messages(conn: &Connection, topic_id: u32) -> Result<Vec<Conversation>> {
+    let mut stmt = conn
+        .prepare(SELECT_ALL_MESSAGES)
+        .with_context(|| format!("准备所有消息查询语句时出错"))?;
+
+    let conversations = stmt
+        .query_map([topic_id], |row| {
+            std::result::Result::Ok(Conversation {
+                user: UserMessage {
+                    id: row.get(0)?,
+                    message: row.get(1)?,
+                    created_at: row.get(2)?,
+                    topic_id,
+                },
+                assistant: AssistantMessage {
+                    id: row.get(3)?,
+                    message: row.get(4)?,
+                    created_at: row.get(5)?,
+                    user_message_id: row.get(6)?,
+                },
+            })
+        })
+        .with_context(|| format!("获取所有消息时出错"))?
+        .collect::<Result<Vec<_>, _>>()
+        .with_context(|| format!("收集所有消息时出错"))?;
+
+    Ok(conversations)
 }

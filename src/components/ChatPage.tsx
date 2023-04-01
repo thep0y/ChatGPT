@@ -103,6 +103,16 @@ const ChatPage: React.FC = () => {
     void fetchConfig()
   }, [])
 
+  useEffect(() => {
+    const getMessagesByTopic = async (): Promise<void> => {
+      const conversations = await invoke('get_messages_by_topic_id', { topicId: 1 })
+
+      console.log(conversations)
+    }
+
+    void getMessagesByTopic()
+  }, [])
+
   // 滚动到底部
   const scrollToBottom = useCallback(() => {
     const scrollbar = document.getElementById('custom-scrollbar')
