@@ -3,7 +3,7 @@ import React, { lazy, memo } from 'react'
 
 import '~/styles/Chat.scss'
 
-const Message = lazy(async () => await import('~/components/Message'))
+const Message = lazy(async () => await import('~/components/message/Message'))
 
 const MessageList: React.FC<MessageListProps> = memo(({ messages }) => (
   <ol className="list">
