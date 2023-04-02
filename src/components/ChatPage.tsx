@@ -4,10 +4,11 @@ import { SettingOutlined, MenuOutlined } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
 import { isEqual, now, proxyToString, readConfig, saveConfig } from '~/lib'
-import '~/styles/ChatPage.scss'
+import { useParams } from 'react-router-dom'
 import { addNewLine } from '~/lib/message'
 import { smoothScrollTo } from '~/components/scrollbar'
 import { appWindow } from '@tauri-apps/api/window'
+import '~/styles/ChatPage.scss'
 
 const Chat = lazy(async () => await import('~/components/Chat'))
 const Scrollbar = lazy(
@@ -99,6 +100,7 @@ const ChatPage: React.FC = () => {
   const [openSetting, setOpenSetting] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [config, setConfig] = useState<Config | null>(null)
+  const { topicID } = useParams<'topicID'>()
 
   useEffect(() => {
     const fetchConfig = async (): Promise<void> => {
@@ -300,7 +302,7 @@ const ChatPage: React.FC = () => {
           ? (
             <Sider>
               <React.Suspense fallback={null}>
-                <Menu />
+                <Menu selectedID={topicID ?? '1'} />
               </React.Suspense>
             </Sider>
             )

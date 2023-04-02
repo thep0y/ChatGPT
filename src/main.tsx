@@ -1,6 +1,6 @@
 import React, { lazy } from 'react'
 import ReactDOM from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 // import '~/styles/index.scss'
 // import TitleBar from '~/components/TitleBar'
 import '~/styles/index.scss'
@@ -18,6 +18,13 @@ if (import.meta.env.DEV) {
 const router = createBrowserRouter([
   {
     path: '/',
+    element: <Navigate to="/1" />,
+    children: [
+
+    ]
+  },
+  {
+    path: '/:topicID',
     element: (
       <React.Suspense>
         <ChatPage />

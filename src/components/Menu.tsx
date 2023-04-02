@@ -5,9 +5,10 @@ import {
   OrderedListOutlined,
   MessageOutlined
 } from '@ant-design/icons'
-import '~/styles/Menu.scss'
+import { Link } from 'react-router-dom'
 import { invoke } from '@tauri-apps/api'
 import { type MenuItemGroupType } from 'antd/es/menu/hooks/useItems'
+import '~/styles/Menu.scss'
 
 type MenuItem = Required<MenuProps>['items'][number]
 
@@ -42,9 +43,13 @@ const getTopics = (topics: MenuItem[]): MenuItem[] => {
   ]
 }
 
-const ChatMenu: React.FC = () => {
+interface ChatMenuProps {
+  selectedID: string
+}
+
+const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID }) => {
   const [topics, setTopics] = useState<MenuItem[]>(getTopics([]))
-  const [freeKey, setFreeKey] = useState('')
+  // const [freeKey, setFreeKey] = useState('')
 
   useEffect(() => {
     const fetchTopics = async (): Promise<void> => {
@@ -54,11 +59,13 @@ const ChatMenu: React.FC = () => {
         setTopics(
           getTopics(
             topics.map((t) => {
-              if (t.name === '自由对话') {
-                setFreeKey(t.id.toString())
-              }
+              // if (t.name === '自由对话') {
+              //   setFreeKey(t.id.toString())
+              // }
 
-              return getItem(t.name, t.id, <MessageOutlined />)
+              const a = (<Link to={'/' + t.id.toString()}>{t.name}</Link>)
+
+              return getItem(a, t.id, <MessageOutlined />)
             })
           )
         )
@@ -85,7 +92,7 @@ const ChatMenu: React.FC = () => {
       items={topics}
       onSelect={(e) => { console.log('选择主题', e) }}
       onClick={(e) => { console.log('点击主题', e) }}
-      defaultSelectedKeys={[freeKey]}
+      defaultSelectedKeys={[selectedID]}
     />
   )
 }
