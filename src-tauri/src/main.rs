@@ -19,7 +19,7 @@ use crate::error::Result;
 use crate::logger::{log_level, logger_config};
 use chat::chat::{chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse};
 use chat::models::{get_chat_models, ModelResponse};
-use config::{Config, Proxy, APP_CONFIG_DIR};
+use config::{Config, Proxy, ProxyConfig, APP_CONFIG_DIR};
 use db::manager::SqliteConnectionManager;
 use db::message::{get_messages, init_messages, Conversation};
 use db::topic::{get_all_topics, init_topic, Topic};
@@ -71,25 +71,12 @@ async fn get_models(proxy: String, api_key: String) -> Result<ModelResponse> {
 }
 
 #[tauri::command]
-async fn read_config() -> Result<Config> {
-    let config = match config::read_config()? {
-        Some(config) => Ok(config),
-        None => Ok(Config {
-            proxy: Proxy {
-                protocol: "socks5://".to_string(),
-                host: "localhost".to_string(),
-                port: 1080,
-            },
-            open_api_key: "".to_string(),
-            image_scale: 4,
-            use_context: false,
-            use_stream: Some(true),
-        }),
-    };
+async fn read_config() -> Result<Option<Config>> {
+    let config = config::read_config()?;
 
     debug!("读取配置文件：{:?}", config);
 
-    config
+    Ok(config)
 }
 
 #[tauri::command]
@@ -103,29 +90,30 @@ async fn write_config(config: Config) -> Result<()> {
 
 #[tauri::command]
 async fn chat_gpt(
-    proxy: String,
+    proxy_config: ProxyConfig,
     api_key: String,
     request: ChatGPTRequest,
     created: u64,
 ) -> Result<ChatGPTResponse> {
     debug!("发送的消息：{:?}", request);
-    chat_gpt_client(&proxy, &api_key, request).await
+    chat_gpt_client(&proxy_config, &api_key, request).await
 }
 
 #[tauri::command]
 async fn chat_gpt_stream(
     pool: tauri::State<'_, SQLitePool>,
     window: tauri::Window,
-    proxy: &str,
+    proxy_config: ProxyConfig,
     api_key: &str,
     request: ChatGPTRequest,
     created: u64,
 ) -> Result<u32> {
+    debug!("使用的代理：{:?}", proxy_config);
     debug!("发送的消息：{:?}", request);
 
     let user_message_content = &request.messages[0].content.clone();
 
-    let response = chat_gpt_steam_client(proxy, api_key, request).await;
+    let response = chat_gpt_steam_client(&proxy_config, api_key, request).await?;
     let mut stream = response.bytes_stream();
 
     let mut message_parts = Vec::new();

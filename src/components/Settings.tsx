@@ -57,12 +57,22 @@ const Settings: React.FC<SettingsProps> = ({
 }) => {
   const [form] = Form.useForm()
 
+  console.log(config)
+
   // TODO: 此处默认值应从配置文件中读取
-  const [proxy, setProxy] = useState({ ...config.proxy })
+  const [proxyMethod, setProxyMethod] = useState(config.proxy?.method)
+  const [proxy, setProxy] = useState({ ...config.proxy?.proxy })
+  const [reverseProxy, setReverseProxy] = useState(config.proxy?.reverseProxy)
   const [openApiKey, setOpenApiKey] = useState(config.openApiKey)
   const [imageScale, setImageScale] = useState(config.imageScale)
   const [useContext, setUseContext] = useState(config.useContext)
   const [useStream, setUseStream] = useState(config.useStream)
+
+  const onProxyMethodChange = useCallback((
+    value: ProxyMethod
+  ): void => {
+    setProxyMethod(value)
+  }, [])
 
   const onProxyInputChange = useCallback((
     key: keyof Proxy,
@@ -73,6 +83,14 @@ const Settings: React.FC<SettingsProps> = ({
 
       return nc
     })
+  }, [])
+
+  const onReverseProxyInputChange = useCallback((
+    value: string
+  ): void => {
+    console.log(value)
+
+    setReverseProxy(value)
   }, [])
 
   const onInputOpenApiKey = useCallback((e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -99,13 +117,25 @@ const Settings: React.FC<SettingsProps> = ({
       await form.validateFields()
       form.resetFields()
 
-      const newSettings: Config = { proxy, imageScale, useContext, openApiKey, useStream }
+      const newSettings: Config = {
+        proxy: {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          method: proxyMethod!,
+          reverseProxy,
+          proxy: Object.keys(proxy).length === 0 ? undefined : proxy
+        },
+        imageScale,
+        useContext,
+        openApiKey,
+        useStream
+      }
 
+      console.log('新配置文件', newSettings)
       onConfigChange(newSettings)
     } catch (info) {
       console.log('Validate Failed:', info)
     }
-  }, [proxy, imageScale, useContext, openApiKey, useStream])
+  }, [proxy, imageScale, useContext, openApiKey, useStream, reverseProxy, proxyMethod])
 
   const protocolOptions = useMemo(
     () =>
@@ -120,7 +150,9 @@ const Settings: React.FC<SettingsProps> = ({
   const onCancel = (): void => {
     form.resetFields()
 
-    setProxy({ ...config.proxy })
+    setProxyMethod(config.proxy?.method)
+    setProxy({ ...config.proxy?.proxy })
+    setReverseProxy(config.proxy?.reverseProxy)
     setOpenApiKey(config.openApiKey)
     setImageScale(config.imageScale)
     setUseContext(config.useContext)
@@ -145,55 +177,95 @@ const Settings: React.FC<SettingsProps> = ({
       >
         <Form.Item name="proxy" label="代理" initialValue={config.proxy}>
           <Input.Group compact>
-            <Form.Item
-              name={['proxy', 'protocol']}
-              noStyle
-              rules={[{ required: true, message: '请选择代理协议！' }]}
+            <Select
+              placeholder="选择代理方式"
+              value={proxyMethod}
+              onChange={(value) => {
+                onProxyMethodChange(value)
+              } }
             >
-              <Select
-                style={{ width: 91 }}
-                value={proxy.protocol}
-                placeholder="选择协议"
-                optionFilterProp="children"
-                onChange={(value) => {
-                  onProxyInputChange('protocol', value)
-                }}
-              >
-                {protocolOptions}
-              </Select>
-            </Form.Item>
+              <Select.Option key="reverse-proxy" value="reverse-proxy">
+                反向代理
+              </Select.Option>
 
-            <Form.Item
-              name={['proxy', 'host']}
-              initialValue={proxy.host}
-              noStyle
-              rules={[{ required: true, message: '请输入代理地址！' }]}
-            >
-              <Input
-                placeholder="HOST"
-                value={proxy.host}
-                style={{ width: 240 }}
-                onChange={(e) => {
-                  onProxyInputChange('host', e.target.value)
-                }}
-              />
-            </Form.Item>
+              <Select.Option key="proxy" value="proxy">
+                代理
+              </Select.Option>
+            </Select>
 
-            <Form.Item
-              name={['proxy', 'port']}
-              noStyle
-              rules={[{ required: true, message: '请输入代理端口！' }]}
-            >
-              <InputNumber
-                min={PORT_MIN}
-                max={PORT_MAX}
-                value={proxy.port}
-                placeholder="PORT"
-                onChange={(value) => {
-                  onProxyInputChange('port', value ?? 1)
-                }}
-              />
-            </Form.Item>
+            {proxyMethod == null
+              ? null
+              : proxyMethod === 'proxy'
+                ? (
+                  <>
+                    <Form.Item
+                      name={['proxy', 'protocol']}
+                      noStyle
+                      rules={[{ required: true, message: '请选择代理协议！' }]}
+                    >
+                      <Select
+                        style={{ width: 91 }}
+                        value={proxy.protocol}
+                        placeholder="选择协议"
+                        optionFilterProp="children"
+                        onChange={(value) => {
+                          onProxyInputChange('protocol', value)
+                        } }
+                      >
+                        {protocolOptions}
+                      </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                      name={['proxy', 'host']}
+                      initialValue={proxy.host}
+                      noStyle
+                      rules={[{ required: true, message: '请输入代理地址！' }]}
+                    >
+                      <Input
+                        placeholder="HOST"
+                        value={proxy.host}
+                        style={{ width: 160 }}
+                        onChange={(e) => {
+                          onProxyInputChange('host', e.target.value)
+                        } }
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name={['proxy', 'port']}
+                      noStyle
+                      rules={[{ required: true, message: '请输入代理端口！' }]}
+                    >
+                      <InputNumber
+                        min={PORT_MIN}
+                        max={PORT_MAX}
+                        value={proxy.port}
+                        placeholder="PORT"
+                        onChange={(value) => {
+                          onProxyInputChange('port', value ?? 1)
+                        } }
+                      />
+                    </Form.Item>
+                  </>
+                  )
+                : (
+                  <Form.Item
+                    name='reverse-proxy'
+                    initialValue={config.proxy?.reverseProxy}
+                    noStyle
+                    rules={[{ required: true, message: '请输入反向代理地址！' }]}
+                  >
+                    <Input
+                      placeholder="REVERSE PROXY"
+                      value={reverseProxy}
+                      style={{ width: 240 }}
+                      onChange={(e) => {
+                        onReverseProxyInputChange(e.target.value)
+                      } }
+                    />
+                  </Form.Item>
+                  )}
           </Input.Group>
         </Form.Item>
 

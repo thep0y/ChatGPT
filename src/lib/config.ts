@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   config.ts
  * Created At:  2023-03-26 18:30:56
- * Modified At: 2023-03-27 22:55:04
+ * Modified At: 2023-04-02 14:13:01
  * Modified By: thepoy
  */
 
@@ -11,11 +11,7 @@ import { invoke } from '@tauri-apps/api'
 import { message } from 'antd'
 
 export const defaultConfig: Config = {
-  proxy: {
-    protocol: 'socks5://',
-    host: 'localhost',
-    port: 1080
-  },
+  proxy: undefined,
   openApiKey: '',
   imageScale: 4,
   useContext: false,
@@ -23,7 +19,11 @@ export const defaultConfig: Config = {
 }
 
 interface ConfigStruct {
-  proxy: Proxy
+  proxy: {
+    method: ProxyMethod
+    proxy?: Proxy
+    reverse_proxy?: ReverseProxy
+  }
   open_api_key: string
   image_scale: number
   use_context: boolean
@@ -53,12 +53,28 @@ export const readConfig = async (): Promise<Config> => {
   try {
     const config = await invoke<ConfigStruct>('read_config')
 
-    if (config.open_api_key === '') {
+    console.log('读取的配置文件', config)
+
+    if (config === null || config.open_api_key === '') {
       await message.warning('配置文件不存在，请先填写关键配置信息')
     }
 
+    if (config === null) {
+      return {
+        proxy: undefined,
+        openApiKey: '',
+        imageScale: 4,
+        useContext: false,
+        useStream: true
+      }
+    }
+
     return {
-      proxy: config.proxy,
+      proxy: {
+        method: config.proxy.method,
+        proxy: config.proxy.proxy,
+        reverseProxy: config.proxy.reverse_proxy
+      },
       openApiKey: config.open_api_key,
       imageScale: config.image_scale,
       useContext: config.use_context,
@@ -74,7 +90,11 @@ export const readConfig = async (): Promise<Config> => {
 export const saveConfig = async (config: Config): Promise<void> => {
   try {
     const configStruct: ConfigStruct = {
-      proxy: config.proxy,
+      proxy: {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        ...config.proxy!,
+        reverse_proxy: config.proxy?.reverseProxy
+      },
       open_api_key: config.openApiKey,
       image_scale: config.imageScale,
       use_context: config.useContext,

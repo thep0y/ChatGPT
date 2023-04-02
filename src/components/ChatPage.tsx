@@ -3,7 +3,7 @@ import { Layout, FloatButton, Spin, message } from 'antd'
 import { SettingOutlined, MenuOutlined } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
-import { isEqual, now, proxyToString, readConfig, saveConfig } from '~/lib'
+import { isEqual, now, readConfig, saveConfig } from '~/lib'
 import { useParams } from 'react-router-dom'
 import { addNewLine } from '~/lib/message'
 import { smoothScrollTo } from '~/components/scrollbar'
@@ -109,7 +109,7 @@ const ChatPage: React.FC = () => {
       setConfig(config)
 
       // 没有配置 api key
-      if (config.openApiKey === '') {
+      if (!config || config.openApiKey === '') {
         setOpenSetting(true)
       }
     }
@@ -200,8 +200,13 @@ const ChatPage: React.FC = () => {
             }
           )
 
+          console.log('使用的代理配置', config?.proxy)
+
           const messageID = await invoke<number>('chat_gpt_stream', {
-            proxy: proxyToString(config?.proxy),
+            proxyConfig: {
+              ...config?.proxy,
+              reverse_proxy: config?.proxy?.reverseProxy
+            },
             apiKey: config?.openApiKey,
             request,
             created
@@ -212,7 +217,10 @@ const ChatPage: React.FC = () => {
           unlisten()
         } else {
           const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', {
-            proxy: proxyToString(config?.proxy),
+            proxyConfig: {
+              ...config?.proxy,
+              reverse_proxy: config?.proxy?.reverseProxy
+            },
             apiKey: config?.openApiKey,
             request
           })

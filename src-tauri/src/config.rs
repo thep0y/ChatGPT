@@ -30,8 +30,28 @@ pub struct Proxy {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+pub struct ProxyConfig {
+    pub method: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub proxy: Option<Proxy>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reverse_proxy: Option<String>,
+}
+
+impl ProxyConfig {
+    pub fn to_string(&self) -> String {
+        if self.method == "proxy" {
+            let proxy = self.proxy.as_ref().unwrap();
+            return format!("{}{}:{}", proxy.protocol, proxy.host, proxy.port);
+        }
+
+        self.reverse_proxy.clone().unwrap()
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Config {
-    pub proxy: Proxy,
+    pub proxy: ProxyConfig,
     pub open_api_key: String,
     pub image_scale: u8,
     pub use_context: bool,
@@ -43,9 +63,15 @@ pub fn read_config() -> Result<Option<Config>> {
         return Ok(None);
     }
 
-    let config_str = fs::read_to_string(CONFIG_FILE.to_owned()).map_err(|e| e.to_string())?;
+    let config_str = fs::read_to_string(CONFIG_FILE.to_owned()).map_err(|e| {
+        error!("读取配置文件时出错：{}", e);
+        e.to_string()
+    })?;
 
-    toml::from_str(&config_str).map_err(|e| e.to_string())
+    toml::from_str(&config_str).map_err(|e| {
+        error!("解析配置文件时出错：{}", e);
+        e.to_string()
+    })
 }
 
 pub fn write_config(config: &Config) -> Result<()> {

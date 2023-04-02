@@ -1,7 +1,12 @@
 use crate::{
-    chat::{client::new_http_client, create_headers, API_BASE_URL},
+    chat::{
+        client::{new_http_client, new_http_client_with_proxy},
+        create_headers, API_BASE_URL,
+    },
+    config::ProxyConfig,
     error::Result,
 };
+use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -71,13 +76,25 @@ const API: &str = "/v1/chat/completions";
 
 // ChatGPT API客户端
 pub async fn chat_gpt_client(
-    proxy: &str,
+    proxy_config: &ProxyConfig,
     api_key: &str,
     request: ChatGPTRequest,
 ) -> Result<ChatGPTResponse> {
-    let client = new_http_client(proxy)?;
+    let client = {
+        if proxy_config.method == "proxy" {
+            new_http_client_with_proxy(&proxy_config.to_string())?
+        } else {
+            new_http_client()?
+        }
+    };
 
-    let url = format!("{}{}", API_BASE_URL, API);
+    let url = {
+        if proxy_config.method == "proxy" {
+            format!("{}{}", API_BASE_URL, API)
+        } else {
+            format!("{}{}", &proxy_config.to_string(), API)
+        }
+    };
 
     let mut headers = create_headers(api_key);
     headers.append("Content-Type", "application/json".parse().unwrap());
@@ -94,29 +111,48 @@ pub async fn chat_gpt_client(
         .map_err(|e| e.to_string())?;
 
     debug!("response {:?}", response);
-    Ok(serde_json::from_value(response).map_err(|e| e.to_string())?)
+
+    let resp: ChatGPTResponse = serde_json::from_value(response).map_err(|e| e.to_string())?;
+
+    Ok(resp)
 }
 
 // ChatGPT API客户端
 pub async fn chat_gpt_steam_client(
-    proxy: &str,
+    proxy_config: &ProxyConfig,
     api_key: &str,
     request: ChatGPTRequest,
-) -> reqwest::Response {
-    let client = new_http_client(proxy).unwrap();
+) -> Result<Response> {
+    let client = {
+        if proxy_config.method == "proxy" {
+            new_http_client_with_proxy(&proxy_config.to_string())?
+        } else {
+            new_http_client()?
+        }
+    };
 
-    let url = format!("{}{}", API_BASE_URL, API);
+    let url = {
+        if proxy_config.method == "proxy" {
+            format!("{}{}", API_BASE_URL, API)
+        } else {
+            let reverse_proxy = &proxy_config.to_string();
+            debug!("使用的反向代理：{}", reverse_proxy);
+            format!("{}{}", reverse_proxy, API)
+        }
+    };
 
     let mut headers = create_headers(api_key);
     headers.append("Content-Type", "application/json".parse().unwrap());
 
-    client
+    let response = client
         .post(&url)
         .headers(headers)
         .json(&request)
         .send()
         .await
-        .unwrap()
+        .map_err(|e| e.to_string())?;
+
+    Ok(response)
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

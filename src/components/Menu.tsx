@@ -12,6 +12,10 @@ import '~/styles/Menu.scss'
 
 type MenuItem = Required<MenuProps>['items'][number]
 
+const newTopic = (): void => {
+  console.log('创建新主题')
+}
+
 const getItem = (
   label: React.ReactNode,
   key: React.Key,
@@ -28,10 +32,10 @@ const getItem = (
   } satisfies MenuItem
 }
 
-const getTopics = (topics: MenuItem[]): MenuItem[] => {
+const getTopicMenuItems = (topics: MenuItem[]): MenuItem[] => {
   return [
     getItem(
-      <Button>
+      <Button onClick={newTopic}>
         <PlusOutlined />
         新主题
       </Button>,
@@ -48,7 +52,7 @@ interface ChatMenuProps {
 }
 
 const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID }) => {
-  const [topics, setTopics] = useState<MenuItem[]>(getTopics([]))
+  const [topics, setTopics] = useState<MenuItem[]>(getTopicMenuItems([]))
   // const [freeKey, setFreeKey] = useState('')
 
   useEffect(() => {
@@ -57,7 +61,7 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID }) => {
         const topics = await invoke<Topic[]>('get_topics')
 
         setTopics(
-          getTopics(
+          getTopicMenuItems(
             topics.map((t) => {
               // if (t.name === '自由对话') {
               //   setFreeKey(t.id.toString())

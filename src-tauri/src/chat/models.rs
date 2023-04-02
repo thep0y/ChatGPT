@@ -1,5 +1,5 @@
 use crate::{
-    chat::{client::new_http_client, create_headers, API_BASE_URL},
+    chat::{client::new_http_client_with_proxy, create_headers, API_BASE_URL},
     error::Result,
 };
 use serde::{Deserialize, Serialize};
@@ -39,7 +39,7 @@ pub struct ModelResponse {
 }
 
 pub async fn get_chat_models(proxy: &str, api_key: &str) -> Result<ModelResponse> {
-    let client = new_http_client(proxy)?;
+    let client = new_http_client_with_proxy(proxy)?;
 
     let url = format!("{}{}", API_BASE_URL, "/v1/models");
     let response = client

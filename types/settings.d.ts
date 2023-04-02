@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: 2023-03-27 22:54:27
+ * Modified At: 2023-04-02 13:56:07
  * Modified By: thepoy
  */
 
@@ -15,8 +15,16 @@ declare interface Proxy {
   port?: number
 }
 
+declare type ReverseProxy = string
+
+type ProxyMethod = 'proxy' | 'reverse-proxy'
+
 declare interface Config {
-  proxy: Proxy
+  proxy?: {
+    method: ProxyMethod
+    proxy?: Proxy
+    reverseProxy?: ReverseProxy
+  }
   openApiKey: string
   imageScale: number
   useContext: boolean
