@@ -20,7 +20,7 @@ use crate::error::Result;
 use crate::logger::{log_level, logger_config};
 use chat::chat::{chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse};
 use chat::models::{get_chat_models, ModelResponse};
-use config::{Config, Proxy, ProxyConfig, APP_CONFIG_DIR};
+use config::{Config, ProxyConfig, APP_CONFIG_DIR};
 use db::manager::SqliteConnectionManager;
 use db::message::{get_messages, init_messages, Conversation};
 use db::topic::{get_all_topics, init_topic, Topic};
