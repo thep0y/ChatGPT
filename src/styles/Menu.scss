@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   Menu.scss
  * Created At:  2023-04-01 11:20:13
- * Modified At: 2023-04-01 11:45:44
+ * Modified At: 2023-04-03 20:13:36
  * Modified By: thepoy
  */
 
@@ -26,4 +26,10 @@
 
 .topic-list {
   height: 100%;
+
+  .ant-menu-item {
+    input {
+      padding-left: 0;
+    }
+  }
 }
