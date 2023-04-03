@@ -31,7 +31,7 @@ impl Topic {
         }
     }
 
-    fn insert(&self, conn: &Connection) -> Result<usize> {
+    pub fn insert(&self, conn: &Connection) -> Result<usize> {
         let count = conn
             .execute(TOPIC_INSERT, (&self.name, self.created_at))
             .with_context(|| format!("插入主题时出错：name={}", self.name))?;

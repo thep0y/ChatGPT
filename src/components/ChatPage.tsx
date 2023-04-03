@@ -169,11 +169,11 @@ const ChatPage: React.FC = () => {
 
   const handleSendMessage = useCallback(
     async (content: string, stream: boolean = true): Promise<void> => {
-      const created = now()
+      const createdAt = now()
 
       setMessages((prevMessages) => [
         ...prevMessages,
-        { content, role: 'user', time: created }
+        { content, role: 'user', time: createdAt }
       ])
 
       setWaiting(true)
@@ -209,7 +209,7 @@ const ChatPage: React.FC = () => {
             },
             apiKey: config?.openApiKey,
             request,
-            created
+            createdAt
           })
 
           console.log('用户消息 id', messageID)

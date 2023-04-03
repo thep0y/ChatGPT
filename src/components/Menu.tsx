@@ -44,6 +44,7 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID }) => {
         onPressEnter={(e) => {
           console.log(e.currentTarget.value)
         }}
+        autoFocus
       />
     )
 

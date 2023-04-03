@@ -15,6 +15,7 @@ extern crate simplelog;
 
 use crate::chat::chat::MessageChunk;
 use crate::db::message::{AssistantMessage, UserMessage};
+use crate::db::topic::topic_exists_by_name;
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
 use chat::chat::{chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse};
@@ -93,7 +94,7 @@ async fn chat_gpt(
     proxy_config: ProxyConfig,
     api_key: String,
     request: ChatGPTRequest,
-    created: u64,
+    created_at: u64,
 ) -> Result<ChatGPTResponse> {
     debug!("发送的消息：{:?}", request);
     chat_gpt_client(&proxy_config, &api_key, request).await
@@ -106,7 +107,7 @@ async fn chat_gpt_stream(
     proxy_config: ProxyConfig,
     api_key: &str,
     request: ChatGPTRequest,
-    created: u64,
+    created_at: u64,
 ) -> Result<u32> {
     debug!("使用的代理：{:?}", proxy_config);
     debug!("发送的消息：{:?}", request);
@@ -174,7 +175,7 @@ async fn chat_gpt_stream(
     let mut user_message_id = 0u32;
 
     if done_flag {
-        let user_message = UserMessage::new(user_message_content, created, 1);
+        let user_message = UserMessage::new(user_message_content, created_at, 1);
 
         let conn = pool.get().map_err(|e| e.to_string())?;
         user_message.insert(&conn).map_err(|e| e.to_string())?;
@@ -207,6 +208,27 @@ async fn get_topics(pool: tauri::State<'_, SQLitePool>) -> Result<Vec<Topic>> {
     debug!("获取到全部主题：{:?}", topics);
 
     Ok(topics)
+}
+
+#[tauri::command]
+async fn new_topic(
+    pool: tauri::State<'_, SQLitePool>,
+    name: String,
+    created_at: u64,
+) -> Result<()> {
+    let new_topic = Topic::new(&name, created_at);
+
+    let conn = pool.get().map_err(|e| e.to_string())?;
+
+    if topic_exists_by_name(&conn, &name).map_err(|e| e.to_string())? {
+        return Err(format!("主题 {} 已存在，不可重复创建", name));
+    };
+
+    new_topic.insert(&conn).map_err(|e| e.to_string())?;
+
+    debug!("创建新主题：{:?}", name);
+
+    Ok(())
 }
 
 fn init_database(pool: &SQLitePool) -> anyhow::Result<()> {
@@ -259,7 +281,8 @@ async fn main() -> anyhow::Result<()> {
             export_to_file,
             read_config,
             write_config,
-            get_messages_by_topic_id
+            get_messages_by_topic_id,
+            new_topic
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
