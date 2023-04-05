@@ -219,6 +219,8 @@ const ChatPage: React.FC = () => {
             },
             apiKey: config?.openApiKey,
             request,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            topicId: parseInt(topicID!),
             createdAt
           })
 

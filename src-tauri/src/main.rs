@@ -106,6 +106,7 @@ async fn chat_gpt_stream(
     window: tauri::Window,
     proxy_config: ProxyConfig,
     api_key: &str,
+    topic_id: u32,
     request: ChatGPTRequest,
     created_at: u64,
 ) -> Result<u32> {
@@ -175,7 +176,7 @@ async fn chat_gpt_stream(
     let mut user_message_id = 0u32;
 
     if done_flag {
-        let user_message = UserMessage::new(user_message_content, created_at, 1);
+        let user_message = UserMessage::new(user_message_content, created_at, topic_id);
 
         let conn = pool.get().map_err(|e| e.to_string())?;
         user_message.insert(&conn).map_err(|e| e.to_string())?;
