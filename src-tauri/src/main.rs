@@ -215,7 +215,7 @@ async fn new_topic(
     pool: tauri::State<'_, SQLitePool>,
     name: String,
     created_at: u64,
-) -> Result<()> {
+) -> Result<i64> {
     let new_topic = Topic::new(&name, created_at);
 
     let conn = pool.get().map_err(|e| e.to_string())?;
@@ -228,7 +228,7 @@ async fn new_topic(
 
     debug!("创建新主题：{:?}", name);
 
-    Ok(())
+    Ok(conn.last_insert_rowid())
 }
 
 fn init_database(pool: &SQLitePool) -> anyhow::Result<()> {

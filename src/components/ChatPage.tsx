@@ -102,6 +102,12 @@ const ChatPage: React.FC = () => {
   const [config, setConfig] = useState<Config | null>(null)
   const { topicID } = useParams<'topicID'>()
 
+  console.log('主题 id', topicID)
+
+  useEffect(() => {
+    setMessages([])
+  }, [topicID])
+
   useEffect(() => {
     const fetchConfig = async (): Promise<void> => {
       const config = await readConfig()
@@ -117,12 +123,15 @@ const ChatPage: React.FC = () => {
     void fetchConfig()
   }, [])
 
-  const getMessagesByTopic = async (): Promise<void> => {
+  const getMessagesByTopic = async (topicID: string): Promise<void> => {
     try {
       const conversations = await invoke<Conversation[]>(
         'get_messages_by_topic_id',
-        { topicId: 1 }
+        { topicId: parseInt(topicID) }
       )
+
+      console.log('当前消息', messages)
+      console.log('会话', conversations)
 
       for (const c of conversations) {
         const userMessage: Message = {
@@ -150,8 +159,9 @@ const ChatPage: React.FC = () => {
   }
 
   useEffect(() => {
-    void getMessagesByTopic()
-  }, [])
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    void getMessagesByTopic(topicID!)
+  }, [topicID])
 
   // 滚动到底部
   const scrollToBottom = useCallback(() => {
