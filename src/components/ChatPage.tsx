@@ -14,7 +14,7 @@ const Chat = lazy(async () => await import('~/components/Chat'))
 const Scrollbar = lazy(
   async () => await import('~/components/scrollbar/Scrollbar')
 )
-const Settings = lazy(async () => await import('~/components/Settings'))
+const GlobalSettings = lazy(async () => await import('~/components/settings/Global'))
 const Menu = lazy(async () => await import('~/components/Menu'))
 const MessageInput = lazy(
   async () => await import('~/components/message/Input')
@@ -305,7 +305,7 @@ const ChatPage: React.FC = () => {
         }}
       /> */}
 
-      <Settings
+      <GlobalSettings
         config={config}
         open={openSetting}
         // onCreate={onCreate}

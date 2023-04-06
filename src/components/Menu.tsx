@@ -1,10 +1,18 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { lazy, useCallback, useEffect, useState } from 'react'
 import { type MenuProps, Spin, Menu, Button, message, Input } from 'antd'
-import { PlusOutlined, MessageOutlined } from '@ant-design/icons'
+import {
+  PlusOutlined,
+  MessageOutlined,
+  SettingFilled
+} from '@ant-design/icons'
 import { Link, useNavigate } from 'react-router-dom'
 import { invoke } from '@tauri-apps/api'
 import '~/styles/Menu.scss'
 import { now } from '~/lib'
+
+const TopicSettings = lazy(
+  async () => await import('~/components/settings/Topic')
+)
 
 type MenuItem = Required<MenuProps>['items'][number]
 
@@ -22,7 +30,8 @@ const getItem = (
     children,
     label,
     type,
-    onClick
+    onClick,
+    style: { paddingLeft: 10, paddingRight: 10 }
   } satisfies MenuItem
 }
 
@@ -30,7 +39,11 @@ interface ChatMenuProps {
   selectedID: string
 }
 
-const newTopic = (label: React.ReactNode, key: React.Key, onClick?: MenuProps['onClick']): MenuItem => {
+const newTopic = (
+  label: React.ReactNode,
+  key: React.Key,
+  onClick?: MenuProps['onClick']
+): MenuItem => {
   return getItem(label, key, onClick, <MessageOutlined />)
 }
 
@@ -38,30 +51,49 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID }) => {
   const [topics, setTopics] = useState<MenuItem[]>([])
   const navigate = useNavigate()
 
-  const onEscape = useCallback((e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.code === 'Escape') {
-      setTopics(pre => [...pre.slice(0, pre.length - 1)])
-    }
-  }, [topics])
+  const onEscape = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>): void => {
+      if (e.code === 'Escape') {
+        setTopics((pre) => [...pre.slice(0, pre.length - 1)])
+      }
+    },
+    [topics]
+  )
 
-  const onConfirm = useCallback(async (e: React.KeyboardEvent<HTMLInputElement>): Promise<void> => {
-    const topicName = e.currentTarget.value
-    const createdAt = now()
+  const onConfirm = useCallback(
+    async (e: React.KeyboardEvent<HTMLInputElement>): Promise<void> => {
+      const topicName = e.currentTarget.value
+      const createdAt = now()
 
-    const id = await invoke<number>('new_topic', { name: topicName, createdAt })
+      const id = await invoke<number>('new_topic', {
+        name: topicName,
+        createdAt
+      })
 
-    const newTopicLabel = <Link to={'/' + id.toString()}>{topicName}</Link>
-    const topic = newTopic(newTopicLabel, id, () => { navigate('/' + id.toString()) })
+      const newTopicLabel = (
+        <span>
+          <Link to={'/' + id.toString()}>{topicName}</Link>
 
-    setTopics(pre => [...pre.slice(0, pre.length - 1), topic])
+          <Button>
+            <SettingFilled />
+          </Button>
+        </span>
+      )
+      const topic = newTopic(newTopicLabel, id, () => {
+        navigate('/' + id.toString())
+      })
 
-    navigate('/' + id.toString())
-  }, [topics])
+      setTopics((pre) => [...pre.slice(0, pre.length - 1), topic])
+
+      navigate('/' + id.toString())
+    },
+    [topics]
+  )
 
   const onNewTopic = useCallback((): void => {
     const inputTopicName = (
       <Input
-        placeholder='输入新主题名'
+        placeholder="输入新主题名"
         bordered={false}
         onPressEnter={onConfirm}
         onKeyUp={onEscape}
@@ -69,10 +101,13 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID }) => {
       />
     )
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const t = newTopic(inputTopicName, parseInt(topics[topics.length - 1]!.key as string) + 1)
+    const t = newTopic(
+      inputTopicName,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      parseInt(topics[topics.length - 1]!.key as string) + 1
+    )
 
-    setTopics(pre => [...pre, t])
+    setTopics((pre) => [...pre, t])
   }, [topics])
 
   useEffect(() => {
@@ -86,9 +121,31 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID }) => {
             //   setFreeKey(t.id.toString())
             // }
 
-            const a = <Link to={'/' + t.id.toString()}>{t.name}</Link>
+            const label = <Link to={'/' + t.id.toString()}>{t.name}</Link>
+            // const label = (
+            //   <span>
+            //     <Link to={'/' + t.id.toString()}>{t.name}</Link>
+            //     <Button onClick={(e) => { e.stopPropagation() }}><SettingFilled /></Button>
+            //   </span>
+            // )
 
-            return getItem(a, t.id, () => { navigate('/' + t.id.toString()) }, <MessageOutlined />)
+            return getItem(
+              label,
+              t.id,
+              () => {
+                navigate('/' + t.id.toString())
+              },
+              <Button
+                className="topic-settings"
+                shape="circle"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  console.log('设置单个主题')
+                }}
+                style={{ zIndex: 99 }}
+                icon={<SettingFilled />}
+              />
+            )
           })
         )
       } catch (e) {
