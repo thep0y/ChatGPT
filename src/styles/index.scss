@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   index.scss
  * Created At:  2023-03-22 23:07:38
- * Modified At: 2023-03-25 20:53:15
+ * Modified At: Thu Apr 06 2023
  * Modified By: thepoy
  */
 
@@ -36,8 +36,12 @@ body {
     background-color: #ffffff21;
     color: #00000021;
 
-    .ant-float-btn-body {
-      background-color: #ffffff21;
+    .ant-badge {
+      color: inherit;
+
+      .ant-float-btn-body {
+        background-color: #ffffff21;
+      }
     }
   }
 
