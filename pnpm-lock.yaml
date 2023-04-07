@@ -35,7 +35,7 @@ specifiers:
   react-syntax-highlighter: ^15.5.0
   rehype-katex: ^6.0.2
   remark-math: ^5.1.1
-  sass: ^1.60.0
+  sass: ^1.61.0
   sort-by: ^1.2.0
   stylelint: ^15.4.0
   stylelint-scss: ^4.6.0
@@ -81,11 +81,11 @@ devDependencies:
   eslint-plugin-n: 15.7.0_eslint@8.37.0
   eslint-plugin-promise: 6.1.1_eslint@8.37.0
   eslint-plugin-react: 7.32.2_eslint@8.37.0
-  sass: 1.60.0
+  sass: 1.61.0
   stylelint: 15.4.0
   stylelint-scss: 4.6.0_stylelint@15.4.0
   typescript: 5.0.3
-  vite: 4.2.1_hghbulspu73jfdazs4i6yiqype
+  vite: 4.2.1_4q5mxzltflcgkzvnigcbiggbqa
   vite-plugin-remove-console: 2.1.0
 
 packages:
@@ -1269,7 +1269,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.19.6_@babel+core@7.21.4
       magic-string: 0.27.0
       react-refresh: 0.14.0
-      vite: 4.2.1_hghbulspu73jfdazs4i6yiqype
+      vite: 4.2.1_4q5mxzltflcgkzvnigcbiggbqa
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -1378,7 +1378,7 @@ packages:
       rc-util: 5.29.3_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      scroll-into-view-if-needed: 3.0.6
+      scroll-into-view-if-needed: 3.0.7
       throttle-debounce: 5.0.0
     transitivePeerDependencies:
       - date-fns
@@ -1520,7 +1520,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001474
-      electron-to-chromium: 1.4.353
+      electron-to-chromium: 1.4.355
       node-releases: 2.0.10
       update-browserslist-db: 1.0.10_browserslist@4.21.5
     dev: true
@@ -1824,8 +1824,8 @@ packages:
     resolution: {integrity: sha512-kWgugTsf5tCyYg7/A1+dTMRBbUcWc+EsJaofNmut1IKjstUYGsl8TNs6DiX2PgvNbFB5q88ScQlGjRQJgnu+6Q==}
     dev: false
 
-  /electron-to-chromium/1.4.353:
-    resolution: {integrity: sha512-IdJVpMHJoBT/nn0GQ02wPfbhogDVpd1ud95lP//FTf5l35wzxKJwibB4HBdY7Q+xKPA1nkZ0UDLOMyRj5U5IAQ==}
+  /electron-to-chromium/1.4.355:
+    resolution: {integrity: sha512-056hxzEE4l667YeOccgjhRr5fTiwZ6EIJ4FpzGps4k3YcS8iAhiaBYUBrv5E2LDQJsussscv9EEUwAYKnv+ZKg==}
     dev: true
 
   /emoji-regex/8.0.0:
@@ -4511,9 +4511,9 @@ packages:
       is-regex: 1.1.4
     dev: true
 
-  /sass/1.60.0:
-    resolution: {integrity: sha512-updbwW6fNb5gGm8qMXzVO7V4sWf7LMXnMly/JEyfbfERbVH46Fn6q02BX7/eHTdKpE7d+oTkMMQpFWNUMfFbgQ==}
-    engines: {node: '>=12.0.0'}
+  /sass/1.61.0:
+    resolution: {integrity: sha512-PDsN7BrVkNZK2+dj/dpKQAWZavbAQ87IXqVvw2+oEYI+GwlTWkvbQtL7F2cCNbMqJEYKPh1EcjSxsnqIb/kyaQ==}
+    engines: {node: '>=14.0.0'}
     hasBin: true
     dependencies:
       chokidar: 3.5.3
@@ -4527,8 +4527,8 @@ packages:
       loose-envify: 1.4.0
     dev: false
 
-  /scroll-into-view-if-needed/3.0.6:
-    resolution: {integrity: sha512-x+CW0kOzlFNOnseF0DBr0AJ5m+TgGmSOdEZwyiZW0gV87XBvxQKw5A8DvFFgabznA68XqLgVX+PwPX8OzsFvRA==}
+  /scroll-into-view-if-needed/3.0.7:
+    resolution: {integrity: sha512-Hr094AIeUq/Du9QWTo+EQA2ygzasu13KltO4TuVqAMf1ioIAIOdf/cDzK4+URe7A81IzdXf5rxMXBpz4k2IdxQ==}
     dependencies:
       compute-scroll-into-view: 3.0.0
     dev: false
@@ -5075,7 +5075,7 @@ packages:
     resolution: {integrity: sha512-cil+h4rX3fDnnKMt73fexMGkwRSOV08+lTAzLGTRjGyxs9Ync3fqPWxnGrngJY7LyMMt3kEKf0hNOi+1DQ0j2g==}
     dev: true
 
-  /vite/4.2.1_hghbulspu73jfdazs4i6yiqype:
+  /vite/4.2.1_4q5mxzltflcgkzvnigcbiggbqa:
     resolution: {integrity: sha512-7MKhqdy0ISo4wnvwtqZkjke6XN4taqQ2TBaTccLIpOKv7Vp2h4Y+NpmWCnGDeSvvn45KxvWgGyb0MkHvY1vgbg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -5105,7 +5105,7 @@ packages:
       postcss: 8.4.21
       resolve: 1.22.2
       rollup: 3.20.2
-      sass: 1.60.0
+      sass: 1.61.0
     optionalDependencies:
       fsevents: 2.3.2
     dev: true

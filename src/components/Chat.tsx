@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import React, { useState, memo, useRef, useCallback, lazy } from 'react'
 import { FloatButton, message } from 'antd'
 import {
@@ -92,7 +91,7 @@ const toImage = async (
   }
 }
 
-const Chat: React.FC<ChatProps> = memo(
+const Chat = memo(
   ({ messages, onSendMessage, waiting, config }: ChatProps) => {
     const messageListComponentRef = useRef<HTMLDivElement>(null)
     const [saving, setSaving] = useState<Saving>({ status: false, name: '' })
