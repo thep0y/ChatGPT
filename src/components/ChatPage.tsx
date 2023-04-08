@@ -330,7 +330,7 @@ const ChatPage: React.FC = () => {
 
         <Content>
           <React.Suspense fallback={null}>
-            <Scrollbar>
+            <Scrollbar key={topicID}>
               <Chat
                 messages={messages}
                 onSendMessage={handleSendMessage}
