@@ -20,6 +20,9 @@ import Progress from '~/components/Progress'
 import { now } from '~/lib'
 
 const MessageList = lazy(async () => await import('~/components/message/List'))
+const Scrollbar = lazy(
+  async () => await import('~/components/scrollbar/Scrollbar')
+)
 
 type ChatProps = MessageListProps & MessageInputProps
 
@@ -91,45 +94,49 @@ const toImage = async (
   }
 }
 
-const Chat = memo(
-  ({ messages, onSendMessage, waiting, config }: ChatProps) => {
-    const messageListComponentRef = useRef<HTMLDivElement>(null)
-    const [saving, setSaving] = useState<Saving>({ status: false, name: '' })
-    const [progress, setProgress] = useState(0)
+const Chat = memo(({ messages, onSendMessage, waiting, config }: ChatProps) => {
+  const messageListComponentRef = useRef<HTMLDivElement>(null)
+  const [saving, setSaving] = useState<Saving>({ status: false, name: '' })
+  const [progress, setProgress] = useState(0)
 
-    const handleSaveImage = useCallback(async () => {
-      if (messages.length === 0) {
-        await message.warning('当前消息列表为空')
+  const handleSaveImage = useCallback(async () => {
+    if (messages.length === 0) {
+      await message.warning('当前消息列表为空')
 
-        return
-      }
+      return
+    }
 
-      const res = await toImage(messageListComponentRef, setSaving, config.imageScale)
+    const res = await toImage(
+      messageListComponentRef,
+      setSaving,
+      config.imageScale
+    )
 
-      if (res == null) {
-        return
-      }
+    if (res == null) {
+      return
+    }
 
-      const { blob, filepath } = res
+    const { blob, filepath } = res
 
-      try {
-        const buffer = new Uint8Array(await blob.arrayBuffer())
+    try {
+      const buffer = new Uint8Array(await blob.arrayBuffer())
 
-        await saveFile(filepath, buffer, setProgress)
+      await saveFile(filepath, buffer, setProgress)
 
-        void message.success('图片已保存到：' + filepath)
-      } catch (e) {
-        handleSaveError((e as any).toString(), setSaving)
-      } finally {
-        setProgress(0)
-        setSaving((pre) => ({ status: !pre.status, name: pre.name }))
-      }
-    }, [messageListComponentRef, messages, setSaving, setProgress, config])
+      void message.success('图片已保存到：' + filepath)
+    } catch (e) {
+      handleSaveError((e as any).toString(), setSaving)
+    } finally {
+      setProgress(0)
+      setSaving((pre) => ({ status: !pre.status, name: pre.name }))
+    }
+  }, [messageListComponentRef, messages, setSaving, setProgress, config])
 
-    return (
-      <>
-        {saving.status ? <Progress progress={progress} /> : null}
+  return (
+    <>
+      {saving.status ? <Progress progress={progress} /> : null}
 
+      <Scrollbar>
         <div id="chat">
           <div ref={messageListComponentRef}>
             <React.Suspense fallback={null}>
@@ -172,12 +179,10 @@ const Chat = memo(
               )
             : null}
         </div>
-
-        {/* <MessageInput onSendMessage={onSendMessage} waiting={waiting} config={config} /> */}
-      </>
-    )
-  }
-)
+      </Scrollbar>
+    </>
+  )
+})
 
 Chat.displayName = 'Chat'
 

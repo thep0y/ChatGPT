@@ -11,10 +11,9 @@ import { appWindow } from '@tauri-apps/api/window'
 import '~/styles/ChatPage.scss'
 
 const Chat = lazy(async () => await import('~/components/Chat'))
-const Scrollbar = lazy(
-  async () => await import('~/components/scrollbar/Scrollbar')
+const GlobalSettings = lazy(
+  async () => await import('~/components/settings/Global')
 )
-const GlobalSettings = lazy(async () => await import('~/components/settings/Global'))
 const Menu = lazy(async () => await import('~/components/Menu'))
 const MessageInput = lazy(
   async () => await import('~/components/message/Input')
@@ -295,16 +294,6 @@ const ChatPage: React.FC = () => {
         }}
       />
 
-      {/* <FloatButton
-        icon={<OrderedListOutlined />}
-        style={{ right: 60 }}
-        onClick={async () => {
-          const topics = await invoke('get_topics')
-
-          console.log('主题列表', topics)
-        }}
-      /> */}
-
       <GlobalSettings
         config={config}
         open={openSetting}
@@ -322,7 +311,11 @@ const ChatPage: React.FC = () => {
           ? (
             <Sider>
               <React.Suspense fallback={null}>
-                <Menu selectedID={topicID ?? '1'} config={config} onConfigChange={setConfig} />
+                <Menu
+                  selectedID={topicID ?? '1'}
+                  config={config}
+                  onConfigChange={setConfig}
+                />
               </React.Suspense>
             </Sider>
             )
@@ -330,14 +323,13 @@ const ChatPage: React.FC = () => {
 
         <Content>
           <React.Suspense fallback={null}>
-            <Scrollbar key={topicID}>
-              <Chat
-                messages={messages}
-                onSendMessage={handleSendMessage}
-                waiting={waiting}
-                config={config}
-              />
-            </Scrollbar>
+            <Chat
+              key={topicID}
+              messages={messages}
+              onSendMessage={handleSendMessage}
+              waiting={waiting}
+              config={config}
+            />
           </React.Suspense>
 
           <React.Suspense fallback={null}>
