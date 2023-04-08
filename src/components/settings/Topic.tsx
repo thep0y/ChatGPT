@@ -18,6 +18,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
     return null
   }
 
+  const [topicName, setTopicName] = useState(name)
   const [useContext, setUseContext] = useState(config?.use_context ?? true)
   const [conversationCount, setConversationCount] = useState(config?.conversation_count ?? 1)
   const [useFirstConversation, setUseFirstConversation] = useState(config?.use_first_conversation ?? false)
@@ -30,6 +31,10 @@ const Settings: React.FC<TopicSettingsProps> = ({
   }
 
   const onOk = (): void => {
+    if (name !== topicName) {
+      // TODO: 异步：数据库中修改主题名
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     onSettingsChange?.(topicID!, {
       use_context: useContext,
@@ -63,6 +68,10 @@ const Settings: React.FC<TopicSettingsProps> = ({
     setSystemRole(e.currentTarget.value)
   }
 
+  const onTopicNameChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setTopicName(e.currentTarget.value)
+  }
+
   return (
     <Modal
       title="主题设置"
@@ -79,7 +88,12 @@ const Settings: React.FC<TopicSettingsProps> = ({
         style={{ maxWidth: 600 }}
       >
         <Form.Item label="主题名">
-          <Input defaultValue={name} maxLength={20} showCount />
+          <Input
+            defaultValue={name}
+            maxLength={20}
+            showCount
+            onChange={onTopicNameChange}
+          />
         </Form.Item>
 
         <Form.Item
