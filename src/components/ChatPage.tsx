@@ -281,6 +281,7 @@ const ChatPage: React.FC = () => {
       <FloatButton
         icon={<SettingOutlined />}
         style={{ right: 8, bottom: 110 }}
+        tooltip='设置'
         onClick={() => {
           setOpenSetting(true)
         }}
@@ -289,6 +290,7 @@ const ChatPage: React.FC = () => {
       <FloatButton
         icon={<MenuOutlined />}
         style={{ right: 8 }}
+        tooltip='显示/隐藏主题列表'
         onClick={() => {
           setShowMenu((pre) => !pre)
         }}
