@@ -177,6 +177,7 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID, config, onConfigChange:
                   openTopicSettings(e, t, config)
                 }}
                 style={{ zIndex: 99 }}
+                disabled={t.id === 1}
                 icon={<SettingFilled />}
               />
             )
