@@ -85,7 +85,6 @@ const Settings: React.FC<TopicSettingsProps> = ({
         <Form.Item
           name="use-context"
           label="是否使用上下文"
-          className="collection-create-form_last-form-item"
         >
           <Switch defaultChecked={useContext} onChange={onUseContextChange} />
         </Form.Item>
@@ -105,7 +104,6 @@ const Settings: React.FC<TopicSettingsProps> = ({
               <Form.Item
                 name="use-first-conversation"
                 label="使用第一组对话"
-                valuePropName="checked"
               >
                 <Switch
                   defaultChecked={useFirstConversation}
@@ -116,7 +114,6 @@ const Settings: React.FC<TopicSettingsProps> = ({
               <Form.Item
                 name="use-role"
                 label="使用角色设定"
-                valuePropName="checked"
               >
                 <Switch defaultChecked={systemRoleAvailable} onChange={(v) => { setSystemRoleAvailable(v) }} />
               </Form.Item>

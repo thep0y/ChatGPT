@@ -134,6 +134,7 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
     const newConfig = {
       ...config,
       topics: {
+        ...config.topics,
         [topicID]: topicConfig
       }
     }

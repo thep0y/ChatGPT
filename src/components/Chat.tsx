@@ -94,7 +94,7 @@ const toImage = async (
   }
 }
 
-const Chat = memo(({ messages, onSendMessage, waiting, config }: ChatProps) => {
+const Chat = memo(({ messages, config }: ChatProps) => {
   const messageListComponentRef = useRef<HTMLDivElement>(null)
   const [saving, setSaving] = useState<Saving>({ status: false, name: '' })
   const [progress, setProgress] = useState(0)
