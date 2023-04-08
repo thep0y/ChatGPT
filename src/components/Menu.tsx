@@ -57,9 +57,16 @@ const defaultTopicConfig: TopicConfig = {
   system_role: ''
 }
 
-const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID, config, onConfigChange: setConfig }) => {
+// TODO: 功能比较简单，为了使用自定义滚动条应重写此组件
+const ChatMenu: React.FC<ChatMenuProps> = ({
+  selectedID,
+  config,
+  onConfigChange: setConfig
+}) => {
   const [topics, setTopics] = useState<MenuItem[]>([])
-  const [openSettings, setOpenSettings] = useState<TopicSettingsProps>({ ...defaultOpenSettings })
+  const [openSettings, setOpenSettings] = useState<TopicSettingsProps>({
+    ...defaultOpenSettings
+  })
   const navigate = useNavigate()
 
   const onEscape = useCallback(
@@ -120,7 +127,10 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID, config, onConfigChange:
     setTopics((pre) => [...pre, t])
   }, [topics])
 
-  const handleConfigChange = (topicID: string, topicConfig: TopicConfig): void => {
+  const handleConfigChange = (
+    topicID: string,
+    topicConfig: TopicConfig
+  ): void => {
     const newConfig = {
       ...config,
       topics: {
@@ -140,9 +150,11 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID, config, onConfigChange:
     setOpenSettings({ open: false })
   }
 
-  console.log(config)
-
-  const openTopicSettings = (e: React.MouseEvent, t: Topic, config: Config): void => {
+  const openTopicSettings = (
+    e: React.MouseEvent,
+    t: Topic,
+    config: Config
+  ): void => {
     e.stopPropagation()
 
     setOpenSettings({
@@ -205,6 +217,7 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID, config, onConfigChange:
       <TopicSettings {...openSettings} />
 
       <Menu
+        style={{ overflowY: 'scroll' }}
         className="topic-list"
         mode="inline"
         items={[
@@ -222,7 +235,7 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID, config, onConfigChange:
         ]}
         onSelect={(e) => {
           console.log('选择主题', e)
-        } }
+        }}
         defaultSelectedKeys={[selectedID]}
       />
     </>
