@@ -36,9 +36,6 @@ const IMAGE_SCALE_MAX = 8
 const PORT_MIN = 1
 const PORT_MAX = 65535
 
-const CONVERSATION_MIN_COUNT = 1
-const CONVERSATION_MAX_COUNT = 5
-
 interface SettingsProps {
   config: Config
   open: boolean
@@ -65,11 +62,7 @@ const Settings: React.FC<SettingsProps> = ({
   const [reverseProxy, setReverseProxy] = useState(config.proxy?.reverseProxy)
   const [openApiKey, setOpenApiKey] = useState(config.openApiKey)
   const [imageScale, setImageScale] = useState(config.imageScale)
-  const [useContext, setUseContext] = useState(config.useContext)
   const [useStream, setUseStream] = useState(config.useStream)
-
-  const [useFirstConversation, setUseFirstConversation] = useState(false)
-  const [conversationCount, setConversationCount] = useState(1)
 
   const onProxyMethodChange = useCallback((
     value: ProxyMethod
@@ -104,18 +97,6 @@ const Settings: React.FC<SettingsProps> = ({
     if (newValue != null) setImageScale(newValue)
   }, [])
 
-  const onConversationCountChange = useCallback((newValue: number | null): void => {
-    if (newValue != null) setConversationCount(newValue)
-  }, [])
-
-  const onUseContextChange = useCallback((status: boolean): void => {
-    setUseContext(status)
-  }, [])
-
-  const onUseFirstConversationChange = useCallback((status: boolean): void => {
-    setUseFirstConversation(status)
-  }, [])
-
   const onUseStreamChange = useCallback((status: boolean): void => {
     setUseStream(status)
   }, [])
@@ -133,7 +114,6 @@ const Settings: React.FC<SettingsProps> = ({
           proxy: Object.keys(proxy).length === 0 ? undefined : proxy
         },
         imageScale,
-        useContext,
         openApiKey,
         useStream
       }
@@ -143,7 +123,7 @@ const Settings: React.FC<SettingsProps> = ({
     } catch (info) {
       console.log('Validate Failed:', info)
     }
-  }, [proxy, imageScale, useContext, openApiKey, useStream, reverseProxy, proxyMethod])
+  }, [proxy, imageScale, openApiKey, useStream, reverseProxy, proxyMethod])
 
   const protocolOptions = useMemo(
     () =>
@@ -163,7 +143,6 @@ const Settings: React.FC<SettingsProps> = ({
     setReverseProxy(config.proxy?.reverseProxy)
     setOpenApiKey(config.openApiKey)
     setImageScale(config.imageScale)
-    setUseContext(config.useContext)
 
     closeSettings()
   }
@@ -317,59 +296,6 @@ const Settings: React.FC<SettingsProps> = ({
             checked={useStream}
             onChange={onUseStreamChange}
           />
-        </Form.Item>
-
-        <Form.Item
-          name="use-context"
-          label="是否使用上下文"
-          className="collection-create-form_last-form-item"
-        >
-          <Switch
-            checked={useContext}
-            onChange={onUseContextChange}
-          />
-
-          {useContext
-            ? (
-              <>
-                <Form.Item
-                  name="use-first-conversation"
-                  label="首个对话传入上下文"
-                  className="collection-create-form_last-form-item"
-                >
-                  <Switch
-                    checked={useFirstConversation}
-                    onChange={onUseFirstConversationChange}
-                  />
-
-                  {useContext ? null : null}
-                </Form.Item>
-
-                <Form.Item name="conversation-count" label="传入的对话数量">
-                  <Row>
-                    <Col span={12}>
-                      <Slider
-                        value={conversationCount}
-                        min={CONVERSATION_MIN_COUNT}
-                        max={CONVERSATION_MAX_COUNT}
-                        onChange={onConversationCountChange}
-                      />
-                    </Col>
-
-                    <Col span={4}>
-                      <InputNumber
-                        value={conversationCount}
-                        min={CONVERSATION_MIN_COUNT}
-                        max={CONVERSATION_MAX_COUNT}
-                        style={{ margin: '0 16px' }}
-                        onChange={onConversationCountChange}
-                      />
-                    </Col>
-                  </Row>
-                </Form.Item>
-              </>
-              )
-            : null}
         </Form.Item>
       </Form>
     </Modal>

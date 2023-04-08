@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   config.ts
  * Created At:  2023-03-26 18:30:56
- * Modified At: 2023-04-02 14:13:01
+ * Modified At: 2023-04-08 19:18:16
  * Modified By: thepoy
  */
 
@@ -14,7 +14,6 @@ export const defaultConfig: Config = {
   proxy: undefined,
   openApiKey: '',
   imageScale: 4,
-  useContext: false,
   useStream: false
 }
 
@@ -26,8 +25,8 @@ interface ConfigStruct {
   }
   open_api_key: string
   image_scale: number
-  use_context: boolean
   use_stream: boolean
+  topics?: Record<string, TopicConfig>
 }
 
 export const PROTOCOLS = [[
@@ -64,7 +63,6 @@ export const readConfig = async (): Promise<Config> => {
         proxy: undefined,
         openApiKey: '',
         imageScale: 4,
-        useContext: false,
         useStream: true
       }
     }
@@ -77,8 +75,8 @@ export const readConfig = async (): Promise<Config> => {
       },
       openApiKey: config.open_api_key,
       imageScale: config.image_scale,
-      useContext: config.use_context,
-      useStream: config.use_stream
+      useStream: config.use_stream,
+      topics: config.topics
     }
   } catch (e) {
     await message.error((e as any).toString())
@@ -97,8 +95,8 @@ export const saveConfig = async (config: Config): Promise<void> => {
       },
       open_api_key: config.openApiKey,
       image_scale: config.imageScale,
-      use_context: config.useContext,
-      use_stream: config.useStream
+      use_stream: config.useStream,
+      topics: config.topics
     }
 
     await invoke('write_config', { config: configStruct })

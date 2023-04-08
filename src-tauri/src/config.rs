@@ -1,7 +1,7 @@
 use crate::error::Result;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
-use std::{fs, path::PathBuf};
+use std::{collections::HashMap, fs, path::PathBuf};
 
 lazy_static! {
     pub static ref APP_CONFIG_DIR: PathBuf = {
@@ -54,8 +54,9 @@ pub struct Config {
     pub proxy: ProxyConfig,
     pub open_api_key: String,
     pub image_scale: u8,
-    pub use_context: bool,
     pub use_stream: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topics: Option<HashMap<String, TopicConfig>>,
 }
 
 pub fn read_config() -> Result<Option<Config>> {
@@ -78,4 +79,12 @@ pub fn write_config(config: &Config) -> Result<()> {
     let config_str = toml::to_string(config).map_err(|e| e.to_string())?;
 
     fs::write(CONFIG_FILE.to_owned(), config_str).map_err(|e| e.to_string())
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct TopicConfig {
+    pub use_context: bool,
+    pub conversation_count: u8,
+    pub use_first_conversation: bool,
+    pub system_role: String,
 }

@@ -322,7 +322,7 @@ const ChatPage: React.FC = () => {
           ? (
             <Sider>
               <React.Suspense fallback={null}>
-                <Menu selectedID={topicID ?? '1'} />
+                <Menu selectedID={topicID ?? '1'} config={config} onConfigChange={setConfig} />
               </React.Suspense>
             </Sider>
             )

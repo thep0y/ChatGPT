@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: 2023-04-08 16:49:19
+ * Modified At: 2023-04-08 20:32:18
  * Modified By: thepoy
  */
 
@@ -27,13 +27,22 @@ declare interface Config {
   }
   openApiKey: string
   imageScale: number
-  useContext: boolean
   useStream: boolean
+  topics?: Record<string, TopicConfig>
+}
+
+declare interface TopicConfig {
+  use_context: boolean
+  conversation_count: number
+  use_first_conversation: boolean
+  system_role: string
 }
 
 interface TopicSettingsProps {
   open: boolean
-  topicID?: number
-  // onSettingsChange: (settings: Config) => void
   closeSettings?: () => void
+  topicID?: string
+  config?: TopicConfig
+  name?: string
+  onSettingsChange?: (topicID: string, config: TopicConfig) => void
 }
