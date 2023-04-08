@@ -200,6 +200,7 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID, config, onConfigChange:
 
   return (
     <>
+      {/* TODO: TopicSettings 的渲染时间需要优化，不该在加载 menu 时渲染 */}
       <TopicSettings {...openSettings} />
 
       <Menu
