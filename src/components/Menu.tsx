@@ -47,8 +47,11 @@ const newTopic = (
   return getItem(label, key, onClick, <MessageOutlined />)
 }
 
+const defaultOpenSettings = { open: false, topicID: 0 }
+
 const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID }) => {
   const [topics, setTopics] = useState<MenuItem[]>([])
+  const [openSettings, setOpenSettings] = useState<TopicSettingsProps>(defaultOpenSettings)
   const navigate = useNavigate()
 
   const onEscape = useCallback(
@@ -110,6 +113,10 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID }) => {
     setTopics((pre) => [...pre, t])
   }, [topics])
 
+  const closeSettings = (): void => {
+    setOpenSettings({ open: false })
+  }
+
   useEffect(() => {
     const fetchTopics = async (): Promise<void> => {
       try {
@@ -140,7 +147,13 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID }) => {
                 shape="circle"
                 onClick={(e) => {
                   e.stopPropagation()
-                  console.log('设置单个主题')
+
+                  setOpenSettings({
+                    open: true,
+                    topicID: t.id,
+                    closeSettings
+                  })
+                  console.log('设置单个主题', t.id)
                 }}
                 style={{ zIndex: 99 }}
                 icon={<SettingFilled />}
@@ -165,27 +178,31 @@ const ChatMenu: React.FC<ChatMenuProps> = ({ selectedID }) => {
   }
 
   return (
-    <Menu
-      className="topic-list"
-      mode="inline"
-      items={[
-        {
-          key: 'grp',
-          label: (
-            <Button onClick={onNewTopic}>
-              <PlusOutlined />
-              新主题
-            </Button>
-          ),
-          children: topics,
-          type: 'group'
-        }
-      ]}
-      onSelect={(e) => {
-        console.log('选择主题', e)
-      }}
-      defaultSelectedKeys={[selectedID]}
-    />
+    <>
+      <TopicSettings {...openSettings} />
+
+      <Menu
+        className="topic-list"
+        mode="inline"
+        items={[
+          {
+            key: 'grp',
+            label: (
+              <Button onClick={onNewTopic}>
+                <PlusOutlined />
+                新主题
+              </Button>
+            ),
+            children: topics,
+            type: 'group'
+          }
+        ]}
+        onSelect={(e) => {
+          console.log('选择主题', e)
+        } }
+        defaultSelectedKeys={[selectedID]}
+      />
+    </>
   )
 }
 

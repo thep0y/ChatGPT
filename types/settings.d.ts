@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: 2023-04-02 13:56:07
+ * Modified At: 2023-04-08 16:49:19
  * Modified By: thepoy
  */
 
@@ -29,4 +29,11 @@ declare interface Config {
   imageScale: number
   useContext: boolean
   useStream: boolean
+}
+
+interface TopicSettingsProps {
+  open: boolean
+  topicID?: number
+  // onSettingsChange: (settings: Config) => void
+  closeSettings?: () => void
 }
