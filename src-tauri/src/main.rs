@@ -15,7 +15,7 @@ extern crate simplelog;
 
 use crate::chat::chat::MessageChunk;
 use crate::db::message::{AssistantMessage, UserMessage};
-use crate::db::topic::topic_exists_by_name;
+use crate::db::topic::{topic_exists_by_name, update_topic_by_id};
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
 use chat::chat::{chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse};
@@ -212,6 +212,22 @@ async fn get_topics(pool: tauri::State<'_, SQLitePool>) -> Result<Vec<Topic>> {
 }
 
 #[tauri::command]
+async fn update_topic(
+    pool: tauri::State<'_, SQLitePool>,
+    topid_id: u32,
+    new_name: String,
+) -> Result<()> {
+    trace!("更新主题：id={}, name={}", topid_id, new_name);
+
+    let conn = pool.get().map_err(|e| e.to_string())?;
+    update_topic_by_id(&conn, topid_id, &new_name).map_err(|e| e.to_string())?;
+
+    debug!("已更新主题名：id={}, name={}", topid_id, new_name);
+
+    Ok(())
+}
+
+#[tauri::command]
 async fn new_topic(
     pool: tauri::State<'_, SQLitePool>,
     name: String,
@@ -283,7 +299,8 @@ async fn main() -> anyhow::Result<()> {
             read_config,
             write_config,
             get_messages_by_topic_id,
-            new_topic
+            new_topic,
+            update_topic
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

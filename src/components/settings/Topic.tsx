@@ -1,5 +1,6 @@
 import React, { type ChangeEvent, memo, useCallback, useState } from 'react'
 import { Modal, Form, Input, InputNumber, Switch } from 'antd'
+import { invoke } from '@tauri-apps/api'
 
 const { TextArea } = Input
 
@@ -14,7 +15,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
   onSettingsChange,
   closeSettings
 }) => {
-  if (config === undefined && topicID === undefined) {
+  if (config === undefined || topicID === undefined) {
     return null
   }
 
@@ -32,11 +33,11 @@ const Settings: React.FC<TopicSettingsProps> = ({
 
   const onOk = (): void => {
     if (name !== topicName) {
-      // TODO: 异步：数据库中修改主题名
+      void invoke('update_topic', { topidId: parseInt(topicID), newName: topicName })
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    onSettingsChange?.(topicID!, {
+    onSettingsChange?.(topicID, {
       use_context: useContext,
       conversation_count: conversationCount,
       use_first_conversation: useFirstConversation,
@@ -59,10 +60,6 @@ const Settings: React.FC<TopicSettingsProps> = ({
   const onUseFirstConversationChange = useCallback((status: boolean): void => {
     setUseFirstConversation(status)
   }, [])
-
-  if (topicID == null) {
-    return null
-  }
 
   const onSystemRoleChange = (e: ChangeEvent<HTMLTextAreaElement>): void => {
     setSystemRole(e.currentTarget.value)

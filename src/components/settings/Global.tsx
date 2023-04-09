@@ -56,7 +56,6 @@ const Settings: React.FC<SettingsProps> = ({
 }) => {
   const [form] = Form.useForm()
 
-  // TODO: 此处默认值应从配置文件中读取
   const [proxyMethod, setProxyMethod] = useState(config.proxy?.method)
   const [proxy, setProxy] = useState({ ...config.proxy?.proxy })
   const [reverseProxy, setReverseProxy] = useState(config.proxy?.reverseProxy)

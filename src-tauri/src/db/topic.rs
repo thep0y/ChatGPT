@@ -102,3 +102,11 @@ pub fn get_all_topics(conn: &Connection) -> Result<Vec<Topic>> {
 
     Ok(topics)
 }
+
+pub fn update_topic_by_id(conn: &Connection, topid_id: u32, new_name: &str) -> Result<usize> {
+    conn.execute(
+        "UPDATE topic SET name = ?1 WHERE id = ?2",
+        (new_name, topid_id),
+    )
+    .with_context(|| format!("准备所有主题查询语句时出错"))
+}
