@@ -11,6 +11,7 @@ interface MessageListProps {
 
 interface MessageInputProps {
   onSendMessage: (message: string, stream: boolean) => void
+  onAbortStream: () => void
   waiting: boolean
   config: Config
 }

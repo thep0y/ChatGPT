@@ -176,6 +176,15 @@ const ChatPage: React.FC = () => {
     scrollToBottom()
   }, [messages, scrollToBottom])
 
+  const handleAbortStream = async (): Promise<void> => {
+    await appWindow.emit('abort-stream')
+    void message.info('已中断流式响应')
+
+    setMessages(pre => [...pre.slice(0, pre.length - 2)])
+
+    // TODO: 添加重试按钮快捷发送上一个问题。
+  }
+
   const handleSendMessage = useCallback(
     async (content: string, stream: boolean = true): Promise<void> => {
       const createdAt = now()
@@ -368,8 +377,6 @@ const ChatPage: React.FC = () => {
             <Chat
               key={topicID}
               messages={messages}
-              onSendMessage={handleSendMessage}
-              waiting={waiting}
               config={config}
             />
           </React.Suspense>
@@ -377,6 +384,7 @@ const ChatPage: React.FC = () => {
           <React.Suspense fallback={null}>
             <MessageInput
               onSendMessage={handleSendMessage}
+              onAbortStream={handleAbortStream}
               waiting={waiting}
               config={config}
             />

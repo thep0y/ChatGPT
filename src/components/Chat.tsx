@@ -24,7 +24,7 @@ const Scrollbar = lazy(
   async () => await import('~/components/scrollbar/Scrollbar')
 )
 
-type ChatProps = MessageListProps & MessageInputProps
+type ChatProps = MessageListProps & { config: Config }
 
 const MESSAGE_SAVEING_FILTER_OPTION: SaveDialogOptions = {
   filters: [

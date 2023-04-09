@@ -10,14 +10,13 @@ import {
   type ButtonProps,
   Input,
   Space,
-  Tooltip,
-  message
+  Tooltip
 } from 'antd'
 import { addNewLine } from '~/lib'
-import { appWindow } from '@tauri-apps/api/window'
 
 const MessageInput = memo(({
   onSendMessage,
+  onAbortStream,
   waiting,
   config
 }: MessageInputProps) => {
@@ -34,12 +33,12 @@ const MessageInput = memo(({
     }
   }
 
-  const handleAbortStream = async (): Promise<void> => {
-    await appWindow.emit('abort-stream')
-    void message.info('已中断流式响应')
+  // const handleAbortStream = async (): Promise<void> => {
+  //   await appWindow.emit('abort-stream')
+  //   void message.info('已中断流式响应')
 
-    // TODO: 添加重试按钮快捷发送上一个问题。
-  }
+  //   // TODO: 添加重试按钮快捷发送上一个问题。
+  // }
 
   const statusButton = (): React.ReactNode => {
     const disabled = waiting || chatMessage.trim() === ''
@@ -64,7 +63,7 @@ const MessageInput = memo(({
     }
     const streamBtnProps: ButtonProps = {
       ...commonBtnProps,
-      onClick: waiting ? handleAbortStream : handleEnter
+      onClick: waiting ? onAbortStream : handleEnter
     }
 
     return config.useStream && waiting
