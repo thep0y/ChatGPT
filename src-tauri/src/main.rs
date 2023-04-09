@@ -113,7 +113,9 @@ async fn chat_gpt_stream(
     debug!("使用的代理：{:?}", proxy_config);
     debug!("发送的消息：{:?}", request);
 
-    let user_message_content = &request.messages[0].content.clone();
+    let messages_len = request.messages.len();
+
+    let user_message_content = &request.messages[messages_len - 1].content.clone();
 
     let response = chat_gpt_steam_client(&proxy_config, api_key, request).await?;
     let mut stream = response.bytes_stream();

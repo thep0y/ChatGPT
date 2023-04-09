@@ -187,14 +187,54 @@ const ChatPage: React.FC = () => {
 
       setWaiting(true)
 
+      const sendedMessages: ChatMessage[] = [
+        {
+          role: 'user',
+          content
+        }
+      ]
+
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const topicConfig = config?.topics?.[topicID!]
+
+      if (topicConfig) {
+        if (topicConfig.use_first_conversation) {
+          if (messages.length >= 2) {
+            sendedMessages.unshift(messages[0], messages[1])
+          }
+        }
+
+        if (topicConfig.conversation_count >= 1) {
+          let conversationCount = topicConfig.conversation_count
+
+          if (messages.length / 2 < conversationCount) {
+            conversationCount = messages.length / 2
+          }
+
+          if (topicConfig.use_first_conversation) {
+            conversationCount -= 1
+          }
+
+          if (conversationCount > 0) {
+            for (let i = conversationCount * 2 - 1; i >= 0; i--) {
+              sendedMessages.unshift(messages[i])
+            }
+          }
+        }
+
+        if (topicConfig.system_role !== '') {
+          sendedMessages.unshift({
+            role: 'system',
+            content: topicConfig.system_role
+          })
+        }
+      }
+
+      console.log('发送的消息', sendedMessages)
+
       try {
         const request: ChatGPTRequest = {
-          messages: [
-            {
-              role: 'user',
-              content
-            }
-          ],
+          messages: sendedMessages,
           model: 'gpt-3.5-turbo',
           stream
         }
@@ -252,7 +292,7 @@ const ChatPage: React.FC = () => {
         setWaiting(false)
       }
     },
-    [config, messages]
+    [config, messages, topicID]
   )
 
   const handleConfigChange = (newConfig: Config): void => {

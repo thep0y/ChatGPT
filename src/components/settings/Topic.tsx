@@ -15,7 +15,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
   onSettingsChange,
   closeSettings
 }) => {
-  if (config === undefined || topicID === undefined) {
+  if (config === undefined && topicID === undefined) {
     return null
   }
 
@@ -33,11 +33,12 @@ const Settings: React.FC<TopicSettingsProps> = ({
 
   const onOk = (): void => {
     if (name !== topicName) {
-      void invoke('update_topic', { topidId: parseInt(topicID), newName: topicName })
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      void invoke('update_topic', { topidId: parseInt(topicID!), newName: topicName })
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    onSettingsChange?.(topicID, {
+    onSettingsChange?.(topicID!, {
       use_context: useContext,
       conversation_count: conversationCount,
       use_first_conversation: useFirstConversation,
