@@ -216,8 +216,8 @@ const ChatPage: React.FC = () => {
           }
 
           if (conversationCount > 0) {
-            for (let i = conversationCount * 2 - 1; i >= 0; i--) {
-              sendedMessages.unshift(messages[i])
+            for (let i = 0; i < conversationCount * 2; i++) {
+              sendedMessages.unshift(messages[messages.length - i - 1])
             }
           }
         }
