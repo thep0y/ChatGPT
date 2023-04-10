@@ -1,5 +1,4 @@
-/* eslint-disable react/prop-types */
-import React, { memo } from 'react'
+import React, { memo, useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import type { CodeProps } from 'react-markdown/lib/ast-to-react'
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async'
@@ -9,42 +8,57 @@ import rehypeKatex from 'rehype-katex'
 
 import 'katex/dist/katex.min.css'
 
-const Message: React.FC<Message> = memo(({ content, role, time }) => {
+const CodeBlock: React.FC<CodeProps> = ({ children, className }) => {
+  const match = useMemo(
+    () => /language-(\w+)/.exec(className ?? ''),
+    [className]
+  )
+
+  CodeStyle['code[class*="language-"]'].fontFamily = 'inherit'
+
+  return (
+    <SyntaxHighlighter
+      style={CodeStyle as any}
+      customStyle={{ fontFamily: 'var(--user-monospace)' }}
+      language={match?.[1]}
+      PreTag="div"
+      showLineNumbers
+      showInlineLineNumbers
+      lineNumberStyle={{ minWidth: '2rem' }}
+      wrapLines
+    >
+      {String(children).replace(/\n$/, '')}
+    </SyntaxHighlighter>
+  )
+}
+
+const InlineCode: React.FC<CodeProps> = ({ className, children }) => {
+  return <code className={className}>{children}</code>
+}
+
+const Message = memo(({ content, role, time }: Message) => {
   const sent = role === 'user'
 
-  CodeStyle['code[class*="language-"]'].fontFamily = 'var(--user-monospace)'
-
+  const remarkPlugins = useMemo(() => [remarkMath], [])
+  const rehypePlugins = useMemo(() => [rehypeKatex], [])
   const renderCodeBlock = ({
     node,
     inline,
     className,
-    children,
-    ...props
+    children
   }: CodeProps): React.ReactElement => {
-    const match = /language-(\w+)/.exec(className ?? '')
-
     if (!(inline ?? false)) {
       return (
-        <SyntaxHighlighter
-          style={CodeStyle as any}
-          customStyle={{ fontFamily: 'var(--user-monospace)' }}
-          language={(match != null) ? match[1] : undefined}
-          PreTag="div"
-          showLineNumbers
-          showInlineLineNumbers
-          lineNumberStyle={{ minWidth: '2rem' }}
-          wrapLines
-          {...props}
-        >
-          {String(children).replace(/\n$/, '')}
-        </SyntaxHighlighter>
+        <CodeBlock className={className} node={node}>
+          {children}
+        </CodeBlock>
       )
     }
 
     return (
-      <code className={className} {...props}>
+      <InlineCode className={className} node={node}>
         {children}
-      </code>
+      </InlineCode>
     )
   }
 
@@ -52,8 +66,8 @@ const Message: React.FC<Message> = memo(({ content, role, time }) => {
     <li className={`shared ${sent ? 'sent' : 'received'}`}>
       <ReactMarkdown
         components={{ code: renderCodeBlock }}
-        remarkPlugins={[remarkMath]}
-        rehypePlugins={[rehypeKatex]}
+        remarkPlugins={remarkPlugins}
+        rehypePlugins={rehypePlugins}
       >
         {content}
       </ReactMarkdown>

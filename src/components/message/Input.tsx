@@ -12,7 +12,6 @@ import {
   Space,
   Tooltip
 } from 'antd'
-import { addNewLine } from '~/lib'
 
 const { TextArea } = Input
 
@@ -34,7 +33,7 @@ const MessageInput = memo(({
       return
     }
 
-    onSendMessage(addNewLine(chatMessage), config.useStream)
+    onSendMessage(chatMessage, config.useStream)
     setChatMessage('')
   }, [chatMessage, config.useStream, onSendMessage])
 
