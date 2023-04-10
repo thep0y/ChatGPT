@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react'
+import React, { useState, memo, useCallback } from 'react'
 import {
   LoadingOutlined,
   SendOutlined,
@@ -14,6 +14,8 @@ import {
 } from 'antd'
 import { addNewLine } from '~/lib'
 
+const { TextArea } = Input
+
 const MessageInput = memo(({
   onSendMessage,
   onAbortStream,
@@ -22,23 +24,19 @@ const MessageInput = memo(({
 }: MessageInputProps) => {
   const [chatMessage, setChatMessage] = useState('')
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>): void => {
+    console.log(e.target.value)
     setChatMessage(e.target.value)
-  }
+  }, [])
 
-  const handleEnter = (): void => {
-    if (chatMessage.trim() !== '') {
-      onSendMessage(addNewLine(chatMessage), config.useStream)
-      setChatMessage('')
+  const handleEnter = useCallback((): void => {
+    if (chatMessage.trim() === '') {
+      return
     }
-  }
 
-  // const handleAbortStream = async (): Promise<void> => {
-  //   await appWindow.emit('abort-stream')
-  //   void message.info('已中断流式响应')
-
-  //   // TODO: 添加重试按钮快捷发送上一个问题。
-  // }
+    onSendMessage(addNewLine(chatMessage), config.useStream)
+    setChatMessage('')
+  }, [chatMessage, config.useStream, onSendMessage])
 
   const statusButton = (): React.ReactNode => {
     const disabled = waiting || chatMessage.trim() === ''
@@ -81,11 +79,14 @@ const MessageInput = memo(({
     <div id="input-message">
       <Affix style={{ width: '90%', maxWidth: 800 }}>
         <Space.Compact block>
-          <Input
+          <TextArea
             value={chatMessage}
             placeholder="输入你要发送给 ChatGPT 的消息"
-            onChange={handleChange}
+            onChangeCapture={handleChange}
             onPressEnter={handleEnter}
+            maxLength={2500}
+            autoSize={{ minRows: 1, maxRows: 10 }}
+            showCount
           />
 
           {statusButton()}
