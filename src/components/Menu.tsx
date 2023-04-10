@@ -103,6 +103,8 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
 
       setTopics((pre) => [...pre.slice(0, pre.length - 1), topic])
 
+      handleConfigChange(id.toString(), defaultTopicConfig)
+
       navigate('/' + id.toString())
     },
     [topics]
