@@ -4,7 +4,7 @@
 # @Email:       thepoy@163.com
 # @File Name:   upx.py
 # @Created At:  2023-03-19 21:31:57
-# @Modified At: 2023-04-01 22:58:06
+# @Modified At: 2023-04-10 21:13:25
 # @Modified By: thepoy
 
 import shutil
@@ -88,6 +88,10 @@ def download_upx(version: str, url: str):
         return exe_file
 
 
+current_dir = os.path.abspath(os.path.dirname(__file__))
+target_dir = Path(current_dir) / "target" / "release"
+
+
 def compress():
     NPM_LIFECYCLE_SCRIPT = os.getenv("NPM_LIFECYCLE_SCRIPT")
     if NPM_LIFECYCLE_SCRIPT and NPM_LIFECYCLE_SCRIPT.startswith("tauri build "):
@@ -110,7 +114,7 @@ def compress():
 
         cmd = str(download_upx(version, url))
 
-    cmd += " -9 src-tauri/target/release/"
+    cmd += " -9 %s/" % str(target_dir)
 
     if sys.platform in ("darwin", "linux"):
         cmd += "chatgpt-client"
