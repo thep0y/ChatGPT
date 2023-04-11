@@ -7,10 +7,12 @@
 
 interface MessageListProps {
   messages: Message[]
+  showTopicList: boolean
 }
 
 interface MessageInputProps {
-  onSendMessage: (message: string, stream: boolean) => void
+  onSendMessage: (message: string, stream: boolean) => Promise<void>
+  onAbortStream: () => void
   waiting: boolean
   config: Config
 }

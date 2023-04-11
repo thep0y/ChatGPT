@@ -134,6 +134,7 @@ async fn chat_gpt_stream(
     let mut done_flag = true;
     let mut response_time = 0u64;
 
+    // TODO: 超过一定时间(默认 5 秒)后未能继续获得 chunk 则自动中断，意味着响应失败
     while let Some(item) = stream.next().await {
         let bytes = item.map_err(|e| e.to_string())?;
         let mut chunk = std::str::from_utf8(&bytes).map_err(|e| e.to_string())?;

@@ -97,7 +97,7 @@ const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [waiting, setWaiting] = useState<boolean>(false)
   const [openSetting, setOpenSetting] = useState(false)
-  const [showMenu, setShowMenu] = useState(false)
+  const [showTopicList, setShowTopicList] = useState(false)
   const [config, setConfig] = useState<Config | null>(null)
   const { topicID } = useParams<'topicID'>()
 
@@ -176,6 +176,15 @@ const ChatPage: React.FC = () => {
     scrollToBottom()
   }, [messages, scrollToBottom])
 
+  const handleAbortStream = async (): Promise<void> => {
+    await appWindow.emit('abort-stream')
+    void message.info('已中断流式响应')
+
+    setMessages(pre => [...pre.slice(0, pre.length - 2)])
+
+    // TODO: 添加重试按钮快捷发送上一个问题。
+  }
+
   const handleSendMessage = useCallback(
     async (content: string, stream: boolean = true): Promise<void> => {
       const createdAt = now()
@@ -216,8 +225,8 @@ const ChatPage: React.FC = () => {
           }
 
           if (conversationCount > 0) {
-            for (let i = conversationCount * 2 - 1; i >= 0; i--) {
-              sendedMessages.unshift(messages[i])
+            for (let i = 0; i < conversationCount * 2; i++) {
+              sendedMessages.unshift(messages[messages.length - i - 1])
             }
           }
         }
@@ -332,7 +341,7 @@ const ChatPage: React.FC = () => {
         style={{ right: 8 }}
         tooltip='显示/隐藏主题列表'
         onClick={() => {
-          setShowMenu((pre) => !pre)
+          setShowTopicList((pre) => !pre)
         }}
       />
 
@@ -349,7 +358,7 @@ const ChatPage: React.FC = () => {
         <h2> 这是对话标题，使用上下文时此处显示对话主题 </h2>
       </Header> */}
 
-        {showMenu
+        {showTopicList
           ? (
             <Sider>
               <React.Suspense fallback={null}>
@@ -368,15 +377,15 @@ const ChatPage: React.FC = () => {
             <Chat
               key={topicID}
               messages={messages}
-              onSendMessage={handleSendMessage}
-              waiting={waiting}
               config={config}
+              showTopicList={showTopicList}
             />
           </React.Suspense>
 
           <React.Suspense fallback={null}>
             <MessageInput
               onSendMessage={handleSendMessage}
+              onAbortStream={handleAbortStream}
               waiting={waiting}
               config={config}
             />

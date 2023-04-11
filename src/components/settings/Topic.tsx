@@ -1,4 +1,4 @@
-import React, { type ChangeEvent, memo, useCallback, useState } from 'react'
+import React, { type ChangeEvent, memo, useCallback, useReducer } from 'react'
 import { Modal, Form, Input, InputNumber, Switch } from 'antd'
 import { invoke } from '@tauri-apps/api'
 
@@ -6,6 +6,42 @@ const { TextArea } = Input
 
 const CONVERSATION_MIN_COUNT = 1
 const CONVERSATION_MAX_COUNT = 5
+
+interface SettingsState {
+  topicName: string
+  useContext: boolean
+  conversationCount: number
+  useFirstConversation: boolean
+  systemRole: string
+  systemRoleAvailable: boolean
+}
+
+type SettingsAction =
+  | { type: 'SET_TOPIC_NAME', payload: string }
+  | { type: 'SET_USE_CONTEXT', payload: boolean }
+  | { type: 'SET_CONVERSATION_COUNT', payload: number }
+  | { type: 'SET_USE_FIRST_CONVERSATION', payload: boolean }
+  | { type: 'SET_SYSTEM_ROLE', payload: string }
+  | { type: 'SET_SYSTEM_ROLE_AVAILABLE', payload: boolean }
+
+const reducer = (state: SettingsState, action: SettingsAction): SettingsState => {
+  switch (action.type) {
+    case 'SET_TOPIC_NAME':
+      return { ...state, topicName: action.payload }
+    case 'SET_USE_CONTEXT':
+      return { ...state, useContext: action.payload }
+    case 'SET_CONVERSATION_COUNT':
+      return { ...state, conversationCount: action.payload }
+    case 'SET_USE_FIRST_CONVERSATION':
+      return { ...state, useFirstConversation: action.payload }
+    case 'SET_SYSTEM_ROLE':
+      return { ...state, systemRole: action.payload }
+    case 'SET_SYSTEM_ROLE_AVAILABLE':
+      return { ...state, systemRoleAvailable: action.payload }
+    default:
+      return state
+  }
+}
 
 const Settings: React.FC<TopicSettingsProps> = ({
   topicID,
@@ -19,55 +55,61 @@ const Settings: React.FC<TopicSettingsProps> = ({
     return null
   }
 
-  const [topicName, setTopicName] = useState(name)
-  const [useContext, setUseContext] = useState(config?.use_context ?? true)
-  const [conversationCount, setConversationCount] = useState(config?.conversation_count ?? 1)
-  const [useFirstConversation, setUseFirstConversation] = useState(config?.use_first_conversation ?? false)
-
-  const [systemRole, setSystemRole] = useState(config?.system_role ?? '')
-  const [systemRoleAvailable, setSystemRoleAvailable] = useState(!!config?.system_role)
+  const [state, dispatch] = useReducer(reducer, {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    topicName: name!,
+    useContext: config?.use_context ?? true,
+    conversationCount: config?.conversation_count ?? 1,
+    useFirstConversation: config?.use_first_conversation ?? false,
+    systemRole: config?.system_role ?? '',
+    systemRoleAvailable: !!config?.system_role
+  })
 
   const onCancel = (): void => {
     closeSettings?.()
   }
 
   const onOk = (): void => {
-    if (name !== topicName) {
+    if (name !== state.topicName) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      void invoke('update_topic', { topidId: parseInt(topicID!), newName: topicName })
+      void invoke('update_topic', { topidId: parseInt(topicID!), newName: state.topicName })
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     onSettingsChange?.(topicID!, {
-      use_context: useContext,
-      conversation_count: conversationCount,
-      use_first_conversation: useFirstConversation,
-      system_role: systemRole
+      use_context: state.useContext,
+      conversation_count: state.conversationCount,
+      use_first_conversation: state.useFirstConversation,
+      system_role: state.systemRole
     })
     closeSettings?.()
   }
 
   const onUseContextChange = useCallback((status: boolean): void => {
-    setUseContext(status)
+    dispatch({ type: 'SET_USE_CONTEXT', payload: status })
   }, [])
 
   const onConversationCountChange = useCallback(
     (newValue: number | null): void => {
-      if (newValue != null) setConversationCount(newValue)
+      if (newValue != null) dispatch({ type: 'SET_CONVERSATION_COUNT', payload: newValue })
     },
     []
   )
 
+  const setSystemRoleAvailable = (status: boolean): void => {
+    dispatch({ type: 'SET_SYSTEM_ROLE_AVAILABLE', payload: status })
+  }
+
   const onUseFirstConversationChange = useCallback((status: boolean): void => {
-    setUseFirstConversation(status)
+    dispatch({ type: 'SET_USE_FIRST_CONVERSATION', payload: status })
   }, [])
 
   const onSystemRoleChange = (e: ChangeEvent<HTMLTextAreaElement>): void => {
-    setSystemRole(e.currentTarget.value)
+    dispatch({ type: 'SET_SYSTEM_ROLE', payload: e.currentTarget.value })
   }
 
   const onTopicNameChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    setTopicName(e.currentTarget.value)
+    dispatch({ type: 'SET_TOPIC_NAME', payload: e.currentTarget.value })
   }
 
   return (
@@ -98,17 +140,17 @@ const Settings: React.FC<TopicSettingsProps> = ({
           name="use-context"
           label="是否使用上下文"
         >
-          <Switch defaultChecked={useContext} onChange={onUseContextChange} />
+          <Switch defaultChecked={state.useContext} onChange={onUseContextChange} />
         </Form.Item>
 
-        {useContext
+        {state.useContext
           ? (
             <>
               <Form.Item label="上下文数量">
                 <InputNumber
                   min={CONVERSATION_MIN_COUNT}
                   max={CONVERSATION_MAX_COUNT}
-                  defaultValue={conversationCount}
+                  defaultValue={state.conversationCount}
                   onChange={onConversationCountChange}
                 />
               </Form.Item>
@@ -118,7 +160,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
                 label="使用第一组对话"
               >
                 <Switch
-                  defaultChecked={useFirstConversation}
+                  defaultChecked={state.useFirstConversation}
                   onChange={onUseFirstConversationChange}
                 />
               </Form.Item>
@@ -127,10 +169,10 @@ const Settings: React.FC<TopicSettingsProps> = ({
                 name="use-role"
                 label="使用角色设定"
               >
-                <Switch defaultChecked={systemRoleAvailable} onChange={(v) => { setSystemRoleAvailable(v) }} />
+                <Switch defaultChecked={state.systemRoleAvailable} onChange={(v) => { setSystemRoleAvailable(v) }} />
               </Form.Item>
 
-              {systemRoleAvailable
+              {state.systemRoleAvailable
                 ? (
                   <Form.Item label="系统角色">
                     <TextArea
@@ -138,7 +180,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
                       maxLength={40}
                       autoSize
                       rows={2}
-                      defaultValue={systemRole}
+                      defaultValue={state.systemRole}
                       onChange={onSystemRoleChange}
                       placeholder='输入为此对话中的 ChatGPT 设定的角色语句'
                     />

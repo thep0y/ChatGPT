@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useCallback, useMemo, useReducer, useEffect, memo } from 'react'
 import {
   Form,
   Input,
@@ -48,57 +48,133 @@ interface ProtocolOption {
   readonly label: string
 }
 
-const Settings: React.FC<SettingsProps> = ({
+interface SettingsState {
+  proxyMethod?: ProxyMethod
+  proxy: Proxy
+  reverseProxy: string
+  openApiKey: string
+  imageScale: number
+  useStream: boolean
+}
+
+type SettingsAction =
+  | { type: 'SET_PROXY_METHOD', payload?: ProxyMethod }
+  | { type: 'SET_PROXY', payload: Proxy }
+  | { type: 'SET_REVERSE_PROXY', payload: string }
+  | { type: 'SET_OPEN_API_KEY', payload: string }
+  | { type: 'SET_IMAGE_SCALE', payload: number }
+  | { type: 'SET_USE_STREAM', payload: boolean }
+  | { type: 'RESET', payload: SettingsState }
+
+const initialState: SettingsState = {
+  proxyMethod: undefined,
+  proxy: {},
+  reverseProxy: '',
+  openApiKey: '',
+  imageScale: 4,
+  useStream: true
+}
+
+const settingsReducer = (
+  state: SettingsState,
+  action: SettingsAction
+): SettingsState => {
+  switch (action.type) {
+    case 'SET_PROXY_METHOD':
+      return { ...state, proxyMethod: action.payload }
+    case 'SET_PROXY':
+      return {
+        ...state,
+        proxy: action.payload
+      }
+    case 'SET_REVERSE_PROXY':
+      return { ...state, reverseProxy: action.payload }
+    case 'SET_OPEN_API_KEY':
+      return { ...state, openApiKey: action.payload }
+    case 'SET_IMAGE_SCALE':
+      return { ...state, imageScale: action.payload }
+    case 'SET_USE_STREAM':
+      return { ...state, useStream: action.payload }
+    default:
+      return state
+  }
+}
+
+const Settings = memo(({
   config,
   open,
   onConfigChange,
   closeSettings
-}) => {
+}: SettingsProps) => {
   const [form] = Form.useForm()
 
-  const [proxyMethod, setProxyMethod] = useState(config.proxy?.method)
-  const [proxy, setProxy] = useState({ ...config.proxy?.proxy })
-  const [reverseProxy, setReverseProxy] = useState(config.proxy?.reverseProxy)
-  const [openApiKey, setOpenApiKey] = useState(config.openApiKey)
-  const [imageScale, setImageScale] = useState(config.imageScale)
-  const [useStream, setUseStream] = useState(config.useStream)
+  const [state, dispatch] = useReducer(settingsReducer, initialState)
 
-  const onProxyMethodChange = useCallback((
-    value: ProxyMethod
-  ): void => {
-    setProxyMethod(value)
-  }, [])
-
-  const onProxyInputChange = useCallback((
-    key: keyof Proxy,
-    value: string | number
-  ): void => {
-    setProxy((pre) => {
-      const nc = { ...pre, [key]: value }
-
-      return nc
+  useEffect(() => {
+    dispatch({ type: 'SET_PROXY_METHOD', payload: config.proxy?.method })
+    dispatch({ type: 'SET_PROXY', payload: { ...config.proxy?.proxy } })
+    dispatch({
+      type: 'SET_REVERSE_PROXY',
+      payload: config.proxy?.reverseProxy ?? ''
     })
+    dispatch({ type: 'SET_OPEN_API_KEY', payload: config.openApiKey })
+    dispatch({ type: 'SET_IMAGE_SCALE', payload: config.imageScale })
+    dispatch({ type: 'SET_USE_STREAM', payload: config.useStream })
+  }, [config])
+
+  const onProxyMethodChange = useCallback((value: ProxyMethod): void => {
+    dispatch({ type: 'SET_PROXY_METHOD', payload: value })
   }, [])
 
-  const onReverseProxyInputChange = useCallback((
-    value: string
-  ): void => {
-    console.log(value)
+  const onProxyInputChange = useCallback(
+    (key: keyof Proxy, value: string | number): void => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      dispatch({
+        type: 'SET_PROXY',
+        payload: { ...state.proxy, [key]: value }
+      })
+    },
+    [state.proxy]
+  )
 
-    setReverseProxy(value)
+  const onReverseProxyInputChange = useCallback((value: string): void => {
+    dispatch({ type: 'SET_REVERSE_PROXY', payload: value })
   }, [])
 
-  const onInputOpenApiKey = useCallback((e: React.ChangeEvent<HTMLInputElement>): void => {
-    setOpenApiKey(e.target.value)
-  }, [])
+  const onInputOpenApiKey = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>): void => {
+      dispatch({ type: 'SET_OPEN_API_KEY', payload: e.target.value })
+    },
+    []
+  )
 
   const onImageScaleChange = useCallback((newValue: number | null): void => {
-    if (newValue != null) setImageScale(newValue)
+    if (newValue != null) {
+      dispatch({ type: 'SET_IMAGE_SCALE', payload: newValue })
+    }
   }, [])
 
   const onUseStreamChange = useCallback((status: boolean): void => {
-    setUseStream(status)
+    dispatch({ type: 'SET_USE_STREAM', payload: status })
   }, [])
+
+  const resetSettings = useCallback((): void => {
+    dispatch({
+      type: 'RESET',
+      payload: initialState
+    })
+  }, [])
+
+  const {
+    proxyMethod,
+    proxy,
+    reverseProxy,
+    openApiKey,
+    imageScale,
+    useStream
+  } = state
+
+  console.log('代理', proxy)
 
   const onFinish = useCallback(async (): Promise<void> => {
     try {
@@ -106,10 +182,12 @@ const Settings: React.FC<SettingsProps> = ({
       form.resetFields()
 
       const newSettings: Config = {
+        ...config,
         proxy: {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           method: proxyMethod!,
           reverseProxy,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           proxy: Object.keys(proxy).length === 0 ? undefined : proxy
         },
         imageScale,
@@ -126,7 +204,7 @@ const Settings: React.FC<SettingsProps> = ({
 
   const protocolOptions = useMemo(
     () =>
-      PROTOCOLS.map(protocol => (
+      PROTOCOLS.map((protocol) => (
         <Select.Option key={protocol.value} value={protocol.value}>
           {protocol.label}
         </Select.Option>
@@ -137,11 +215,7 @@ const Settings: React.FC<SettingsProps> = ({
   const onCancel = (): void => {
     form.resetFields()
 
-    setProxyMethod(config.proxy?.method)
-    setProxy({ ...config.proxy?.proxy })
-    setReverseProxy(config.proxy?.reverseProxy)
-    setOpenApiKey(config.openApiKey)
-    setImageScale(config.imageScale)
+    resetSettings()
 
     closeSettings()
   }
@@ -168,7 +242,7 @@ const Settings: React.FC<SettingsProps> = ({
               value={proxyMethod}
               onChange={(value) => {
                 onProxyMethodChange(value)
-              } }
+              }}
             >
               <Select.Option key="reverse-proxy" value="reverse-proxy">
                 反向代理
@@ -186,6 +260,7 @@ const Settings: React.FC<SettingsProps> = ({
                   <>
                     <Form.Item
                       name={['proxy', 'protocol']}
+                      initialValue={proxy.protocol}
                       noStyle
                       rules={[{ required: true, message: '请选择代理协议！' }]}
                     >
@@ -196,7 +271,7 @@ const Settings: React.FC<SettingsProps> = ({
                         optionFilterProp="children"
                         onChange={(value) => {
                           onProxyInputChange('protocol', value)
-                        } }
+                        }}
                       >
                         {protocolOptions}
                       </Select>
@@ -214,13 +289,14 @@ const Settings: React.FC<SettingsProps> = ({
                         style={{ width: 160 }}
                         onChange={(e) => {
                           onProxyInputChange('host', e.target.value)
-                        } }
+                        }}
                       />
                     </Form.Item>
 
                     <Form.Item
                       name={['proxy', 'port']}
                       noStyle
+                      initialValue={proxy.port}
                       rules={[{ required: true, message: '请输入代理端口！' }]}
                     >
                       <InputNumber
@@ -230,14 +306,14 @@ const Settings: React.FC<SettingsProps> = ({
                         placeholder="PORT"
                         onChange={(value) => {
                           onProxyInputChange('port', value ?? 1)
-                        } }
+                        }}
                       />
                     </Form.Item>
                   </>
                   )
                 : (
                   <Form.Item
-                    name='reverse-proxy'
+                    name="reverse-proxy"
                     initialValue={config.proxy?.reverseProxy}
                     noStyle
                     rules={[{ required: true, message: '请输入反向代理地址！' }]}
@@ -248,7 +324,7 @@ const Settings: React.FC<SettingsProps> = ({
                       style={{ width: 240 }}
                       onChange={(e) => {
                         onReverseProxyInputChange(e.target.value)
-                      } }
+                      }}
                     />
                   </Form.Item>
                   )}
@@ -291,14 +367,13 @@ const Settings: React.FC<SettingsProps> = ({
           label="是否使用流式响应"
           className="collection-create-form_last-form-item"
         >
-          <Switch
-            checked={useStream}
-            onChange={onUseStreamChange}
-          />
+          <Switch checked={useStream} onChange={onUseStreamChange} />
         </Form.Item>
       </Form>
     </Modal>
   )
-}
+})
+
+Settings.displayName = 'GlobalSettings'
 
 export default Settings

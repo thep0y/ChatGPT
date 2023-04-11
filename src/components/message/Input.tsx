@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react'
+import React, { useState, memo, useCallback } from 'react'
 import {
   LoadingOutlined,
   SendOutlined,
@@ -10,36 +10,34 @@ import {
   type ButtonProps,
   Input,
   Space,
-  Tooltip,
-  message
+  Tooltip
 } from 'antd'
-import { addNewLine } from '~/lib'
-import { appWindow } from '@tauri-apps/api/window'
+
+const { TextArea } = Input
 
 const MessageInput = memo(({
   onSendMessage,
+  onAbortStream,
   waiting,
   config
 }: MessageInputProps) => {
   const [chatMessage, setChatMessage] = useState('')
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setChatMessage(e.target.value)
-  }
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>): void => {
+    // 回车发送后可能会添加一个新的换行，需要 trim 一下
+    setChatMessage(e.target.value.trim())
+  }, [])
 
-  const handleEnter = (): void => {
-    if (chatMessage.trim() !== '') {
-      onSendMessage(addNewLine(chatMessage), config.useStream)
+  const handleEnter = useCallback((): void => {
+    if (chatMessage.trim() === '') {
       setChatMessage('')
+
+      return
     }
-  }
 
-  const handleAbortStream = async (): Promise<void> => {
-    await appWindow.emit('abort-stream')
-    void message.info('已中断流式响应')
-
-    // TODO: 添加重试按钮快捷发送上一个问题。
-  }
+    void onSendMessage(chatMessage.trim(), config.useStream)
+    setChatMessage('')
+  }, [chatMessage, config.useStream, onSendMessage])
 
   const statusButton = (): React.ReactNode => {
     const disabled = waiting || chatMessage.trim() === ''
@@ -64,7 +62,7 @@ const MessageInput = memo(({
     }
     const streamBtnProps: ButtonProps = {
       ...commonBtnProps,
-      onClick: waiting ? handleAbortStream : handleEnter
+      onClick: waiting ? onAbortStream : handleEnter
     }
 
     return config.useStream && waiting
@@ -82,11 +80,14 @@ const MessageInput = memo(({
     <div id="input-message">
       <Affix style={{ width: '90%', maxWidth: 800 }}>
         <Space.Compact block>
-          <Input
+          <TextArea
             value={chatMessage}
             placeholder="输入你要发送给 ChatGPT 的消息"
             onChange={handleChange}
             onPressEnter={handleEnter}
+            maxLength={2500}
+            autoSize={{ minRows: 1, maxRows: 10 }}
+            showCount
           />
 
           {statusButton()}
