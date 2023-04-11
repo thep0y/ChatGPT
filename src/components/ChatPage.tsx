@@ -97,7 +97,7 @@ const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [waiting, setWaiting] = useState<boolean>(false)
   const [openSetting, setOpenSetting] = useState(false)
-  const [showMenu, setShowMenu] = useState(false)
+  const [showTopicList, setShowTopicList] = useState(false)
   const [config, setConfig] = useState<Config | null>(null)
   const { topicID } = useParams<'topicID'>()
 
@@ -341,7 +341,7 @@ const ChatPage: React.FC = () => {
         style={{ right: 8 }}
         tooltip='显示/隐藏主题列表'
         onClick={() => {
-          setShowMenu((pre) => !pre)
+          setShowTopicList((pre) => !pre)
         }}
       />
 
@@ -358,7 +358,7 @@ const ChatPage: React.FC = () => {
         <h2> 这是对话标题，使用上下文时此处显示对话主题 </h2>
       </Header> */}
 
-        {showMenu
+        {showTopicList
           ? (
             <Sider>
               <React.Suspense fallback={null}>
@@ -378,6 +378,7 @@ const ChatPage: React.FC = () => {
               key={topicID}
               messages={messages}
               config={config}
+              showTopicList={showTopicList}
             />
           </React.Suspense>
 

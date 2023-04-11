@@ -7,6 +7,7 @@
 
 interface MessageListProps {
   messages: Message[]
+  showTopicList: boolean
 }
 
 interface MessageInputProps {

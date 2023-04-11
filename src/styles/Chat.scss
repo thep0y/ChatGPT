@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   ChatBubble.scss
  * Created At:  2023-03-22 19:01:13
- * Modified At: 2023-04-10 21:49:13
+ * Modified At: Tue Apr 11 2023
  * Modified By: thepoy
  */
 
@@ -46,6 +46,26 @@
 [data-theme="dark"] {
   .list {
     --bg: #161515;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  .max {
+    max-width: 1200px;
+  }
+
+  .max-with-menu {
+    max-width: 1000px;
+  }
+}
+
+@media screen and (max-width: 1200px) {
+  .max {
+    max-width: 100%;
+  }
+
+  .max-with-menu {
+    max-width: 100%;
   }
 }
 

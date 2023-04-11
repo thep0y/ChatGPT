@@ -94,7 +94,7 @@ const toImage = async (
   }
 }
 
-const Chat = memo(({ messages, config }: ChatProps) => {
+const Chat = memo(({ messages, config, showTopicList }: ChatProps) => {
   const messageListComponentRef = useRef<HTMLDivElement>(null)
   const [saving, setSaving] = useState<Saving>({ status: false, name: '' })
   const [progress, setProgress] = useState(0)
@@ -140,7 +140,7 @@ const Chat = memo(({ messages, config }: ChatProps) => {
         <div id="chat">
           <div ref={messageListComponentRef}>
             <React.Suspense fallback={null}>
-              <MessageList messages={messages} />
+              <MessageList messages={messages} showTopicList={showTopicList} />
             </React.Suspense>
           </div>
 

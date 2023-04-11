@@ -36,7 +36,7 @@ const InlineCode: React.FC<CodeProps> = ({ className, children }) => {
   return <code className={className}>{children}</code>
 }
 
-const Message = memo(({ content, role, time }: Message) => {
+const Message = memo(({ content, role, time, showTopicList }: Message & { showTopicList: boolean }) => {
   const sent = role === 'user'
 
   const remarkPlugins = useMemo(() => [remarkMath], [])
@@ -63,7 +63,7 @@ const Message = memo(({ content, role, time }: Message) => {
   }
 
   return (
-    <li className={`shared ${sent ? 'sent' : 'received'}`}>
+    <li className={`shared ${showTopicList ? 'max-with-menu' : 'max'} ${sent ? 'sent' : 'received'}`}>
       <ReactMarkdown
         components={{ code: renderCodeBlock }}
         remarkPlugins={remarkPlugins}
