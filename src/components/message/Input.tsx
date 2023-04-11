@@ -24,16 +24,18 @@ const MessageInput = memo(({
   const [chatMessage, setChatMessage] = useState('')
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>): void => {
-    console.log(e.target.value)
-    setChatMessage(e.target.value)
+    // 回车发送后可能会添加一个新的换行，需要 trim 一下
+    setChatMessage(e.target.value.trim())
   }, [])
 
   const handleEnter = useCallback((): void => {
     if (chatMessage.trim() === '') {
+      setChatMessage('')
+
       return
     }
 
-    onSendMessage(chatMessage, config.useStream)
+    void onSendMessage(chatMessage.trim(), config.useStream)
     setChatMessage('')
   }, [chatMessage, config.useStream, onSendMessage])
 
@@ -81,7 +83,7 @@ const MessageInput = memo(({
           <TextArea
             value={chatMessage}
             placeholder="输入你要发送给 ChatGPT 的消息"
-            onChangeCapture={handleChange}
+            onChange={handleChange}
             onPressEnter={handleEnter}
             maxLength={2500}
             autoSize={{ minRows: 1, maxRows: 10 }}
