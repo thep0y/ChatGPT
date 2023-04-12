@@ -42,3 +42,19 @@ export const saveFile = async (filepath: string, buffer: Uint8Array, setProgress
     setProgress(progress)
   }
 }
+
+export const saveMarkdown = async (filepath: string, messages: Message[], setProgress: React.Dispatch<React.SetStateAction<number>>): Promise<void> => {
+  const messagesLen = messages.length
+
+  for (let i = 0; i < messagesLen; i++) {
+    await invoke('export_to_markdown', {
+      filepath,
+      message: messages[i],
+      offset: i
+    })
+
+    const progress = Math.round((i + 1) / messagesLen * 100)
+
+    setProgress(progress)
+  }
+}

@@ -15,7 +15,7 @@ import {
 } from '@tauri-apps/api/dialog'
 
 import '~/styles/Chat.scss'
-import { saveFile } from '~/lib/fs'
+import { saveFile, saveMarkdown } from '~/lib/fs'
 import Progress from '~/components/Progress'
 import { now } from '~/lib'
 
@@ -48,6 +48,21 @@ interface ExportTask {
   blob: Blob
 }
 
+const toMarkdown = async (setSaving: React.Dispatch<React.SetStateAction<Saving>>): Promise<string | null> => {
+  const filePath = await save({
+    ...MESSAGE_SAVEING_FILTER_OPTION,
+    defaultPath: `ChatGPT 对话-${now()}.md`
+  })
+
+  if (filePath === null) {
+    handleSaveError('markdown 的保存路径选择失败', setSaving)
+
+    return null
+  }
+
+  return filePath
+}
+
 const toImage = async (
   messageListComponentRef: React.RefObject<HTMLDivElement>,
   setSaving: React.Dispatch<React.SetStateAction<Saving>>,
@@ -58,7 +73,6 @@ const toImage = async (
     defaultPath: `ChatGPT 对话-${now()}.png`
   })
 
-  setSaving({ status: true, name: '图片' })
   if (filePath === null) {
     handleSaveError('图片的保存路径选择失败', setSaving)
 
@@ -72,6 +86,8 @@ const toImage = async (
 
     return null
   }
+
+  setSaving({ status: true, name: '图片' })
 
   const lis: NodeListOf<HTMLElement> = target.querySelectorAll('li.shared')
 
@@ -99,7 +115,24 @@ const Chat = memo(({ messages, config, showTopicList }: ChatProps) => {
   const [saving, setSaving] = useState<Saving>({ status: false, name: '' })
   const [progress, setProgress] = useState(0)
 
+  const handleSaveMarkdown = useCallback(async () => {
+    if (messages.length === 0) {
+      await message.warning('当前消息列表为空')
+    }
+
+    const path = await toMarkdown(setSaving)
+
+    if (path == null) {
+      return
+    }
+
+    await saveMarkdown(path, messages, setProgress)
+
+    void message.success('markdown 已保存到：' + path)
+  }, [messageListComponentRef, messages, setSaving, setProgress, config])
+
   const handleSaveImage = useCallback(async () => {
+    // TODO: 在其他主题中，保存图片有 bug
     if (messages.length === 0) {
       await message.warning('当前消息列表为空')
 
@@ -117,6 +150,8 @@ const Chat = memo(({ messages, config, showTopicList }: ChatProps) => {
     }
 
     const { blob, filepath } = res
+
+    console.log('消息', messages)
 
     try {
       const buffer = new Uint8Array(await blob.arrayBuffer())
@@ -166,6 +201,7 @@ const Chat = memo(({ messages, config, showTopicList }: ChatProps) => {
                 <FloatButton
                   key="save-markdown"
                   tooltip="保存为 markdown"
+                  onClick={handleSaveMarkdown}
                   icon={<FileMarkdownOutlined />}
                 />
 

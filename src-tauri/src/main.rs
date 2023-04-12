@@ -18,7 +18,9 @@ use crate::db::message::{AssistantMessage, UserMessage};
 use crate::db::topic::{topic_exists_by_name, update_topic_by_id};
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
-use chat::chat::{chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse};
+use chat::chat::{
+    chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse, Message,
+};
 use chat::models::{get_chat_models, ModelResponse};
 use config::{Config, ProxyConfig, APP_CONFIG_DIR};
 use db::manager::SqliteConnectionManager;
@@ -63,6 +65,39 @@ async fn export_to_file(filepath: String, buf: Vec<u8>, offset: u32) -> Result<(
         .map_err(|e| e.to_string())?;
     let mut writer = BufWriter::new(file);
     writer.write_all(&buf).await.map_err(|e| e.to_string())?;
+    writer.flush().await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn export_to_markdown(filepath: String, message: Message, offset: u32) -> Result<()> {
+    if offset == 0 {
+        let text = format!("## {}\n\n", message.content);
+        let mut file = File::create(filepath).await.map_err(|e| e.to_string())?;
+        return file
+            .write_all(text.as_bytes())
+            .await
+            .map_err(|e| e.to_string());
+    }
+
+    let file = OpenOptions::new()
+        .append(true)
+        .open(filepath)
+        .await
+        .map_err(|e| e.to_string())?;
+    let mut writer = BufWriter::new(file);
+
+    let text = {
+        if message.role == "user" {
+            format!("\n\n## {}\n\n", message.content)
+        } else {
+            message.content
+        }
+    };
+
+    writer
+        .write_all(text.as_bytes())
+        .await
+        .map_err(|e| e.to_string())?;
     writer.flush().await.map_err(|e| e.to_string())
 }
 
@@ -299,6 +334,7 @@ async fn main() -> anyhow::Result<()> {
             get_topics,
             get_models,
             export_to_file,
+            export_to_markdown,
             read_config,
             write_config,
             get_messages_by_topic_id,
