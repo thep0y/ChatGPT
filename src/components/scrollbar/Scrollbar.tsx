@@ -11,11 +11,13 @@ const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children }) => {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (scrollRef.current === null) {
+    const current = scrollRef.current
+
+    if (!current) {
       return
     }
 
-    const ps = new PerfectScrollbar(scrollRef.current, {
+    const ps = new PerfectScrollbar(current, {
       // 根据需要设置选项
       suppressScrollX: true
     })
@@ -23,10 +25,10 @@ const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children }) => {
     return () => {
       ps.destroy()
     }
-  }, [])
+  }, [scrollRef])
 
   return (
-    <div id='custom-scrollbar' className="custom-scrollbar" ref={scrollRef}>
+    <div className="custom-scrollbar" ref={scrollRef}>
       {children}
     </div>
   )

@@ -164,7 +164,7 @@ const ChatPage: React.FC = () => {
 
   // 滚动到底部
   const scrollToBottom = useCallback(() => {
-    const scrollbar = document.getElementById('custom-scrollbar')
+    const scrollbar = document.getElementsByClassName('custom-scrollbar')[0] as HTMLElement
 
     if (scrollbar != null) {
       smoothScrollTo(scrollbar, scrollbar.scrollHeight, 1000)
@@ -376,6 +376,8 @@ const ChatPage: React.FC = () => {
           <React.Suspense fallback={null}>
             <Chat
               key={topicID}
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              topicID={topicID!}
               messages={messages}
               config={config}
               showTopicList={showTopicList}

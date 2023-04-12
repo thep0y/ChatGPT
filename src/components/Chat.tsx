@@ -24,7 +24,7 @@ const Scrollbar = lazy(
   async () => await import('~/components/scrollbar/Scrollbar')
 )
 
-type ChatProps = MessageListProps & { config: Config }
+type ChatProps = MessageListProps & { config: Config, topicID: string }
 
 const MESSAGE_SAVEING_FILTER_OPTION: SaveDialogOptions = {
   filters: [
@@ -110,7 +110,7 @@ const toImage = async (
   }
 }
 
-const Chat = memo(({ messages, config, showTopicList }: ChatProps) => {
+const Chat = memo(({ messages, config, showTopicList, topicID }: ChatProps) => {
   const messageListComponentRef = useRef<HTMLDivElement>(null)
   const [saving, setSaving] = useState<Saving>({ status: false, name: '' })
   const [progress, setProgress] = useState(0)
@@ -167,6 +167,10 @@ const Chat = memo(({ messages, config, showTopicList }: ChatProps) => {
     }
   }, [messageListComponentRef, messages, setSaving, setProgress, config])
 
+  if (messages.length === 0) {
+    return null
+  }
+
   return (
     <>
       {saving.status ? <Progress progress={progress} /> : null}
@@ -179,41 +183,39 @@ const Chat = memo(({ messages, config, showTopicList }: ChatProps) => {
             </React.Suspense>
           </div>
 
-          {messages.length > 1
-            ? (
-              <FloatButton.Group
-                trigger="hover"
-                style={{ right: 8, bottom: 160 }}
-                icon={<SaveOutlined />}
-              >
-                <FloatButton
-                  key="save-txt"
-                  tooltip="保存为 txt"
-                  icon={<FileTextOutlined />}
-                />
+          (
+          <FloatButton.Group
+            trigger="hover"
+            style={{ right: 8, bottom: 160 }}
+            icon={<SaveOutlined />}
+          >
+            <FloatButton
+              key="save-txt"
+              tooltip="保存为 txt"
+              icon={<FileTextOutlined />}
+            />
 
-                <FloatButton
-                  key="save-pdf"
-                  tooltip="保存为 pdf"
-                  icon={<FilePdfOutlined />}
-                />
+            <FloatButton
+              key="save-pdf"
+              tooltip="保存为 pdf"
+              icon={<FilePdfOutlined />}
+            />
 
-                <FloatButton
-                  key="save-markdown"
-                  tooltip="保存为 markdown"
-                  onClick={handleSaveMarkdown}
-                  icon={<FileMarkdownOutlined />}
-                />
+            <FloatButton
+              key="save-markdown"
+              tooltip="保存为 markdown"
+              onClick={handleSaveMarkdown}
+              icon={<FileMarkdownOutlined />}
+            />
 
-                <FloatButton
-                  key="save-image"
-                  onClick={handleSaveImage}
-                  tooltip="保存为图片"
-                  icon={<FileImageOutlined />}
-                />
-              </FloatButton.Group>
-              )
-            : null}
+            <FloatButton
+              key="save-image"
+              onClick={handleSaveImage}
+              tooltip="保存为图片"
+              icon={<FileImageOutlined />}
+            />
+          </FloatButton.Group>
+          )
         </div>
       </Scrollbar>
     </>
