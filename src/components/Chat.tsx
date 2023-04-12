@@ -24,7 +24,7 @@ const Scrollbar = lazy(
   async () => await import('~/components/scrollbar/Scrollbar')
 )
 
-type ChatProps = MessageListProps & { config: Config, topicID: string }
+type ChatProps = MessageListProps & { config: Config, topicName: string }
 
 const MESSAGE_SAVEING_FILTER_OPTION: SaveDialogOptions = {
   filters: [
@@ -48,10 +48,10 @@ interface ExportTask {
   blob: Blob
 }
 
-const toMarkdown = async (setSaving: React.Dispatch<React.SetStateAction<Saving>>): Promise<string | null> => {
+const toMarkdown = async (topicName: string, setSaving: React.Dispatch<React.SetStateAction<Saving>>): Promise<string | null> => {
   const filePath = await save({
     ...MESSAGE_SAVEING_FILTER_OPTION,
-    defaultPath: `ChatGPT 对话-${now()}.md`
+    defaultPath: `${topicName}-${now()}.md`
   })
 
   if (filePath === null) {
@@ -64,13 +64,14 @@ const toMarkdown = async (setSaving: React.Dispatch<React.SetStateAction<Saving>
 }
 
 const toImage = async (
+  topicName: string,
   messageListComponentRef: React.RefObject<HTMLDivElement>,
   setSaving: React.Dispatch<React.SetStateAction<Saving>>,
   imageScale: number
 ): Promise<ExportTask | null> => {
   const filePath = await save({
     ...MESSAGE_SAVEING_FILTER_OPTION,
-    defaultPath: `ChatGPT 对话-${now()}.png`
+    defaultPath: `${topicName}-${now()}.png`
   })
 
   if (filePath === null) {
@@ -110,7 +111,7 @@ const toImage = async (
   }
 }
 
-const Chat = memo(({ messages, config, showTopicList, topicID }: ChatProps) => {
+const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) => {
   const messageListComponentRef = useRef<HTMLDivElement>(null)
   const [saving, setSaving] = useState<Saving>({ status: false, name: '' })
   const [progress, setProgress] = useState(0)
@@ -120,13 +121,13 @@ const Chat = memo(({ messages, config, showTopicList, topicID }: ChatProps) => {
       await message.warning('当前消息列表为空')
     }
 
-    const path = await toMarkdown(setSaving)
+    const path = await toMarkdown(topicName, setSaving)
 
     if (path == null) {
       return
     }
 
-    await saveMarkdown(path, messages, setProgress)
+    await saveMarkdown(path, topicName, messages, setProgress)
 
     void message.success('markdown 已保存到：' + path)
   }, [messageListComponentRef, messages, setSaving, setProgress, config])
@@ -140,6 +141,7 @@ const Chat = memo(({ messages, config, showTopicList, topicID }: ChatProps) => {
     }
 
     const res = await toImage(
+      topicName,
       messageListComponentRef,
       setSaving,
       config.imageScale

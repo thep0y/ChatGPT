@@ -69,9 +69,14 @@ async fn export_to_file(filepath: String, buf: Vec<u8>, offset: u32) -> Result<(
 }
 
 #[tauri::command]
-async fn export_to_markdown(filepath: String, message: Message, offset: u32) -> Result<()> {
+async fn export_to_markdown(
+    filepath: String,
+    topic_name: String,
+    message: Message,
+    offset: u32,
+) -> Result<()> {
     if offset == 0 {
-        let text = format!("## {}\n\n", message.content);
+        let text = format!("# {}\n\n## {}\n\n", topic_name, message.content);
         let mut file = File::create(filepath).await.map_err(|e| e.to_string())?;
         return file
             .write_all(text.as_bytes())

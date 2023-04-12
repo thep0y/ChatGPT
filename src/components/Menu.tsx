@@ -177,13 +177,13 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
 
         setTopics(
           topics.map((t) => {
-            const label = <Link to={'/' + t.id.toString()}>{t.name}</Link>
+            const label = <Link to={'/' + t.id.toString() + '?name=' + t.name}>{t.name}</Link>
 
             return getItem(
               label,
               t.id,
               () => {
-                navigate('/' + t.id.toString())
+                navigate('/' + t.id.toString() + '?name=' + t.name)
               },
               <Button
                 className="topic-settings"

@@ -4,7 +4,7 @@ import { SettingOutlined, MenuOutlined } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
 import { isEqual, now, readConfig, saveConfig } from '~/lib'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { addNewLine } from '~/lib/message'
 import { smoothScrollTo } from '~/components/scrollbar'
 import { appWindow } from '@tauri-apps/api/window'
@@ -100,8 +100,12 @@ const ChatPage: React.FC = () => {
   const [showTopicList, setShowTopicList] = useState(false)
   const [config, setConfig] = useState<Config | null>(null)
   const { topicID } = useParams<'topicID'>()
+  const [searchParams] = useSearchParams()
 
   console.log('主题 id', topicID)
+  console.log('主题名', searchParams.get('name'))
+
+  const topicName = searchParams.get('name') ?? '未知主题名'
 
   useEffect(() => {
     setMessages([])
@@ -376,8 +380,7 @@ const ChatPage: React.FC = () => {
           <React.Suspense fallback={null}>
             <Chat
               key={topicID}
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              topicID={topicID!}
+              topicName={topicName}
               messages={messages}
               config={config}
               showTopicList={showTopicList}

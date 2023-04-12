@@ -18,7 +18,7 @@ if (import.meta.env.DEV) {
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/1" />,
+    element: <Navigate to="/1?name=自由主题" />,
     children: [
 
     ]
