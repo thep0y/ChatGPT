@@ -183,7 +183,6 @@ const Chat = memo(({ messages, config, showTopicList, topicID }: ChatProps) => {
             </React.Suspense>
           </div>
 
-          (
           <FloatButton.Group
             trigger="hover"
             style={{ right: 8, bottom: 160 }}
@@ -215,7 +214,6 @@ const Chat = memo(({ messages, config, showTopicList, topicID }: ChatProps) => {
               icon={<FileImageOutlined />}
             />
           </FloatButton.Group>
-          )
         </div>
       </Scrollbar>
     </>
