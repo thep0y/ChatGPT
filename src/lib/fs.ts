@@ -5,7 +5,7 @@
  * modified 2023-03-24 18:01:11
  */
 
-import { invoke } from '@tauri-apps/api'
+import { invoke, shell } from '@tauri-apps/api'
 
 /**
  * 以指定大小(默认 8kiB)的切片保存文件。
@@ -41,6 +41,8 @@ export const saveFile = async (filepath: string, buffer: Uint8Array, setProgress
 
     setProgress(progress)
   }
+
+  void shell.open(filepath)
 }
 
 export const saveMarkdown = async (filepath: string, topicName: string, messages: Message[], setProgress: React.Dispatch<React.SetStateAction<number>>): Promise<void> => {
@@ -58,4 +60,6 @@ export const saveMarkdown = async (filepath: string, topicName: string, messages
 
     setProgress(progress)
   }
+
+  void shell.open(filepath)
 }
