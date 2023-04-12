@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   index.d.ts
  * Created At:  2023-03-21 20:39:18
- * Modified At: Thu Mar 30 2023
+ * Modified At: Wed Apr 12 2023
  * Modified By: thepoy
  */
 
@@ -13,6 +13,7 @@ declare module 'dom-to-image-more' {
     toPng: (node: Node, options?: Options) => Promise<string>
     toJpeg: (node: Node, options?: Options) => Promise<string>
     toBlob: (node: Node, options?: Options) => Promise<Blob>
+    toCanvas: (node: Node, options?: Options) => Promise<HTMLCanvasElement>
     toPixelData: (node: Node, options?: Options) => Promise<Uint8ClampedArray>
   }
 

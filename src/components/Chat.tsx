@@ -26,11 +26,20 @@ const Scrollbar = lazy(
 
 type ChatProps = MessageListProps & { config: Config, topicName: string }
 
-const MESSAGE_SAVEING_FILTER_OPTION: SaveDialogOptions = {
+const IMAGE_FILTER_OPTION: SaveDialogOptions = {
   filters: [
     {
       name: '图片',
-      extensions: ['png']
+      extensions: ['png', 'svg', 'jpeg']
+    }
+  ] as DialogFilter[]
+} as const
+
+const MARKDOWN_FILTER_OPTION: SaveDialogOptions = {
+  filters: [
+    {
+      name: 'markdown',
+      extensions: ['md']
     }
   ] as DialogFilter[]
 } as const
@@ -40,17 +49,17 @@ const handleSaveError = (
   setSaving: React.Dispatch<React.SetStateAction<Saving>>
 ): void => {
   void message.error(errorMsg)
-  setSaving((pre) => ({ status: !pre.status, name: pre.name }))
+  setSaving((pre) => ({ status: false, name: pre.name }))
 }
 
 interface ExportTask {
   filepath: string
-  blob: Blob
+  blob: Blob | null
 }
 
 const toMarkdown = async (topicName: string, setSaving: React.Dispatch<React.SetStateAction<Saving>>): Promise<string | null> => {
   const filePath = await save({
-    ...MESSAGE_SAVEING_FILTER_OPTION,
+    ...MARKDOWN_FILTER_OPTION,
     defaultPath: `${topicName}-${now()}.md`
   })
 
@@ -70,7 +79,7 @@ const toImage = async (
   imageScale: number
 ): Promise<ExportTask | null> => {
   const filePath = await save({
-    ...MESSAGE_SAVEING_FILTER_OPTION,
+    ...IMAGE_FILTER_OPTION,
     defaultPath: `${topicName}-${now()}.png`
   })
 
@@ -105,6 +114,7 @@ const toImage = async (
 
     return { blob, filepath: filePath }
   } catch (e) {
+    console.error(e)
     handleSaveError((e as any).toString(), setSaving)
 
     return null
@@ -153,7 +163,12 @@ const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) =>
 
     const { blob, filepath } = res
 
-    console.log('消息', messages)
+    if (blob == null) {
+      setSaving((pre) => ({ status: false, name: pre.name }))
+      void message.error('对话过长，图片尺寸过大，请更换导出类型')
+
+      return
+    }
 
     try {
       const buffer = new Uint8Array(await blob.arrayBuffer())
@@ -165,7 +180,7 @@ const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) =>
       handleSaveError((e as any).toString(), setSaving)
     } finally {
       setProgress(0)
-      setSaving((pre) => ({ status: !pre.status, name: pre.name }))
+      setSaving((pre) => ({ status: false, name: pre.name }))
     }
   }, [messageListComponentRef, messages, setSaving, setProgress, config])
 
