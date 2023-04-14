@@ -7,7 +7,7 @@ const TOPIC_TABLE: &str = r#"
     CREATE TABLE IF NOT EXISTS topic (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name VARCHAR(20) NOT NULL,
-        description VARCHAR(200) NOT NULL,
+        description VARCHAR(200) NOT NULL DEFAULT '',
         created_at INTEGER NOT NULL
     )
 "#;
