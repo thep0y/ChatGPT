@@ -1,7 +1,8 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useLayoutEffect } from 'react'
 import PerfectScrollbar from 'perfect-scrollbar'
 import 'perfect-scrollbar/css/perfect-scrollbar.css'
 import '~/styles/Scrollbar.scss'
+import { smoothScrollTo } from '.'
 
 interface CustomScrollbarProps {
   children: React.ReactNode
@@ -10,7 +11,7 @@ interface CustomScrollbarProps {
 const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children }) => {
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const current = scrollRef.current
 
     if (!current) {
@@ -22,10 +23,12 @@ const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children }) => {
       suppressScrollX: true
     })
 
+    smoothScrollTo(current, ps.contentHeight, 1000)
+
     return () => {
       ps.destroy()
     }
-  }, [scrollRef])
+  })
 
   return (
     <div className="custom-scrollbar" ref={scrollRef}>

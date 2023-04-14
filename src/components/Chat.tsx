@@ -1,4 +1,4 @@
-import React, { useState, memo, useRef, useCallback, lazy } from 'react'
+import React, { useState, memo, useRef, useCallback, lazy, useLayoutEffect } from 'react'
 import { FloatButton, message } from 'antd'
 import {
   SaveOutlined,
@@ -125,6 +125,7 @@ const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) =>
   const messageListComponentRef = useRef<HTMLDivElement>(null)
   const [saving, setSaving] = useState<Saving>({ status: false, name: '' })
   const [progress, setProgress] = useState(0)
+  const [key, setKey] = useState(0)
 
   const handleSaveMarkdown = useCallback(async () => {
     if (messages.length === 0) {
@@ -184,9 +185,23 @@ const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) =>
     }
   }, [messageListComponentRef, messages, setSaving, setProgress, config])
 
-  if (messages.length === 0) {
-    return null
-  }
+  const observer = new ResizeObserver(entries => {
+    // Chat 组件高度变化时需要让 messageListComponentRef 也产生变化
+    // 才能让滚动条的高度更新，这里采用给 messageListComponentRef 添加
+    // 一个变化的属性的办法
+    entries.forEach(entry => {
+      setKey(pre => pre + 1)
+      entry.target.setAttribute('key', key.toString())
+    })
+  })
+
+  useLayoutEffect(() => {
+    const current = messageListComponentRef.current
+
+    if (!current) return
+
+    observer.observe(messageListComponentRef.current)
+  }, [messageListComponentRef.current])
 
   return (
     <>
@@ -200,39 +215,40 @@ const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) =>
             </React.Suspense>
           </div>
 
-          <FloatButton.Group
-            trigger="hover"
-            style={{ right: 8, bottom: 160 }}
-            icon={<SaveOutlined />}
-          >
-            <FloatButton
-              key="save-txt"
-              tooltip="保存为 txt"
-              icon={<FileTextOutlined />}
-            />
-
-            <FloatButton
-              key="save-pdf"
-              tooltip="保存为 pdf"
-              icon={<FilePdfOutlined />}
-            />
-
-            <FloatButton
-              key="save-markdown"
-              tooltip="保存为 markdown"
-              onClick={handleSaveMarkdown}
-              icon={<FileMarkdownOutlined />}
-            />
-
-            <FloatButton
-              key="save-image"
-              onClick={handleSaveImage}
-              tooltip="保存为图片"
-              icon={<FileImageOutlined />}
-            />
-          </FloatButton.Group>
         </div>
       </Scrollbar>
+
+      <FloatButton.Group
+        trigger="hover"
+        style={{ right: 8, bottom: 160 }}
+        icon={<SaveOutlined />}
+      >
+        <FloatButton
+          key="save-txt"
+          tooltip="保存为 txt"
+          icon={<FileTextOutlined />}
+        />
+
+        <FloatButton
+          key="save-pdf"
+          tooltip="保存为 pdf"
+          icon={<FilePdfOutlined />}
+        />
+
+        <FloatButton
+          key="save-markdown"
+          tooltip="保存为 markdown"
+          onClick={handleSaveMarkdown}
+          icon={<FileMarkdownOutlined />}
+        />
+
+        <FloatButton
+          key="save-image"
+          onClick={handleSaveImage}
+          tooltip="保存为图片"
+          icon={<FileImageOutlined />}
+        />
+      </FloatButton.Group>
     </>
   )
 })

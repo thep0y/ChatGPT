@@ -6,7 +6,6 @@ import { type Event } from '@tauri-apps/api/event'
 import { isEqual, now, readConfig, saveConfig } from '~/lib'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { addNewLine } from '~/lib/message'
-import { smoothScrollTo } from '~/components/scrollbar'
 import { appWindow } from '@tauri-apps/api/window'
 import '~/styles/ChatPage.scss'
 
@@ -19,7 +18,6 @@ const MessageInput = lazy(
   async () => await import('~/components/message/Input')
 )
 
-// const { Header, Content } = Layout
 const { Content, Sider } = Layout
 
 const handleStreamResponse = async (
@@ -166,20 +164,6 @@ const ChatPage: React.FC = () => {
     void getMessagesByTopic(topicID!)
   }, [topicID])
 
-  // 滚动到底部
-  const scrollToBottom = useCallback(() => {
-    const scrollbar = document.getElementsByClassName('custom-scrollbar')[0] as HTMLElement
-
-    if (scrollbar != null) {
-      smoothScrollTo(scrollbar, scrollbar.scrollHeight, 1000)
-    }
-  }, [])
-
-  // 监听消息变化并滚动到底部
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages, scrollToBottom])
-
   const handleAbortStream = async (): Promise<void> => {
     await appWindow.emit('abort-stream')
     void message.info('已中断流式响应')
@@ -253,8 +237,6 @@ const ChatPage: React.FC = () => {
         }
 
         if (stream) {
-          // const role: Role = 'assistant'
-
           const unlisten = await appWindow.listen<string>(
             'stream',
             async (e) => {
@@ -358,10 +340,6 @@ const ChatPage: React.FC = () => {
       />
 
       <Layout className="layout">
-        {/* <Header className="chat-title">
-        <h2> 这是对话标题，使用上下文时此处显示对话主题 </h2>
-      </Header> */}
-
         {showTopicList
           ? (
             <Sider>

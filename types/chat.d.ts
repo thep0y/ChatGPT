@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   chat.d.ts
  * Created At:  2023-03-21 20:38:24
- * Modified At: 2023-04-09 11:29:28
+ * Modified At: Fri Apr 14 2023
  * Modified By: thepoy
  */
 
@@ -85,3 +85,5 @@ declare interface MessageChunk {
     index: number
   }>
 }
+
+type UpdateScrollbar = () => void
