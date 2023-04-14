@@ -8,6 +8,7 @@ mod config;
 mod db;
 mod error;
 mod logger;
+mod time;
 
 #[macro_use]
 extern crate log;
@@ -15,7 +16,7 @@ extern crate simplelog;
 
 use crate::chat::chat::MessageChunk;
 use crate::db::message::{AssistantMessage, UserMessage};
-use crate::db::topic::{topic_exists_by_name, update_topic_by_id};
+use crate::db::topic::{insert_topic, topic_exists_by_name, update_topic_by_id};
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
 use chat::chat::{
@@ -246,8 +247,23 @@ fn get_messages_by_topic_id(
 
 #[tauri::command]
 async fn get_topics(pool: tauri::State<'_, SQLitePool>) -> Result<Vec<Topic>> {
-    let conn = pool.get().map_err(|e| e.to_string())?;
-    let topics = get_all_topics(&conn).map_err(|e| e.to_string())?;
+    trace!("获取全部主题");
+
+    let conn = match pool.get() {
+        Ok(c) => c,
+        Err(e) => {
+            error!("从连接池中获取连接时出错：{}", e);
+            return Err(e.to_string());
+        }
+    };
+
+    let topics = match get_all_topics(&conn) {
+        Ok(c) => c,
+        Err(e) => {
+            error!("获取全部主题时出错：{}", e);
+            return Err(e.to_string());
+        }
+    };
 
     debug!("获取到全部主题：{:?}", topics);
 
@@ -286,17 +302,33 @@ async fn new_topic(
     description: String,
     created_at: u64,
 ) -> Result<i64> {
-    let new_topic = Topic::new(&name, &description, created_at);
+    trace!("插入新主题");
 
-    let conn = pool.get().map_err(|e| e.to_string())?;
-
-    if topic_exists_by_name(&conn, &name).map_err(|e| e.to_string())? {
-        return Err(format!("主题 {} 已存在，不可重复创建", name));
+    let new_topic = match Topic::new(&name, &description, created_at) {
+        Ok(t) => t,
+        Err(e) => {
+            error!("创建新主题时出错：{}", e);
+            return Err(e.to_string());
+        }
     };
 
-    new_topic.insert(&conn).map_err(|e| e.to_string())?;
+    let conn = match pool.get() {
+        Ok(c) => c,
+        Err(e) => {
+            error!("从连接池中获取连接时出错：{}", e);
+            return Err(e.to_string());
+        }
+    };
 
-    debug!("创建新主题：{:?}", name);
+    match insert_topic(&conn, &new_topic) {
+        Ok(()) => (),
+        Err(e) => {
+            error!("插入新主题时出错：{}", e);
+            return Err(e.to_string());
+        }
+    };
+
+    debug!("已插入新主题到数据库：{:?}", name);
 
     Ok(conn.last_insert_rowid())
 }
