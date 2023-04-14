@@ -16,7 +16,7 @@ extern crate simplelog;
 
 use crate::chat::chat::MessageChunk;
 use crate::db::message::{AssistantMessage, UserMessage};
-use crate::db::topic::{insert_topic, topic_exists_by_name, update_topic_by_id};
+use crate::db::topic::{insert_topic, update_topic_by_id};
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
 use chat::chat::{

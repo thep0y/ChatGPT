@@ -186,7 +186,7 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
         setTopics(
           topics.map((t) => {
             const label = (
-              <Tooltip title={t.name} placement='top'>
+              <Tooltip title={t.description === '' ? t.name : t.description} placement='right'>
                 <Link to={'/' + t.id.toString() + '?name=' + t.name}>
                   {t.name}
                 </Link>
@@ -194,7 +194,7 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
             )
 
             const icon =
-              t.id === 1
+              t.id <= 2
                 ? (
                   <MessageOutlined />
                   )
