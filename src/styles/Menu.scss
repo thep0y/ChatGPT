@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   Menu.scss
  * Created At:  2023-04-01 11:20:13
- * Modified At: 2023-04-06 19:44:07
+ * Modified At: Fri Apr 14 2023
  * Modified By: thepoy
  */
 
@@ -24,6 +24,13 @@
 
     .topic-settings.ant-menu-item-icon {
       display: initial;
+      z-index: 99;
+
+      &:hover {
+        color: #1677ff;
+        transition: transform 0.15s;
+        transform: scale(1.25);
+      }
     }
   }
 }

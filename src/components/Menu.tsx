@@ -1,5 +1,13 @@
 import React, { lazy, useCallback, useEffect, useState } from 'react'
-import { type MenuProps, Spin, Menu, Button, message, Input } from 'antd'
+import {
+  type MenuProps,
+  Spin,
+  Menu,
+  Button,
+  message,
+  Input,
+  Tooltip
+} from 'antd'
 import {
   PlusOutlined,
   MessageOutlined,
@@ -177,7 +185,29 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
 
         setTopics(
           topics.map((t) => {
-            const label = <Link to={'/' + t.id.toString() + '?name=' + t.name}>{t.name}</Link>
+            const label = (
+              <Tooltip title={t.name} placement='top'>
+                <Link to={'/' + t.id.toString() + '?name=' + t.name}>
+                  {t.name}
+                </Link>
+              </Tooltip>
+            )
+
+            const icon =
+              t.id === 1
+                ? (
+                  <MessageOutlined />
+                  )
+                : (
+                  <Tooltip title="主题设置" placement="topLeft">
+                    <SettingFilled
+                      className="topic-settings"
+                      onClick={(e) => {
+                        openTopicSettings(e, t, config)
+                      }}
+                    />
+                  </Tooltip>
+                  )
 
             return getItem(
               label,
@@ -185,16 +215,7 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
               () => {
                 navigate('/' + t.id.toString() + '?name=' + t.name)
               },
-              <Button
-                className="topic-settings"
-                shape="circle"
-                onClick={(e) => {
-                  openTopicSettings(e, t, config)
-                }}
-                style={{ zIndex: 99 }}
-                disabled={t.id === 1}
-                icon={<SettingFilled />}
-              />
+              icon
             )
           })
         )
