@@ -72,6 +72,7 @@ declare interface Saving {
 declare interface Topic {
   id: number
   name: string
+  description: string
 }
 
 declare interface MessageChunk {

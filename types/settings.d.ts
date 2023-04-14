@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: 2023-04-08 20:32:18
+ * Modified At: Fri Apr 14 2023
  * Modified By: thepoy
  */
 
@@ -44,5 +44,6 @@ interface TopicSettingsProps {
   topicID?: string
   config?: TopicConfig
   name?: string
+  description?: string
   onSettingsChange?: (topicID: string, config: TopicConfig) => void
 }

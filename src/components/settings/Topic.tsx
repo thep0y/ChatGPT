@@ -9,6 +9,7 @@ const CONVERSATION_MAX_COUNT = 5
 
 interface SettingsState {
   topicName: string
+  description: string
   useContext: boolean
   conversationCount: number
   useFirstConversation: boolean
@@ -18,6 +19,7 @@ interface SettingsState {
 
 type SettingsAction =
   | { type: 'SET_TOPIC_NAME', payload: string }
+  | { type: 'SET_TOPIC_DESCRIPTION', payload: string }
   | { type: 'SET_USE_CONTEXT', payload: boolean }
   | { type: 'SET_CONVERSATION_COUNT', payload: number }
   | { type: 'SET_USE_FIRST_CONVERSATION', payload: boolean }
@@ -28,6 +30,8 @@ const reducer = (state: SettingsState, action: SettingsAction): SettingsState =>
   switch (action.type) {
     case 'SET_TOPIC_NAME':
       return { ...state, topicName: action.payload }
+    case 'SET_TOPIC_DESCRIPTION':
+      return { ...state, description: action.payload }
     case 'SET_USE_CONTEXT':
       return { ...state, useContext: action.payload }
     case 'SET_CONVERSATION_COUNT':
@@ -48,6 +52,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
   config,
   open,
   name,
+  description,
   onSettingsChange,
   closeSettings
 }) => {
@@ -58,6 +63,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
   const [state, dispatch] = useReducer(reducer, {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     topicName: name!,
+    description: description ?? '',
     useContext: config?.use_context ?? true,
     conversationCount: config?.conversation_count ?? 1,
     useFirstConversation: config?.use_first_conversation ?? false,
@@ -70,9 +76,9 @@ const Settings: React.FC<TopicSettingsProps> = ({
   }
 
   const onOk = (): void => {
-    if (name !== state.topicName) {
+    if (name !== state.topicName || description !== state.description) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      void invoke('update_topic', { topidId: parseInt(topicID!), newName: state.topicName })
+      void invoke('update_topic', { topidId: parseInt(topicID!), newName: state.topicName, newDescription: state.description })
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -112,6 +118,10 @@ const Settings: React.FC<TopicSettingsProps> = ({
     dispatch({ type: 'SET_TOPIC_NAME', payload: e.currentTarget.value })
   }
 
+  const onTopicDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>): void => {
+    dispatch({ type: 'SET_TOPIC_DESCRIPTION', payload: e.currentTarget.value })
+  }
+
   return (
     <Modal
       title="主题设置"
@@ -133,6 +143,16 @@ const Settings: React.FC<TopicSettingsProps> = ({
             maxLength={20}
             showCount
             onChange={onTopicNameChange}
+          />
+        </Form.Item>
+
+        <Form.Item label="主题描述">
+          <TextArea
+            defaultValue={description}
+            maxLength={200}
+            onChange={onTopicDescriptionChange}
+            showCount
+            autoSize
           />
         </Form.Item>
 

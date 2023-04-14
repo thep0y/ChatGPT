@@ -1,4 +1,4 @@
-import React, { lazy, useCallback, useEffect, useState } from 'react'
+import React, { lazy, memo, useCallback, useEffect, useState } from 'react'
 import {
   type MenuProps,
   Spin,
@@ -66,11 +66,11 @@ const defaultTopicConfig: TopicConfig = {
 }
 
 // TODO: 功能比较简单，为了使用自定义滚动条应重写此组件
-const ChatMenu: React.FC<ChatMenuProps> = ({
+const ChatMenu = memo(({
   selectedID,
   config,
   onConfigChange: setConfig
-}) => {
+}: ChatMenuProps) => {
   const [topics, setTopics] = useState<MenuItem[]>([])
   const [openSettings, setOpenSettings] = useState<TopicSettingsProps>({
     ...defaultOpenSettings
@@ -264,6 +264,8 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
       />
     </>
   )
-}
+})
+
+ChatMenu.displayName = 'ChatMenu'
 
 export default ChatMenu
