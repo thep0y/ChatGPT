@@ -20,6 +20,7 @@ interface MessageInputProps {
 declare interface Topic {
   id: number
   name: string
+  description: string
   created_at: number
 }
 

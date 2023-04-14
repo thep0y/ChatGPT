@@ -259,13 +259,22 @@ async fn update_topic(
     pool: tauri::State<'_, SQLitePool>,
     topid_id: u32,
     new_name: String,
+    new_description: String,
 ) -> Result<()> {
-    trace!("更新主题：id={}, name={}", topid_id, new_name);
+    trace!(
+        "更新主题：id={}, name={}, new_description={}",
+        topid_id,
+        new_name,
+        new_description
+    );
 
     let conn = pool.get().map_err(|e| e.to_string())?;
-    update_topic_by_id(&conn, topid_id, &new_name).map_err(|e| e.to_string())?;
+    update_topic_by_id(&conn, topid_id, &new_name, &new_description).map_err(|e| e.to_string())?;
 
-    debug!("已更新主题名：id={}, name={}", topid_id, new_name);
+    debug!(
+        "已更新主题名：id={}, name={}, description={}",
+        topid_id, new_name, new_description
+    );
 
     Ok(())
 }
@@ -274,9 +283,10 @@ async fn update_topic(
 async fn new_topic(
     pool: tauri::State<'_, SQLitePool>,
     name: String,
+    description: String,
     created_at: u64,
 ) -> Result<i64> {
-    let new_topic = Topic::new(&name, created_at);
+    let new_topic = Topic::new(&name, &description, created_at);
 
     let conn = pool.get().map_err(|e| e.to_string())?;
 
