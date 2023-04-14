@@ -1,4 +1,5 @@
 # ChatGPT
+
 ChatGPT 客户端
 
 ## 1 安装
@@ -18,3 +19,7 @@ ChatGPT 客户端
 ## 4 bug
 
 - [ ] 非自由主题下无法使用`domtoimage.toBlob`创建`blob`
+
+## 5 功能列表
+
+- [ ] 支持 MySQL、PostgreSQL 保存对话
