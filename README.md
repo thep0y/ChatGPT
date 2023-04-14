@@ -23,3 +23,4 @@ ChatGPT 客户端
 ## 5 功能列表
 
 - [ ] 支持 MySQL、PostgreSQL 保存对话
+- [ ] 双击回车发送消息
