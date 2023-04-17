@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: Fri Apr 14 2023
+ * Modified At: Mon Apr 17 2023
  * Modified By: thepoy
  */
 
@@ -38,12 +38,15 @@ declare interface TopicConfig {
   system_role: string
 }
 
-interface TopicSettingsProps {
+interface PromptSettingsProps {
   open: boolean
   closeSettings?: () => void
-  topicID?: string
   config?: TopicConfig
+  onSettingsChange?: (topicID: string, config: TopicConfig) => void
+}
+
+interface TopicSettingsProps extends PromptSettingsProps {
+  topicID?: string
   name?: string
   description?: string
-  onSettingsChange?: (topicID: string, config: TopicConfig) => void
 }

@@ -2,7 +2,7 @@ import React, { useState, memo, useCallback } from 'react'
 import {
   LoadingOutlined,
   SendOutlined,
-  CloseCircleFilled
+  CloseCircleFilled, ClearOutlined
 } from '@ant-design/icons'
 import {
   Affix,
@@ -10,16 +10,20 @@ import {
   type ButtonProps,
   Input,
   Space,
-  Tooltip
+  Tooltip,
+  message
 } from 'antd'
+import { invoke } from '@tauri-apps/api'
 
 const { TextArea } = Input
 
 const MessageInput = memo(({
   onSendMessage,
   onAbortStream,
+  resetMessageList,
   waiting,
-  config
+  config,
+  topicID
 }: MessageInputProps) => {
   const [chatMessage, setChatMessage] = useState('')
 
@@ -38,6 +42,18 @@ const MessageInput = memo(({
     void onSendMessage(chatMessage.trim(), config.useStream)
     setChatMessage('')
   }, [chatMessage, config.useStream, onSendMessage])
+
+  const clearMessages = async (): Promise<void> => {
+    console.log('清空主题', topicID)
+
+    try {
+      await invoke('clear_topic', { topicId: parseInt(topicID) })
+
+      resetMessageList()
+    } catch (e) {
+      void message.error((e as string))
+    }
+  }
 
   const statusButton = (): React.ReactNode => {
     const disabled = waiting || chatMessage.trim() === ''
@@ -80,6 +96,12 @@ const MessageInput = memo(({
     <div id="input-message">
       <Affix style={{ width: '90%', maxWidth: 800 }}>
         <Space.Compact block>
+          <Tooltip title='清空当前主题消息'>
+            <Button type='primary' onClick={clearMessages}>
+              <ClearOutlined />
+            </Button>
+          </Tooltip>
+
           <TextArea
             value={chatMessage}
             placeholder="输入你要发送给 ChatGPT 的消息"
@@ -87,6 +109,7 @@ const MessageInput = memo(({
             onPressEnter={handleEnter}
             maxLength={2500}
             autoSize={{ minRows: 1, maxRows: 10 }}
+            style={{ borderRadius: 0 }}
             showCount
           />
 

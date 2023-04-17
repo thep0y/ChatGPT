@@ -22,6 +22,10 @@ const TopicSettings = lazy(
   async () => await import('~/components/settings/Topic')
 )
 
+const PromptSettings = lazy(
+  async () => await import('~/components/settings/Prompt')
+)
+
 type MenuItem = Required<MenuProps>['items'][number]
 
 const getItem = (
@@ -72,7 +76,10 @@ const ChatMenu = memo(({
   onConfigChange: setConfig
 }: ChatMenuProps) => {
   const [topics, setTopics] = useState<MenuItem[]>([])
-  const [openSettings, setOpenSettings] = useState<TopicSettingsProps>({
+  const [topicSettingsStatus, setTopicSettingsStatus] = useState<TopicSettingsProps>({
+    ...defaultOpenSettings
+  })
+  const [promptSettingsStatus, setPromptSettingsStatus] = useState<PromptSettingsProps>({
     ...defaultOpenSettings
   })
   const navigate = useNavigate()
@@ -150,15 +157,18 @@ const ChatMenu = memo(({
     }
 
     setConfig(newConfig)
-    setOpenSettings({ open: false })
+    setTopicSettingsStatus({ open: false })
 
     if (isEqual(config, newConfig)) return
 
     void saveConfig(newConfig)
   }
 
-  const closeSettings = (): void => {
-    setOpenSettings({ open: false })
+  const closeTopicSettings = (): void => {
+    setTopicSettingsStatus({ open: false })
+  }
+  const closePromptSettings = (): void => {
+    setPromptSettingsStatus({ open: false })
   }
 
   const openTopicSettings = (
@@ -168,13 +178,23 @@ const ChatMenu = memo(({
   ): void => {
     e.stopPropagation()
 
-    setOpenSettings({
+    if (t.id === 2) {
+      setPromptSettingsStatus({
+        open: true,
+        onSettingsChange: handleConfigChange,
+        closeSettings: closePromptSettings
+      })
+
+      return
+    }
+
+    setTopicSettingsStatus({
       open: true,
       topicID: t.id.toString(),
       name: t.name,
       config: config.topics ? config.topics[t.id] : { ...defaultTopicConfig },
       onSettingsChange: handleConfigChange,
-      closeSettings
+      closeSettings: closeTopicSettings
     })
   }
 
@@ -194,7 +214,7 @@ const ChatMenu = memo(({
             )
 
             const icon =
-              t.id <= 2
+              t.id === 1
                 ? (
                   <MessageOutlined />
                   )
@@ -238,7 +258,8 @@ const ChatMenu = memo(({
   return (
     <>
       {/* TODO: TopicSettings 的渲染时间需要优化，不该在加载 menu 时渲染 */}
-      <TopicSettings {...openSettings} />
+      <TopicSettings {...topicSettingsStatus} />
+      <PromptSettings {...promptSettingsStatus} />
 
       <Menu
         style={{ overflowY: 'scroll' }}

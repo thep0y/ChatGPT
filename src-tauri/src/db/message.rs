@@ -20,14 +20,14 @@ const USER_MESSAGE_INSERT: &str = r#"
 
 const ASSISTANT_MESSAGE_TABLE: &str = r#"
     CREATE TABLE IF NOT EXISTS assistant_message (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            message TEXT NOT NULL,
-            created_at INTEGER NOT NULL,
-            user_message_id INTEGER NOT NULL,
-            CONSTRAINT fk_user_message
-            FOREIGN KEY (user_message_id)
-            REFERENCES user_message (id)
-        )
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        message TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        user_message_id INTEGER NOT NULL,
+        CONSTRAINT fk_user_message
+        FOREIGN KEY (user_message_id)
+        REFERENCES user_message (id)
+    )
         "#;
 
 const ASSISTANT_MESSAGE_INSERT: &str = r#"

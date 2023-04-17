@@ -1,6 +1,6 @@
 import React, { useState, lazy, useEffect, useCallback } from 'react'
 import { Layout, FloatButton, Spin, message } from 'antd'
-import { SettingOutlined, MenuOutlined } from '@ant-design/icons'
+import { SettingOutlined, MenuOutlined, ClearOutlined } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
 import { isEqual, now, readConfig, saveConfig } from '~/lib'
@@ -365,12 +365,17 @@ const ChatPage: React.FC = () => {
             />
           </React.Suspense>
 
+          <ClearOutlined />
+
           <React.Suspense fallback={null}>
             <MessageInput
               onSendMessage={handleSendMessage}
               onAbortStream={handleAbortStream}
+              resetMessageList={() => { setMessages([]) }}
               waiting={waiting}
               config={config}
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              topicID={topicID!}
             />
           </React.Suspense>
         </Content>
