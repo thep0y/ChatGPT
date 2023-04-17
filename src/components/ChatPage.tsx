@@ -1,11 +1,21 @@
 import React, { useState, lazy, useEffect, useCallback } from 'react'
-import { Layout, FloatButton, Spin, message } from 'antd'
-import { SettingOutlined, MenuOutlined, ClearOutlined } from '@ant-design/icons'
+import { Layout, FloatButton, Spin, message, Modal } from 'antd'
+import {
+  SettingOutlined,
+  MenuOutlined,
+  ExclamationCircleFilled
+} from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
 import { isEqual, now, readConfig, saveConfig } from '~/lib'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { PROMPT_ASSISTANT_RESPONSE_IN_CHINESE, PROMPT_ROLE_MESSAGE, addNewLine } from '~/lib/message'
+import {
+  PROMPT_ASSISTANT_RESPONSE,
+  PROMPT_ASSISTANT_RESPONSE_IN_CHINESE,
+  PROMPT_ROLE_MESSAGE,
+  PROMPT_ROLE_MESSAGE_IN_CHINESE,
+  addNewLine
+} from '~/lib/message'
 import { appWindow } from '@tauri-apps/api/window'
 import '~/styles/ChatPage.scss'
 
@@ -91,6 +101,8 @@ const messageExists = (messages: Message[], time: number): boolean => {
   return false
 }
 
+const { confirm } = Modal
+
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [waiting, setWaiting] = useState<boolean>(false)
@@ -134,6 +146,10 @@ const ChatPage: React.FC = () => {
       console.log('当前消息', messages)
       console.log('会话', conversations)
 
+      if (topicID === '2' && conversations.length > 0) {
+        await showConfirm(topicID)
+      }
+
       for (const c of conversations) {
         const userMessage: Message = {
           content: c.user.message,
@@ -158,6 +174,31 @@ const ChatPage: React.FC = () => {
       void message.error((e as any).toString())
     }
   }
+  const showConfirm = async (topicID: string): Promise<void> => {
+    confirm({
+      title: '注意',
+      icon: <ExclamationCircleFilled />,
+      content:
+        '在完善新的问题之前应先清空之前的对话，否则会影响新问题的对话逻辑。',
+      okText: '继续',
+      cancelText: '清空',
+      cancelButtonProps: { danger: true, type: 'primary' },
+      onOk () {
+        console.log('do nothing')
+      },
+      async onCancel () {
+        console.log('清空主题', topicID)
+
+        try {
+          await invoke('clear_topic', { topicId: parseInt(topicID) })
+
+          setMessages([])
+        } catch (e) {
+          void message.error(e as string)
+        }
+      }
+    })
+  }
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -168,7 +209,7 @@ const ChatPage: React.FC = () => {
     await appWindow.emit('abort-stream')
     void message.info('已中断流式响应')
 
-    setMessages(pre => [...pre.slice(0, pre.length - 2)])
+    setMessages((pre) => [...pre.slice(0, pre.length - 2)])
 
     // TODO: 添加重试按钮快捷发送上一个问题。
   }
@@ -195,44 +236,64 @@ const ChatPage: React.FC = () => {
       const topicConfig = config?.topics?.[topicID!]
 
       if (topicID === '2') {
-        sendedMessages.unshift({
-          role: 'user',
-          content: PROMPT_ROLE_MESSAGE
-        }, {
-          role: 'assistant',
-          content: PROMPT_ASSISTANT_RESPONSE_IN_CHINESE
-        })
+        if (config?.prompt.inChinese) {
+          sendedMessages.unshift(
+            {
+              role: 'user',
+              content: PROMPT_ROLE_MESSAGE_IN_CHINESE
+            },
+            {
+              role: 'assistant',
+              content: PROMPT_ASSISTANT_RESPONSE_IN_CHINESE
+            }
+          )
+        } else {
+          sendedMessages.unshift(
+            {
+              role: 'user',
+              content: PROMPT_ROLE_MESSAGE
+            },
+            {
+              role: 'assistant',
+              content: PROMPT_ASSISTANT_RESPONSE
+            }
+          )
+        }
+
+        sendedMessages.push(...messages)
       } else {
         if (topicConfig) {
-          if (topicConfig.use_first_conversation) {
-            if (messages.length >= 2) {
-              sendedMessages.unshift(messages[0], messages[1])
-            }
-          }
-
-          if (topicConfig.conversation_count >= 1) {
-            let conversationCount = topicConfig.conversation_count
-
-            if (messages.length / 2 < conversationCount) {
-              conversationCount = messages.length / 2
-            }
-
+          if (topicConfig.use_context) {
             if (topicConfig.use_first_conversation) {
-              conversationCount -= 1
-            }
-
-            if (conversationCount > 0) {
-              for (let i = 0; i < conversationCount * 2; i++) {
-                sendedMessages.unshift(messages[messages.length - i - 1])
+              if (messages.length >= 2) {
+                sendedMessages.unshift(messages[0], messages[1])
               }
             }
-          }
 
-          if (topicConfig.system_role !== '') {
-            sendedMessages.unshift({
-              role: 'system',
-              content: topicConfig.system_role
-            })
+            if (topicConfig.conversation_count >= 1) {
+              let conversationCount = topicConfig.conversation_count
+
+              if (messages.length / 2 < conversationCount) {
+                conversationCount = messages.length / 2
+              }
+
+              if (topicConfig.use_first_conversation) {
+                conversationCount -= 1
+              }
+
+              if (conversationCount > 0) {
+                for (let i = 0; i < conversationCount * 2; i++) {
+                  sendedMessages.unshift(messages[messages.length - i - 1])
+                }
+              }
+            }
+
+            if (topicConfig.system_role !== '') {
+              sendedMessages.unshift({
+                role: 'system',
+                content: topicConfig.system_role
+              })
+            }
           }
         }
       }
@@ -326,7 +387,7 @@ const ChatPage: React.FC = () => {
       <FloatButton
         icon={<SettingOutlined />}
         style={{ right: 8, bottom: 110 }}
-        tooltip='设置'
+        tooltip="设置"
         onClick={() => {
           setOpenSetting(true)
         }}
@@ -335,7 +396,7 @@ const ChatPage: React.FC = () => {
       <FloatButton
         icon={<MenuOutlined />}
         style={{ right: 8 }}
-        tooltip='显示/隐藏主题列表'
+        tooltip="显示/隐藏主题列表"
         onClick={() => {
           setShowTopicList((pre) => !pre)
         }}
@@ -375,13 +436,13 @@ const ChatPage: React.FC = () => {
             />
           </React.Suspense>
 
-          <ClearOutlined />
-
           <React.Suspense fallback={null}>
             <MessageInput
               onSendMessage={handleSendMessage}
               onAbortStream={handleAbortStream}
-              resetMessageList={() => { setMessages([]) }}
+              resetMessageList={() => {
+                setMessages([])
+              }}
               waiting={waiting}
               config={config}
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

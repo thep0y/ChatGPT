@@ -79,6 +79,9 @@ const Settings: React.FC<TopicSettingsProps> = ({
     if (name !== state.topicName || description !== state.description) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       void invoke('update_topic', { topidId: parseInt(topicID!), newName: state.topicName, newDescription: state.description })
+
+      console.log('主题名', state.topicName)
+      console.log('主题描述', state.description)
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
