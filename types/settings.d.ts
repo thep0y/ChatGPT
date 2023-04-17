@@ -55,7 +55,7 @@ declare interface PromptConfig {
 interface PromptSettingsProps {
   open: boolean
   closeSettings?: () => void
-  config?: TopicConfig
+  config?: PromptConfig
   onSettingsChange?: (
     promptConfig: PromptConfig
   ) => void
@@ -64,6 +64,7 @@ interface PromptSettingsProps {
 interface TopicSettingsProps extends PromptSettingsProps {
   topicID?: string
   name?: string
+  config?: TopicConfig
   description?: string
   onSettingsChange?: (topicID: string, config: TopicConfig) => void
 }

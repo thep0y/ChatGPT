@@ -198,7 +198,8 @@ const ChatMenu = memo(({
       setPromptSettingsStatus({
         open: true,
         onSettingsChange: handlePromptConfigChange,
-        closeSettings: closePromptSettings
+        closeSettings: closePromptSettings,
+        config: config.prompt
       })
 
       return

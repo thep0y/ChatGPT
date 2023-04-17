@@ -283,6 +283,8 @@ const Settings = memo(({
         name="settings"
         initialValues={{ 'open-api-key': openApiKey }}
       >
+        <Divider>基础设置</Divider>
+
         <Form.Item name="proxy" label="代理" initialValue={config.proxy}>
           <Input.Group compact>
             <Select
@@ -424,6 +426,7 @@ const Settings = memo(({
           name="markdown-save-mode"
           label="Markdown 用户消息保存形式"
           initialValue={mode}
+          tooltip="用户消息是多行文件时，应使用引用块形式保存"
         >
           <Select
             style={{ width: 150 }}
@@ -435,7 +438,6 @@ const Settings = memo(({
           >
             {markdownUserMessageModeOptions}
           </Select>
-
         </Form.Item>
       </Form>
     </Modal>

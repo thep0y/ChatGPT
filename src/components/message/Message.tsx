@@ -27,7 +27,8 @@ const CodeBlock: React.FC<CodeProps> = ({ children, className }) => {
       lineNumberStyle={{ minWidth: '2rem' }}
       wrapLines
     >
-      {String(children).replace(/\n$/, '')}
+      {/* {String(children).replace(/\n$/, '')} */}
+      {String(children)}
     </SyntaxHighlighter>
   )
 }

@@ -2,9 +2,9 @@ import React, { memo, useState } from 'react'
 import { Modal, Form, Switch } from 'antd'
 
 const Settings: React.FC<PromptSettingsProps> = memo(({
-  open, closeSettings, onSettingsChange
+  open, closeSettings, onSettingsChange, config
 }: PromptSettingsProps) => {
-  const [inChinese, setInChinese] = useState(false)
+  const [inChinese, setInChinese] = useState(config?.inChinese ?? true)
 
   const onSwitchLanguage = (status: boolean): void => {
     setInChinese(status)
@@ -15,18 +15,10 @@ const Settings: React.FC<PromptSettingsProps> = memo(({
   }
 
   const onOk = (): void => {
-    // if (name !== state.topicName || description !== state.description) {
-    //   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    //   void invoke('update_topic', { topidId: parseInt(topicID!), newName: state.topicName, newDescription: state.description })
-    // }
-
-    // // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    // onSettingsChange?.(topicID!, {
-    //   use_context: state.useContext,
-    //   conversation_count: state.conversationCount,
-    //   use_first_conversation: state.useFirstConversation,
-    //   system_role: state.systemRole
-    // })
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    onSettingsChange?.({
+      inChinese
+    })
     closeSettings?.()
   }
 
@@ -48,7 +40,7 @@ const Settings: React.FC<PromptSettingsProps> = memo(({
         <Form.Item
           name="switch-language"
           label="使用中文"
-          tooltip="是否使用中文交流"
+          tooltip="默认使用中文作为提示/问题完善文字，关闭时使用英文。应根据实际情况设置。"
         >
           <Switch
             defaultChecked={inChinese}

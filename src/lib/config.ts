@@ -16,7 +16,7 @@ export const defaultConfig: Config = {
   imageScale: 4,
   useStream: false,
   prompt: {
-    inChinese: false
+    inChinese: true
   },
   export: {
     markdown: {
@@ -82,7 +82,7 @@ export const readConfig = async (): Promise<Config> => {
         proxy: config?.proxy?.proxy,
         reverseProxy: config?.proxy?.reverse_proxy
       },
-      prompt: { inChinese: config?.prompt?.in_chinese ?? false },
+      prompt: { inChinese: config?.prompt?.in_chinese ?? true },
       openApiKey: config?.open_api_key ?? '',
       imageScale: config?.image_scale ?? 4,
       useStream: config?.use_stream ?? false,
