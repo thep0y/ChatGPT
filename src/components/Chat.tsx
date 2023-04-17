@@ -15,9 +15,10 @@ import {
 } from '@tauri-apps/api/dialog'
 
 import '~/styles/Chat.scss'
-import { saveFile, saveMarkdown } from '~/lib/fs'
+import { UserMessageMode, saveFile, saveMarkdown } from '~/lib/fs'
 import Progress from '~/components/Progress'
 import { now } from '~/lib'
+import { type TypeOpen } from 'antd/es/message/interface'
 
 const MessageList = lazy(async () => await import('~/components/message/List'))
 const Scrollbar = lazy(
@@ -44,11 +45,12 @@ const MARKDOWN_FILTER_OPTION: SaveDialogOptions = {
   ] as DialogFilter[]
 } as const
 
-const handleSaveError = (
+const handleSaveMessage = (
   errorMsg: string,
-  setSaving: React.Dispatch<React.SetStateAction<Saving>>
+  setSaving: React.Dispatch<React.SetStateAction<Saving>>,
+  method: TypeOpen = message.error
 ): void => {
-  void message.error(errorMsg)
+  void method(errorMsg)
   setSaving((pre) => ({ status: false, name: pre.name }))
 }
 
@@ -64,7 +66,7 @@ const toMarkdown = async (topicName: string, setSaving: React.Dispatch<React.Set
   })
 
   if (filePath === null) {
-    handleSaveError('markdown 的保存路径选择失败', setSaving)
+    handleSaveMessage('markdown 的保存路径选择失败', setSaving, message.info)
 
     return null
   }
@@ -84,7 +86,7 @@ const toImage = async (
   })
 
   if (filePath === null) {
-    handleSaveError('图片的保存路径选择失败', setSaving)
+    handleSaveMessage('图片的保存路径选择失败', setSaving, message.info)
 
     return null
   }
@@ -92,7 +94,7 @@ const toImage = async (
   const target = messageListComponentRef.current
 
   if (target == null) {
-    handleSaveError('当前消息列表为空', setSaving)
+    handleSaveMessage('当前消息列表为空', setSaving, message.info)
 
     return null
   }
@@ -115,7 +117,7 @@ const toImage = async (
     return { blob, filepath: filePath }
   } catch (e) {
     console.error(e)
-    handleSaveError((e as any).toString(), setSaving)
+    handleSaveMessage((e as any).toString(), setSaving)
 
     return null
   }
@@ -138,7 +140,11 @@ const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) =>
       return
     }
 
-    await saveMarkdown(path, topicName, messages, setProgress)
+    if (config.export.markdown.mode === UserMessageMode.TITLE) {
+      void message.warning('如果用户消息中含有多行文件，应在设置中设置导出形式为“引用块”')
+    }
+
+    await saveMarkdown(config.export.markdown.mode, path, topicName, messages, setProgress)
 
     void message.success('markdown 已保存到：' + path)
   }, [messageListComponentRef, messages, setSaving, setProgress, config])
@@ -178,7 +184,7 @@ const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) =>
 
       void message.success('图片已保存到：' + filepath)
     } catch (e) {
-      handleSaveError((e as any).toString(), setSaving)
+      handleSaveMessage((e as any).toString(), setSaving)
     } finally {
       setProgress(0)
       setSaving((pre) => ({ status: false, name: pre.name }))

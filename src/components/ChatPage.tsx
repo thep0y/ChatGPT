@@ -5,7 +5,7 @@ import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
 import { isEqual, now, readConfig, saveConfig } from '~/lib'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { addNewLine } from '~/lib/message'
+import { PROMPT_ASSISTANT_RESPONSE_IN_CHINESE, PROMPT_ROLE_MESSAGE, addNewLine } from '~/lib/message'
 import { appWindow } from '@tauri-apps/api/window'
 import '~/styles/ChatPage.scss'
 
@@ -194,36 +194,46 @@ const ChatPage: React.FC = () => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const topicConfig = config?.topics?.[topicID!]
 
-      if (topicConfig) {
-        if (topicConfig.use_first_conversation) {
-          if (messages.length >= 2) {
-            sendedMessages.unshift(messages[0], messages[1])
-          }
-        }
-
-        if (topicConfig.conversation_count >= 1) {
-          let conversationCount = topicConfig.conversation_count
-
-          if (messages.length / 2 < conversationCount) {
-            conversationCount = messages.length / 2
-          }
-
+      if (topicID === '2') {
+        sendedMessages.unshift({
+          role: 'user',
+          content: PROMPT_ROLE_MESSAGE
+        }, {
+          role: 'assistant',
+          content: PROMPT_ASSISTANT_RESPONSE_IN_CHINESE
+        })
+      } else {
+        if (topicConfig) {
           if (topicConfig.use_first_conversation) {
-            conversationCount -= 1
-          }
-
-          if (conversationCount > 0) {
-            for (let i = 0; i < conversationCount * 2; i++) {
-              sendedMessages.unshift(messages[messages.length - i - 1])
+            if (messages.length >= 2) {
+              sendedMessages.unshift(messages[0], messages[1])
             }
           }
-        }
 
-        if (topicConfig.system_role !== '') {
-          sendedMessages.unshift({
-            role: 'system',
-            content: topicConfig.system_role
-          })
+          if (topicConfig.conversation_count >= 1) {
+            let conversationCount = topicConfig.conversation_count
+
+            if (messages.length / 2 < conversationCount) {
+              conversationCount = messages.length / 2
+            }
+
+            if (topicConfig.use_first_conversation) {
+              conversationCount -= 1
+            }
+
+            if (conversationCount > 0) {
+              for (let i = 0; i < conversationCount * 2; i++) {
+                sendedMessages.unshift(messages[messages.length - i - 1])
+              }
+            }
+          }
+
+          if (topicConfig.system_role !== '') {
+            sendedMessages.unshift({
+              role: 'system',
+              content: topicConfig.system_role
+            })
+          }
         }
       }
 

@@ -25,10 +25,20 @@ declare interface Config {
     proxy?: Proxy
     reverseProxy?: ReverseProxy
   }
+  prompt: PromptConfig
+  export: ExportConfig
   openApiKey: string
   imageScale: number
   useStream: boolean
   topics?: Record<string, TopicConfig>
+}
+
+declare interface ExportConfig {
+  markdown: MarkdownConfig
+}
+
+declare interface MarkdownConfig {
+  mode: number
 }
 
 declare interface TopicConfig {
@@ -38,15 +48,22 @@ declare interface TopicConfig {
   system_role: string
 }
 
+declare interface PromptConfig {
+  inChinese: boolean
+}
+
 interface PromptSettingsProps {
   open: boolean
   closeSettings?: () => void
   config?: TopicConfig
-  onSettingsChange?: (topicID: string, config: TopicConfig) => void
+  onSettingsChange?: (
+    promptConfig: PromptConfig
+  ) => void
 }
 
 interface TopicSettingsProps extends PromptSettingsProps {
   topicID?: string
   name?: string
   description?: string
+  onSettingsChange?: (topicID: string, config: TopicConfig) => void
 }

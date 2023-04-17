@@ -61,7 +61,7 @@ const newTopic = (
   return getItem(label, key, onClick, <MessageOutlined />)
 }
 
-const defaultOpenSettings: TopicSettingsProps = { open: false }
+const defaultOpenSettings = { open: false }
 const defaultTopicConfig: TopicConfig = {
   use_context: true,
   conversation_count: 1,
@@ -118,7 +118,7 @@ const ChatMenu = memo(({
 
       setTopics((pre) => [...pre.slice(0, pre.length - 1), topic])
 
-      handleConfigChange(id.toString(), defaultTopicConfig)
+      handleTopicConfigChange(id.toString(), defaultTopicConfig)
 
       navigate('/' + id.toString())
     },
@@ -144,7 +144,7 @@ const ChatMenu = memo(({
     setTopics((pre) => [...pre, t])
   }, [topics])
 
-  const handleConfigChange = (
+  const handleTopicConfigChange = (
     topicID: string,
     topicConfig: TopicConfig
   ): void => {
@@ -154,6 +154,22 @@ const ChatMenu = memo(({
         ...config.topics,
         [topicID]: topicConfig
       }
+    }
+
+    setConfig(newConfig)
+    setTopicSettingsStatus({ open: false })
+
+    if (isEqual(config, newConfig)) return
+
+    void saveConfig(newConfig)
+  }
+
+  const handlePromptConfigChange = (
+    promptConfig: PromptConfig
+  ): void => {
+    const newConfig: Config = {
+      ...config,
+      prompt: { ...promptConfig }
     }
 
     setConfig(newConfig)
@@ -181,7 +197,7 @@ const ChatMenu = memo(({
     if (t.id === 2) {
       setPromptSettingsStatus({
         open: true,
-        onSettingsChange: handleConfigChange,
+        onSettingsChange: handlePromptConfigChange,
         closeSettings: closePromptSettings
       })
 
@@ -193,7 +209,7 @@ const ChatMenu = memo(({
       topicID: t.id.toString(),
       name: t.name,
       config: config.topics ? config.topics[t.id] : { ...defaultTopicConfig },
-      onSettingsChange: handleConfigChange,
+      onSettingsChange: handleTopicConfigChange,
       closeSettings: closeTopicSettings
     })
   }

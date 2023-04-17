@@ -8,10 +8,12 @@ import {
   Row,
   Col,
   InputNumber,
-  Switch
+  Switch,
+  Divider
 } from 'antd'
+import { UserMessageMode } from '~/lib/fs'
 
-const PROTOCOLS: ProtocolOption[] = [
+const PROTOCOLS: Array<SelectOption<string>> = [
   {
     value: 'http://',
     label: 'http'
@@ -30,6 +32,17 @@ const PROTOCOLS: ProtocolOption[] = [
   }
 ]
 
+const MARKDOWN_USER_MESSAGE_MODES: Array<SelectOption<number>> = [
+  {
+    value: UserMessageMode.TITLE,
+    label: '二级标题'
+  },
+  {
+    value: UserMessageMode.QUOTE,
+    label: '引用块'
+  }
+]
+
 const IMAGE_SCALE_MIN = 2
 const IMAGE_SCALE_MAX = 8
 
@@ -43,8 +56,8 @@ interface SettingsProps {
   closeSettings: () => void
 }
 
-interface ProtocolOption {
-  readonly value: string
+interface SelectOption<T = string | number> {
+  readonly value: T
   readonly label: string
 }
 
@@ -55,6 +68,7 @@ interface SettingsState {
   openApiKey: string
   imageScale: number
   useStream: boolean
+  export: ExportConfig
 }
 
 type SettingsAction =
@@ -64,6 +78,7 @@ type SettingsAction =
   | { type: 'SET_OPEN_API_KEY', payload: string }
   | { type: 'SET_IMAGE_SCALE', payload: number }
   | { type: 'SET_USE_STREAM', payload: boolean }
+  | { type: 'SET_MARKDOWN_USER_MESSAGE_MODE', payload: UserMessageMode }
   | { type: 'RESET', payload: SettingsState }
 
 const initialState: SettingsState = {
@@ -72,7 +87,12 @@ const initialState: SettingsState = {
   reverseProxy: '',
   openApiKey: '',
   imageScale: 4,
-  useStream: true
+  useStream: true,
+  export: {
+    markdown: {
+      mode: UserMessageMode.TITLE
+    }
+  }
 }
 
 const settingsReducer = (
@@ -95,6 +115,15 @@ const settingsReducer = (
       return { ...state, imageScale: action.payload }
     case 'SET_USE_STREAM':
       return { ...state, useStream: action.payload }
+    case 'SET_MARKDOWN_USER_MESSAGE_MODE':
+      return {
+        ...state,
+        export: {
+          markdown: {
+            mode: action.payload
+          }
+        }
+      }
     default:
       return state
   }
@@ -119,11 +148,16 @@ const Settings = memo(({
     })
     dispatch({ type: 'SET_OPEN_API_KEY', payload: config.openApiKey })
     dispatch({ type: 'SET_IMAGE_SCALE', payload: config.imageScale })
+    dispatch({ type: 'SET_MARKDOWN_USER_MESSAGE_MODE', payload: config.export.markdown.mode })
     dispatch({ type: 'SET_USE_STREAM', payload: config.useStream })
   }, [config])
 
   const onProxyMethodChange = useCallback((value: ProxyMethod): void => {
     dispatch({ type: 'SET_PROXY_METHOD', payload: value })
+  }, [])
+
+  const onMarkdownUserMessageModeChange = useCallback((value: UserMessageMode): void => {
+    dispatch({ type: 'SET_MARKDOWN_USER_MESSAGE_MODE', payload: value })
   }, [])
 
   const onProxyInputChange = useCallback(
@@ -171,10 +205,9 @@ const Settings = memo(({
     reverseProxy,
     openApiKey,
     imageScale,
-    useStream
+    useStream,
+    export: { markdown: { mode } }
   } = state
-
-  console.log('代理', proxy)
 
   const onFinish = useCallback(async (): Promise<void> => {
     try {
@@ -192,7 +225,12 @@ const Settings = memo(({
         },
         imageScale,
         openApiKey,
-        useStream
+        useStream,
+        export: {
+          markdown: {
+            mode
+          }
+        }
       }
 
       console.log('新配置文件', newSettings)
@@ -200,13 +238,23 @@ const Settings = memo(({
     } catch (info) {
       console.log('Validate Failed:', info)
     }
-  }, [proxy, imageScale, openApiKey, useStream, reverseProxy, proxyMethod])
+  }, [proxy, imageScale, openApiKey, useStream, reverseProxy, proxyMethod, mode])
 
   const protocolOptions = useMemo(
     () =>
       PROTOCOLS.map((protocol) => (
         <Select.Option key={protocol.value} value={protocol.value}>
           {protocol.label}
+        </Select.Option>
+      )),
+    []
+  )
+
+  const markdownUserMessageModeOptions = useMemo(
+    () =>
+      MARKDOWN_USER_MESSAGE_MODES.map((mode) => (
+        <Select.Option key={mode.value} value={mode.value}>
+          {mode.label}
         </Select.Option>
       )),
     []
@@ -368,6 +416,26 @@ const Settings = memo(({
           className="collection-create-form_last-form-item"
         >
           <Switch checked={useStream} onChange={onUseStreamChange} />
+        </Form.Item>
+
+        <Divider>导出</Divider>
+
+        <Form.Item
+          name="markdown-save-mode"
+          label="Markdown 用户消息保存形式"
+          initialValue={mode}
+        >
+          <Select
+            style={{ width: 150 }}
+            placeholder="选择保存形式"
+            optionFilterProp="children"
+            onChange={(value) => {
+              onMarkdownUserMessageModeChange(value)
+            }}
+          >
+            {markdownUserMessageModeOptions}
+          </Select>
+
         </Form.Item>
       </Form>
     </Modal>

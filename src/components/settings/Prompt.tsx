@@ -1,7 +1,9 @@
 import React, { memo, useState } from 'react'
 import { Modal, Form, Switch } from 'antd'
 
-const Settings: React.FC<PromptSettingsProps> = memo(({ open, closeSettings }: PromptSettingsProps) => {
+const Settings: React.FC<PromptSettingsProps> = memo(({
+  open, closeSettings, onSettingsChange
+}: PromptSettingsProps) => {
   const [inChinese, setInChinese] = useState(false)
 
   const onSwitchLanguage = (status: boolean): void => {
