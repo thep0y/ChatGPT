@@ -7,6 +7,7 @@ mod chat;
 mod config;
 mod db;
 mod error;
+mod export;
 mod logger;
 mod time;
 
@@ -27,6 +28,7 @@ use config::{Config, ProxyConfig, APP_CONFIG_DIR};
 use db::manager::SqliteConnectionManager;
 use db::message::{get_messages, init_messages, Conversation};
 use db::topic::{get_all_topics, init_topic, Topic};
+use export::markdown::{format_user_message, UserMessageMode};
 use futures_util::StreamExt;
 use simplelog::{ColorChoice, CombinedLogger, TermLogger, TerminalMode, WriteLogger};
 use std::fs as SysFS;
@@ -54,51 +56,57 @@ fn set_gtk_scale_env() {
 
 #[tauri::command]
 async fn export_to_file(filepath: String, buf: Vec<u8>, offset: u32) -> Result<()> {
-    if offset == 0 {
-        let mut file = File::create(filepath).await.map_err(|e| e.to_string())?;
-        return file.write_all(&buf).await.map_err(|e| e.to_string());
-    }
+    let mut file = if offset == 0 {
+        File::create(filepath).await.map_err(|e| e.to_string())?
+    } else {
+        OpenOptions::new()
+            .append(true)
+            .open(filepath)
+            .await
+            .map_err(|e| e.to_string())?
+    };
 
-    let file = OpenOptions::new()
-        .append(true)
-        .open(filepath)
-        .await
-        .map_err(|e| e.to_string())?;
-    let mut writer = BufWriter::new(file);
+    let mut writer = BufWriter::new(&mut file);
     writer.write_all(&buf).await.map_err(|e| e.to_string())?;
     writer.flush().await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 async fn export_to_markdown(
+    mode: usize,
     filepath: String,
     topic_name: String,
     message: Message,
     offset: u32,
 ) -> Result<()> {
-    if offset == 0 {
-        let text = format!("# {}\n\n## {}\n\n", topic_name, message.content);
-        let mut file = File::create(filepath).await.map_err(|e| e.to_string())?;
-        return file
-            .write_all(text.as_bytes())
-            .await
-            .map_err(|e| e.to_string());
-    }
+    let user_message_mode = UserMessageMode::try_from(mode)?;
 
-    let file = OpenOptions::new()
-        .append(true)
-        .open(filepath)
-        .await
-        .map_err(|e| e.to_string())?;
-    let mut writer = BufWriter::new(file);
-
-    let text = {
-        if message.role == "user" {
-            format!("\n\n## {}\n\n", message.content)
-        } else {
-            message.content
-        }
+    let text = if offset == 0 {
+        format!(
+            "# {}\n\n{}\n",
+            topic_name,
+            format_user_message(&message.content, user_message_mode)
+        )
+    } else if message.role == "user" {
+        format!(
+            "\n{}\n",
+            format_user_message(&message.content, user_message_mode)
+        )
+    } else {
+        message.content + "\n"
     };
+
+    let mut file = if offset == 0 {
+        File::create(filepath).await.map_err(|e| e.to_string())?
+    } else {
+        OpenOptions::new()
+            .append(true)
+            .open(filepath)
+            .await
+            .map_err(|e| e.to_string())?
+    };
+
+    let mut writer = BufWriter::new(&mut file);
 
     writer
         .write_all(text.as_bytes())
