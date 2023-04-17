@@ -141,10 +141,19 @@ pub fn update_topic_by_id(
     new_name: &str,
     new_description: &str,
 ) -> Result<usize> {
+    trace!(
+        "通过 id 更新主题, id={}, name={}, description={}",
+        topid_id,
+        new_name,
+        new_description
+    );
+
     let size = conn.execute(
-        "UPDATE topic SET name = ?1 AND description = ?2 WHERE id = ?3",
+        "UPDATE topic SET name = ?1, description = ?2 WHERE id = ?3",
         (new_name, new_description, topid_id),
     )?;
+
+    trace!("影响的行数: {size}");
 
     Ok(size)
 }
