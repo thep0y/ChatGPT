@@ -6,7 +6,7 @@ use crate::{
     config::ProxyConfig,
     error::Result,
 };
-use reqwest::Response;
+use reqwest_eventsource::EventSource;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -122,7 +122,7 @@ pub async fn chat_gpt_steam_client(
     proxy_config: &ProxyConfig,
     api_key: &str,
     request: ChatGPTRequest,
-) -> Result<Response> {
+) -> Result<EventSource> {
     let client = {
         if proxy_config.method == "proxy" {
             new_http_client_with_proxy(&proxy_config.to_string())?
@@ -144,15 +144,17 @@ pub async fn chat_gpt_steam_client(
     let mut headers = create_headers(api_key);
     headers.append("Content-Type", "application/json".parse().unwrap());
 
-    let response = client
-        .post(&url)
-        .headers(headers)
-        .json(&request)
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
+    debug!("requesting: method=POST path={}", url);
 
-    Ok(response)
+    let rb = client.post(url).headers(headers).json(&request);
+
+    match EventSource::new(rb) {
+        Ok(es) => Ok(es),
+        Err(e) => {
+            error!("{}", e);
+            return Err(e.to_string());
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

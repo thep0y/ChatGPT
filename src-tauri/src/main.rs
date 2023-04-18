@@ -30,6 +30,7 @@ use db::message::{get_messages, init_messages, Conversation};
 use db::topic::{get_all_topics, init_topic, Topic};
 use export::markdown::{format_user_message, UserMessageMode};
 use futures_util::StreamExt;
+use reqwest_eventsource::Event;
 use simplelog::{ColorChoice, CombinedLogger, TermLogger, TerminalMode, WriteLogger};
 use std::fs as SysFS;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -140,13 +141,44 @@ async fn write_config(config: Config) -> Result<()> {
 
 #[tauri::command]
 async fn chat_gpt(
+    pool: tauri::State<'_, SQLitePool>,
     proxy_config: ProxyConfig,
     api_key: String,
+    topic_id: u32,
     request: ChatGPTRequest,
     created_at: u64,
 ) -> Result<ChatGPTResponse> {
+    debug!("使用的代理：{:?}", proxy_config);
     debug!("发送的消息：{:?}", request);
-    chat_gpt_client(&proxy_config, &api_key, request).await
+
+    let messages_len = request.messages.len();
+
+    let user_message_content = &request.messages[messages_len - 1].content.clone();
+
+    let response = match chat_gpt_client(&proxy_config, &api_key, request).await {
+        Ok(r) => r,
+        Err(e) => {
+            error!("获取普通响应时出错：{}", e);
+            return Err(e.to_string());
+        }
+    };
+
+    let user_message = UserMessage::new(user_message_content, created_at, topic_id);
+
+    let conn = pool.get().map_err(|e| e.to_string())?;
+    user_message.insert(&conn).map_err(|e| e.to_string())?;
+
+    let user_message_id = conn.last_insert_rowid() as u32;
+
+    let chat_message = AssistantMessage::new(
+        response.choices[0].message.content.clone(),
+        response.created,
+        user_message_id,
+    );
+
+    chat_message.insert(&conn).map_err(|e| e.to_string())?;
+
+    Ok(response)
 }
 
 #[tauri::command]
@@ -154,7 +186,7 @@ async fn chat_gpt_stream(
     pool: tauri::State<'_, SQLitePool>,
     window: tauri::Window,
     proxy_config: ProxyConfig,
-    api_key: &str,
+    api_key: String,
     topic_id: u32,
     request: ChatGPTRequest,
     created_at: u64,
@@ -166,8 +198,15 @@ async fn chat_gpt_stream(
 
     let user_message_content = &request.messages[messages_len - 1].content.clone();
 
-    let response = chat_gpt_steam_client(&proxy_config, api_key, request).await?;
-    let mut stream = response.bytes_stream();
+    let mut es = match chat_gpt_steam_client(&proxy_config, &api_key, request).await {
+        Ok(r) => r,
+        Err(e) => {
+            error!("获取流式响应时出错：{}", e);
+            return Err(e.to_string());
+        }
+    };
+
+    // let mut stream = response.bytes_stream();
 
     let mut message_parts = Vec::new();
 
@@ -184,40 +223,55 @@ async fn chat_gpt_stream(
     let mut response_time = 0u64;
 
     // TODO: 超过一定时间(默认 5 秒)后未能继续获得 chunk 则自动中断，意味着响应失败
-    while let Some(item) = stream.next().await {
-        let bytes = item.map_err(|e| e.to_string())?;
-        let mut chunk = std::str::from_utf8(&bytes).map_err(|e| e.to_string())?;
+    while let Some(event) = es.next().await {
+        match event {
+            Ok(Event::Open) => trace!("Connection Open!"),
+            Ok(Event::Message(message)) => {
+                debug!("Message: {:#?}", message.data);
 
-        debug!("chunk: {}", chunk);
+                let data = &message.data;
 
-        chunk = chunk.trim();
-        let slices = chunk.split("\n\n");
+                if data == "[DONE]" {
+                    window.emit("stream", "done").map_err(|e| e.to_string())?;
+                    break;
+                }
 
-        for item in slices {
-            let body = &item[6..];
-            if body == "[DONE]" {
-                window.emit("stream", "done").map_err(|e| e.to_string())?;
-                break;
+                let chunk_message: MessageChunk = match serde_json::from_str(data) {
+                    Ok(r) => r,
+                    Err(e) => {
+                        error!("反序列化 chunk str 时出错：{}", e);
+                        return Err(e.to_string());
+                    }
+                };
+
+                if response_time == 0 {
+                    response_time = chunk_message.created;
+                }
+
+                if let Some(part) = &chunk_message.choices[0].delta.content {
+                    message_parts.push(part.to_string());
+                }
+
+                window
+                    .emit("stream", chunk_message)
+                    .map_err(|e| e.to_string())?;
             }
-
-            let chunk_message: MessageChunk =
-                serde_json::from_str(body).map_err(|e| e.to_string())?;
-
-            if response_time == 0 {
-                response_time = chunk_message.created;
+            Err(err) => {
+                match err {
+                    reqwest_eventsource::Error::StreamEnded => {
+                        trace!("Connection Done!")
+                    }
+                    _ => {
+                        error!("解析流式响应时出错：{}", err);
+                    }
+                }
+                es.close();
             }
-
-            if let Some(part) = &chunk_message.choices[0].delta.content {
-                message_parts.push(part.to_string());
-            }
-
-            window
-                .emit("stream", chunk_message)
-                .map_err(|e| e.to_string())?;
         }
 
         if abort_flag.load(Ordering::Relaxed) {
             done_flag = false;
+            es.close();
             break;
         }
     }
