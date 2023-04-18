@@ -78,8 +78,6 @@ const handleStreamResponse = async (
       }
     ])
 
-    console.log('流消息', '向最后一条消息的 content 中添加文字')
-
     return
   }
 
@@ -111,9 +109,6 @@ const ChatPage: React.FC = () => {
   const [config, setConfig] = useState<Config | null>(null)
   const { topicID } = useParams<'topicID'>()
   const [searchParams] = useSearchParams()
-
-  console.log('主题 id', topicID)
-  console.log('主题名', searchParams.get('name'))
 
   const topicName = searchParams.get('name') ?? '未知主题名'
 
@@ -236,6 +231,8 @@ const ChatPage: React.FC = () => {
       const topicConfig = config?.topics?.[topicID!]
 
       if (topicID === '2') {
+        sendedMessages.unshift(...messages)
+
         if (config?.prompt.inChinese) {
           sendedMessages.unshift(
             {
@@ -259,8 +256,6 @@ const ChatPage: React.FC = () => {
             }
           )
         }
-
-        sendedMessages.push(...messages)
       } else {
         if (topicConfig) {
           if (topicConfig.use_context) {
@@ -329,9 +324,17 @@ const ChatPage: React.FC = () => {
 
           console.log('使用的代理配置', config?.proxy)
 
-          const messageID = await invoke<number>('chat_gpt_stream', args)
+          try {
+            const messageID = await invoke<number>('chat_gpt_stream', args)
 
-          console.log('用户消息 id', messageID)
+            console.log('用户消息 id', messageID)
+          } catch (e) {
+            void message.error((e as string))
+
+            setMessages((prevMessages) => [
+              ...prevMessages.slice(0, prevMessages.length - 1)
+            ])
+          }
 
           unlisten()
         } else {

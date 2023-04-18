@@ -263,6 +263,7 @@ async fn chat_gpt_stream(
                     }
                     _ => {
                         error!("解析流式响应时出错：{}", err);
+                        return Err(err.to_string());
                     }
                 }
                 es.close();
