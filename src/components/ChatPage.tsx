@@ -307,6 +307,18 @@ const ChatPage: React.FC = () => {
           stream
         }
 
+        const args = {
+          proxyConfig: {
+            ...config?.proxy,
+            reverse_proxy: config?.proxy?.reverseProxy
+          },
+          apiKey: config?.openApiKey,
+          request,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          topicId: parseInt(topicID!),
+          createdAt
+        }
+
         if (stream) {
           const unlisten = await appWindow.listen<string>(
             'stream',
@@ -317,30 +329,13 @@ const ChatPage: React.FC = () => {
 
           console.log('使用的代理配置', config?.proxy)
 
-          const messageID = await invoke<number>('chat_gpt_stream', {
-            proxyConfig: {
-              ...config?.proxy,
-              reverse_proxy: config?.proxy?.reverseProxy
-            },
-            apiKey: config?.openApiKey,
-            request,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            topicId: parseInt(topicID!),
-            createdAt
-          })
+          const messageID = await invoke<number>('chat_gpt_stream', args)
 
           console.log('用户消息 id', messageID)
 
           unlisten()
         } else {
-          const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', {
-            proxyConfig: {
-              ...config?.proxy,
-              reverse_proxy: config?.proxy?.reverseProxy
-            },
-            apiKey: config?.openApiKey,
-            request
-          })
+          const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', args)
 
           // chatgpt 的响应的时间戳是精确到秒的，需要 x1000 js 才能正确识别
           setMessages((prevMessages) => [
