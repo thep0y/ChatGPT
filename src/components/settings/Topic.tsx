@@ -26,7 +26,10 @@ type SettingsAction =
   | { type: 'SET_SYSTEM_ROLE', payload: string }
   | { type: 'SET_SYSTEM_ROLE_AVAILABLE', payload: boolean }
 
-const reducer = (state: SettingsState, action: SettingsAction): SettingsState => {
+const reducer = (
+  state: SettingsState,
+  action: SettingsAction
+): SettingsState => {
   switch (action.type) {
     case 'SET_TOPIC_NAME':
       return { ...state, topicName: action.payload }
@@ -77,8 +80,12 @@ const Settings: React.FC<TopicSettingsProps> = ({
 
   const onOk = (): void => {
     if (name !== state.topicName || description !== state.description) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      void invoke('update_topic', { topidId: parseInt(topicID!), newName: state.topicName, newDescription: state.description })
+      void invoke('update_topic', {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        topidId: parseInt(topicID!),
+        newName: state.topicName,
+        newDescription: state.description
+      })
 
       console.log('主题名', state.topicName)
       console.log('主题描述', state.description)
@@ -100,7 +107,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
 
   const onConversationCountChange = useCallback(
     (newValue: number | null): void => {
-      if (newValue != null) dispatch({ type: 'SET_CONVERSATION_COUNT', payload: newValue })
+      if (newValue != null) { dispatch({ type: 'SET_CONVERSATION_COUNT', payload: newValue }) }
     },
     []
   )
@@ -121,7 +128,9 @@ const Settings: React.FC<TopicSettingsProps> = ({
     dispatch({ type: 'SET_TOPIC_NAME', payload: e.currentTarget.value })
   }
 
-  const onTopicDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>): void => {
+  const onTopicDescriptionChange = (
+    e: ChangeEvent<HTMLTextAreaElement>
+  ): void => {
     dispatch({ type: 'SET_TOPIC_DESCRIPTION', payload: e.currentTarget.value })
   }
 
@@ -159,11 +168,36 @@ const Settings: React.FC<TopicSettingsProps> = ({
           />
         </Form.Item>
 
-        <Form.Item
-          name="use-context"
-          label="是否使用上下文"
-        >
-          <Switch defaultChecked={state.useContext} onChange={onUseContextChange} />
+        <Form.Item name="use-role" label="使用角色设定">
+          <Switch
+            defaultChecked={state.systemRoleAvailable}
+            onChange={(v) => {
+              setSystemRoleAvailable(v)
+            }}
+          />
+        </Form.Item>
+
+        {state.systemRoleAvailable
+          ? (
+            <Form.Item label="系统角色">
+              <TextArea
+                showCount
+                maxLength={40}
+                autoSize
+                rows={2}
+                defaultValue={state.systemRole}
+                onChange={onSystemRoleChange}
+                placeholder="输入为此对话中的 ChatGPT 设定的角色语句"
+              />
+            </Form.Item>
+            )
+          : null}
+
+        <Form.Item name="use-context" label="是否使用上下文">
+          <Switch
+            defaultChecked={state.useContext}
+            onChange={onUseContextChange}
+          />
         </Form.Item>
 
         {state.useContext
@@ -178,38 +212,12 @@ const Settings: React.FC<TopicSettingsProps> = ({
                 />
               </Form.Item>
 
-              <Form.Item
-                name="use-first-conversation"
-                label="使用第一组对话"
-              >
+              <Form.Item name="use-first-conversation" label="使用第一组对话">
                 <Switch
                   defaultChecked={state.useFirstConversation}
                   onChange={onUseFirstConversationChange}
                 />
               </Form.Item>
-
-              <Form.Item
-                name="use-role"
-                label="使用角色设定"
-              >
-                <Switch defaultChecked={state.systemRoleAvailable} onChange={(v) => { setSystemRoleAvailable(v) }} />
-              </Form.Item>
-
-              {state.systemRoleAvailable
-                ? (
-                  <Form.Item label="系统角色">
-                    <TextArea
-                      showCount
-                      maxLength={40}
-                      autoSize
-                      rows={2}
-                      defaultValue={state.systemRole}
-                      onChange={onSystemRoleChange}
-                      placeholder='输入为此对话中的 ChatGPT 设定的角色语句'
-                    />
-                  </Form.Item>
-                  )
-                : null}
             </>
             )
           : null}

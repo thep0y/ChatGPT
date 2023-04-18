@@ -287,13 +287,13 @@ const ChatPage: React.FC = () => {
                 }
               }
             }
+          }
 
-            if (topicConfig.system_role !== '') {
-              sendedMessages.unshift({
-                role: 'system',
-                content: topicConfig.system_role
-              })
-            }
+          if (topicConfig.system_role !== '') {
+            sendedMessages.unshift({
+              role: 'system',
+              content: topicConfig.system_role
+            })
           }
         }
       }
