@@ -17,6 +17,10 @@ const TOPIC_INSERT: &str = r#"
     INSERT INTO topic (name, created_at) VALUES (?1, ?2)
 "#;
 
+const TOPIC_INSERT_WITH_ID: &str = r#"
+    INSERT INTO topic (id, name, created_at) VALUES (?1, ?2, ?3)
+"#;
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Topic {
     pub id: u32,
@@ -26,7 +30,7 @@ pub struct Topic {
 }
 
 impl Topic {
-    pub fn new(name: &str, description: &str, mut created_at: u64) -> Result<Self> {
+    pub fn new(name: &str, description: &str, created_at: u64) -> Result<Self> {
         Self::new_with_id(0, name, description, created_at)
     }
 
@@ -49,9 +53,13 @@ impl Topic {
     }
 
     pub fn insert(&self, conn: &Connection) -> Result<usize> {
-        let count = conn
-            .execute(TOPIC_INSERT, (&self.name, self.created_at))
-            .with_context(|| format!("插入主题时出错：name={}", self.name))?;
+        let count = if self.id > 0 {
+            conn.execute(TOPIC_INSERT_WITH_ID, (self.id, &self.name, self.created_at))
+                .with_context(|| format!("插入主题时出错：name={}", self.name))?
+        } else {
+            conn.execute(TOPIC_INSERT, (&self.name, self.created_at))
+                .with_context(|| format!("插入主题时出错：name={}", self.name))?
+        };
 
         Ok(count)
     }
