@@ -28,18 +28,21 @@ const MessageInput = memo(({
   const [chatMessage, setChatMessage] = useState('')
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>): void => {
+    // TODO: 双击回车发送消息，不能对所有的消息都 trim 处理
     // 回车发送后可能会添加一个新的换行，需要 trim 一下
     setChatMessage(e.target.value.trim())
   }, [])
 
   const handleEnter = useCallback((): void => {
-    if (chatMessage.trim() === '') {
-      setChatMessage('')
+    const message = chatMessage.trim()
+
+    if (message === '') {
+      setChatMessage(message)
 
       return
     }
 
-    void onSendMessage(chatMessage.trim(), config.useStream)
+    void onSendMessage(message, config.useStream)
     setChatMessage('')
   }, [chatMessage, config.useStream, onSendMessage])
 

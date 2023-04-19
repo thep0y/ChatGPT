@@ -1,5 +1,5 @@
 import React, { type ChangeEvent, memo, useCallback, useReducer } from 'react'
-import { Modal, Form, Input, InputNumber, Switch } from 'antd'
+import { Modal, Form, Input, InputNumber, Switch, Button, Popconfirm, message } from 'antd'
 import { invoke } from '@tauri-apps/api'
 
 const { TextArea } = Input
@@ -78,6 +78,11 @@ const Settings: React.FC<TopicSettingsProps> = ({
     closeSettings?.()
   }
 
+  const onDelete = (): void => {
+    console.log('删除主题')
+    closeSettings?.()
+  }
+
   const onOk = (): void => {
     if (name !== state.topicName || description !== state.description) {
       void invoke('update_topic', {
@@ -134,6 +139,10 @@ const Settings: React.FC<TopicSettingsProps> = ({
     dispatch({ type: 'SET_TOPIC_DESCRIPTION', payload: e.currentTarget.value })
   }
 
+  const cancelDelete = (): void => {
+    void message.info('下次注意点，别乱点按钮！')
+  }
+
   return (
     <Modal
       title="主题设置"
@@ -142,6 +151,36 @@ const Settings: React.FC<TopicSettingsProps> = ({
       open={open}
       onCancel={onCancel}
       onOk={onOk}
+      footer={[
+        <Popconfirm
+          key='delete'
+          title='确认删除此主题吗？'
+          onCancel={cancelDelete}
+          onConfirm={onDelete}
+          okText="确定"
+          cancelText="取消"
+        >
+          <Button
+            type="primary"
+            danger
+          >
+            删除
+          </Button>
+        </Popconfirm>,
+        <Button
+          key="cancel"
+          onClick={onCancel}
+        >
+          取消
+        </Button>,
+        <Button
+          key="submit"
+          type="primary"
+          onClick={onOk}
+        >
+          保存
+        </Button>
+      ]}
     >
       <Form
         labelCol={{ span: 6 }}
