@@ -100,6 +100,7 @@ const ChatMenu = memo(({
 
       const id = await invoke<number>('new_topic', {
         name: topicName,
+        description: '',
         createdAt
       })
 

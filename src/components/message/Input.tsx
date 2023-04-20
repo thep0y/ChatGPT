@@ -110,7 +110,7 @@ const MessageInput = memo(({
             placeholder="输入你要发送给 ChatGPT 的消息"
             onChange={handleChange}
             onPressEnter={handleEnter}
-            maxLength={2500}
+            maxLength={4000}
             autoSize={{ minRows: 1, maxRows: 10 }}
             style={{ borderRadius: 0 }}
             showCount
