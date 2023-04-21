@@ -191,6 +191,7 @@ const ChatMenu = memo(({
   const deleteItem = (id: React.Key): void => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     setTopics(pre => pre.filter(v => v!.key! !== id))
+    navigate('/1')
   }
 
   const openTopicSettings = (
@@ -305,7 +306,7 @@ const ChatMenu = memo(({
         onSelect={(e) => {
           console.log('选择主题', e)
         }}
-        defaultSelectedKeys={[selectedID]}
+        selectedKeys={[selectedID]}
       />
     </>
   )
