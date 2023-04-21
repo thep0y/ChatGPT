@@ -269,7 +269,7 @@ const ChatPage: React.FC = () => {
     return createdAt
   }
 
-  const sendStreamRequest = async (args: ChatRequestArgs): Promise<void> => {
+  const sendStreamRequest = async (args: ChatRequestArgs, input: string): Promise<void> => {
     console.log('使用的代理配置', config?.proxy)
 
     try {
@@ -287,6 +287,10 @@ const ChatPage: React.FC = () => {
       } catch (e) {
         void message.error((e as string))
 
+        setRetryContent(input)
+
+        console.log(input)
+
         setMessages((prevMessages) => [
           ...prevMessages.slice(0, prevMessages.length - 1)
         ])
@@ -295,6 +299,8 @@ const ChatPage: React.FC = () => {
       unlisten()
     } catch (e) {
       void message.error((e as string))
+
+      setRetryContent(input)
 
       setMessages((prevMessages) => [
         ...prevMessages.slice(0, prevMessages.length - 1)
@@ -349,10 +355,11 @@ const ChatPage: React.FC = () => {
           createdAt
         }
 
-        if (stream) await sendStreamRequest(args)
+        if (stream) await sendStreamRequest(args, content)
         else await sendRequest(args)
       } catch (e) {
         setRetryContent(content)
+
         await message.error(e as any)
       } finally {
         setWaiting(false)
@@ -381,8 +388,6 @@ const ChatPage: React.FC = () => {
       </Spin>
     )
   }
-
-  console.log('消息列表', messages)
 
   return (
     <>

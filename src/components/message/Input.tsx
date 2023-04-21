@@ -1,4 +1,4 @@
-import React, { useState, memo, useCallback } from 'react'
+import React, { useState, memo, useCallback, useEffect } from 'react'
 import {
   LoadingOutlined,
   SendOutlined,
@@ -27,6 +27,10 @@ const MessageInput = memo(({
   retryContent
 }: MessageInputProps) => {
   const [chatMessage, setChatMessage] = useState(retryContent)
+
+  useEffect(() => {
+    setChatMessage(retryContent)
+  }, [retryContent])
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>): void => {
     // TODO: 双击回车发送消息，不能对所有的消息都 trim 处理
