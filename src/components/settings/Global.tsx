@@ -69,7 +69,7 @@ interface SelectOption<T = string | number> {
 }
 
 interface SettingsState {
-  proxyMethod?: ProxyMethod
+  proxyMethod: ProxyMethod
   proxy: Proxy
   reverseProxy: string
   openApiKey: string
@@ -79,7 +79,7 @@ interface SettingsState {
 }
 
 type SettingsAction =
-  | { type: 'SET_PROXY_METHOD', payload?: ProxyMethod }
+  | { type: 'SET_PROXY_METHOD', payload: ProxyMethod }
   | { type: 'SET_PROXY', payload: Proxy }
   | { type: 'SET_REVERSE_PROXY', payload: string }
   | { type: 'SET_OPEN_API_KEY', payload: string }
@@ -89,7 +89,7 @@ type SettingsAction =
   | { type: 'RESET', payload: SettingsState }
 
 const initialState: SettingsState = {
-  proxyMethod: undefined,
+  proxyMethod: 'proxy',
   proxy: {},
   reverseProxy: '',
   openApiKey: '',
@@ -147,7 +147,7 @@ const Settings = memo(({
   const [state, dispatch] = useReducer(settingsReducer, initialState)
 
   useEffect(() => {
-    dispatch({ type: 'SET_PROXY_METHOD', payload: config.proxy?.method })
+    dispatch({ type: 'SET_PROXY_METHOD', payload: config.proxy?.method ?? 'proxy' })
     dispatch({ type: 'SET_PROXY', payload: { ...config.proxy?.proxy } })
     dispatch({
       type: 'SET_REVERSE_PROXY',
@@ -161,7 +161,7 @@ const Settings = memo(({
 
   const onProxyMethodChange = useCallback((value: ProxyMethod): void => {
     dispatch({ type: 'SET_PROXY_METHOD', payload: value })
-  }, [])
+  }, [state])
 
   const onMarkdownUserMessageModeChange = useCallback((value: UserMessageMode): void => {
     dispatch({ type: 'SET_MARKDOWN_USER_MESSAGE_MODE', payload: value })
@@ -219,15 +219,12 @@ const Settings = memo(({
   const onFinish = useCallback(async (): Promise<void> => {
     try {
       await form.validateFields()
-      form.resetFields()
 
       const newSettings: Config = {
         ...config,
         proxy: {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          method: proxyMethod!,
+          method: proxyMethod,
           reverseProxy,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           proxy: Object.keys(proxy).length === 0 ? undefined : proxy
         },
         imageScale,
@@ -276,16 +273,20 @@ const Settings = memo(({
   }
 
   const onCheckConnect = async (): Promise<void> => {
-    const res = await invoke<Model>('get_model', {
-      proxyConfig: {
-        ...config?.proxy,
-        reverse_proxy: config?.proxy?.reverseProxy
-      },
-      apiKey: config?.openApiKey,
-      model: Models.GPT_3_5
-    })
+    try {
+      const res = await invoke<Model>('get_model', {
+        proxyConfig: {
+          ...config?.proxy,
+          reverse_proxy: config?.proxy?.reverseProxy
+        },
+        apiKey: config?.openApiKey,
+        model: Models.GPT_3_5
+      })
 
-    if (res.id) void message.success('代理有效')
+      if (res.id) void message.success('代理有效')
+    } catch (e) {
+      void message.error('无法访问 api，可能是因为代理无效或网络异常')
+    }
   }
 
   return (
@@ -391,7 +392,7 @@ const Settings = memo(({
                     >
                       <Input
                         placeholder="REVERSE PROXY"
-                        value={reverseProxy}
+                        // value={reverseProxy}
                         style={{ width: 240 }}
                         onChange={(e) => {
                           onReverseProxyInputChange(e.target.value)
@@ -403,7 +404,7 @@ const Settings = memo(({
             </Input.Group>
 
             <Tooltip title='设置好代理后应点击此按钮检查连通性，避免在使用过程中出现网络错误'>
-              <Button shape="circle" onClick={onCheckConnect} icon={<SwapOutlined />} />
+              <Button shape="circle" onClick={onCheckConnect} icon={<SwapOutlined rotate={90} />} />
             </Tooltip>
           </Space>
         </Form.Item>

@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::{
     api::{client::new_client, create_headers, url::api_url},
     config::ProxyConfig,
@@ -79,6 +81,7 @@ pub async fn retrieve_model(
     let response = client
         .get(&url)
         .headers(create_headers(api_key))
+        .timeout(Duration::from_secs(1))
         .send()
         .await
         .map_err(|e| e.to_string())?
