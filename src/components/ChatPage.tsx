@@ -175,7 +175,8 @@ const ChatPage: React.FC = () => {
   const { topicID } = useParams<'topicID'>()
   const [searchParams] = useSearchParams()
 
-  const [retryContent, setRetryContent] = useState('')
+  const [retry, setRetry] = useState(false)
+  // const [abort, setAbort] = useState(false)
 
   const topicIDNumber = parseInt(topicID)
 
@@ -248,14 +249,9 @@ const ChatPage: React.FC = () => {
     })
   }
 
-  const handleAbortStream = async (content: string): Promise<void> => {
+  const handleAbortStream = async (): Promise<void> => {
     await appWindow.emit('abort-stream')
     void message.info('已中断流式响应')
-
-    setMessages((pre) => [...pre.slice(0, pre.length - 2)])
-    setRetryContent(content)
-
-    // TODO: 添加重试按钮快捷发送上一个问题。
   }
 
   const newMessage = (content: string): number => {
@@ -283,13 +279,13 @@ const ChatPage: React.FC = () => {
       try {
         const messageID = await invoke<number>('chat_gpt_stream', args as any)
 
-        console.log('用户消息 id', messageID)
+        if (messageID === 0) {
+          setMessages((pre) => [...pre.slice(0, pre.length - 2)])
+        }
       } catch (e) {
         void message.error((e as string))
 
-        setRetryContent(input)
-
-        console.log(input)
+        setRetry(true)
 
         setMessages((prevMessages) => [
           ...prevMessages.slice(0, prevMessages.length - 1)
@@ -300,7 +296,7 @@ const ChatPage: React.FC = () => {
     } catch (e) {
       void message.error((e as string))
 
-      setRetryContent(input)
+      setRetry(true)
 
       setMessages((prevMessages) => [
         ...prevMessages.slice(0, prevMessages.length - 1)
@@ -336,6 +332,7 @@ const ChatPage: React.FC = () => {
       const createdAt = newMessage(content)
 
       setWaiting(true)
+      setRetry(false)
 
       const sendedMessages: ChatMessage[] = [
         {
@@ -358,7 +355,7 @@ const ChatPage: React.FC = () => {
         if (stream) await sendStreamRequest(args, content)
         else await sendRequest(args)
       } catch (e) {
-        setRetryContent(content)
+        setRetry(true)
 
         await message.error(e as any)
       } finally {
@@ -454,7 +451,7 @@ const ChatPage: React.FC = () => {
               config={config}
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               topicID={topicID}
-              retryContent={retryContent}
+              retry={retry}
             />
           </React.Suspense>
         </Content>

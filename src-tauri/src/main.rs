@@ -274,6 +274,7 @@ async fn chat_gpt_stream(
         }
 
         if abort_flag.load(Ordering::Relaxed) {
+            trace!("中断时的消息: {:?}", message_parts);
             done_flag = false;
             es.close();
             break;

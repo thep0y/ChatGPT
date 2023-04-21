@@ -12,12 +12,12 @@ interface MessageListProps {
 
 interface MessageInputProps {
   onSendMessage: (message: string, stream: boolean) => Promise<void>
-  onAbortStream: (content: string) => void
+  onAbortStream: () => void
   resetMessageList: () => void
   waiting: boolean
   config: Config
   topicID: string
-  retryContent: string
+  retry: boolean
 }
 
 declare interface Topic {

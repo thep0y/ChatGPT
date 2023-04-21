@@ -24,13 +24,16 @@ const MessageInput = memo(({
   waiting,
   config,
   topicID,
-  retryContent
+  retry
 }: MessageInputProps) => {
-  const [chatMessage, setChatMessage] = useState(retryContent)
+  const [chatMessage, setChatMessage] = useState('')
+  const [lastInputMessage, setLastInputMessage] = useState('')
 
   useEffect(() => {
-    setChatMessage(retryContent)
-  }, [retryContent])
+    if (retry) {
+      setChatMessage(lastInputMessage)
+    }
+  })
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>): void => {
     // TODO: 双击回车发送消息，不能对所有的消息都 trim 处理
@@ -38,7 +41,7 @@ const MessageInput = memo(({
     setChatMessage(e.target.value.trim())
   }, [])
 
-  const handleEnter = useCallback((): void => {
+  const handleEnter = useCallback(async (): Promise<void> => {
     const message = chatMessage.trim()
 
     if (message === '') {
@@ -48,12 +51,13 @@ const MessageInput = memo(({
     }
 
     void onSendMessage(message, config.useStream)
+
+    setLastInputMessage(message)
+
     setChatMessage('')
   }, [chatMessage, config.useStream, onSendMessage])
 
   const clearMessages = async (): Promise<void> => {
-    console.log('清空主题', topicID)
-
     try {
       await invoke('clear_topic', { topicId: parseInt(topicID) })
 
@@ -64,7 +68,8 @@ const MessageInput = memo(({
   }
 
   const handleAbort = (): void => {
-    onAbortStream(chatMessage)
+    onAbortStream()
+    setChatMessage(lastInputMessage)
   }
 
   const statusButton = (): React.ReactNode => {
