@@ -1,5 +1,6 @@
 use crate::{
-    chat::{client::new_http_client_with_proxy, create_headers, API_BASE_URL},
+    api::{client::new_client, create_headers, url::api_url},
+    config::ProxyConfig,
     error::Result,
 };
 use serde::{Deserialize, Serialize};
@@ -33,15 +34,48 @@ pub struct Model {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct ModelResponse {
+pub struct ModelsResponse {
     pub object: String,
     pub data: Vec<Model>,
 }
 
-pub async fn get_chat_models(proxy: &str, api_key: &str) -> Result<ModelResponse> {
-    let client = new_http_client_with_proxy(proxy)?;
+const API: &str = "/v1/models";
 
-    let url = format!("{}{}", API_BASE_URL, "/v1/models");
+pub async fn get_chat_models(proxy_config: &ProxyConfig, api_key: &str) -> Result<ModelsResponse> {
+    let client = new_client(proxy_config)?;
+
+    let url = api_url(proxy_config, API);
+
+    let response = client
+        .get(&url)
+        .headers(create_headers(api_key))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?
+        .json::<Value>()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    debug!("response {:?}", response);
+    Ok(serde_json::from_value(response).map_err(|e| e.to_string())?)
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ModelResponse {
+    pub id: String,
+    pub object: String,
+    pub owned_by: Vec<Model>,
+}
+
+pub async fn retrieve_model(
+    proxy_config: &ProxyConfig,
+    api_key: &str,
+    model: &str,
+) -> Result<Model> {
+    let client = new_client(proxy_config)?;
+
+    let url = api_url(proxy_config, API) + "/" + model;
+
     let response = client
         .get(&url)
         .headers(create_headers(api_key))

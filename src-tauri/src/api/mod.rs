@@ -3,6 +3,7 @@ use reqwest::header::{HeaderMap, AUTHORIZATION};
 pub mod chat;
 pub mod client;
 pub mod models;
+mod url;
 
 // ChatGPT API基础URL
 const API_BASE_URL: &str = "https://api.openai.com";

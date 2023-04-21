@@ -5,7 +5,9 @@
  * modified 2023-04-21 13:15:16
  */
 
-export const newChatRequest = (sendedMessages: ChatMessage[], stream: boolean, model = 'gpt-3.5-turbo'): ChatGPTRequest => {
+import { Models } from './model'
+
+export const newChatRequest = (sendedMessages: ChatMessage[], stream: boolean, model = Models.GPT_3_5): ChatGPTRequest => {
   return {
     messages: sendedMessages,
     model,

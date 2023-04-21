@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-mod chat;
+mod api;
 mod config;
 mod db;
 mod error;
@@ -15,15 +15,13 @@ mod time;
 extern crate log;
 extern crate simplelog;
 
-use crate::chat::chat::MessageChunk;
+use crate::api::chat::MessageChunk;
 use crate::db::message::{AssistantMessage, UserMessage};
 use crate::db::topic::{insert_topic, update_topic_by_id};
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
-use chat::chat::{
-    chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse, Message,
-};
-use chat::models::{get_chat_models, ModelResponse};
+use api::chat::{chat_gpt_client, chat_gpt_steam_client, ChatGPTRequest, ChatGPTResponse, Message};
+use api::models::{get_chat_models, retrieve_model, Model, ModelsResponse};
 use config::{Config, ProxyConfig, APP_CONFIG_DIR};
 use db::manager::SqliteConnectionManager;
 use db::message::{get_messages, init_messages, Conversation};
@@ -117,8 +115,13 @@ async fn export_to_markdown(
 }
 
 #[tauri::command]
-async fn get_models(proxy: String, api_key: String) -> Result<ModelResponse> {
-    get_chat_models(&proxy, &api_key).await
+async fn get_models(proxy_config: ProxyConfig, api_key: String) -> Result<ModelsResponse> {
+    get_chat_models(&proxy_config, &api_key).await
+}
+
+#[tauri::command]
+async fn get_model(proxy_config: ProxyConfig, api_key: String, model: String) -> Result<Model> {
+    retrieve_model(&proxy_config, &api_key, &model).await
 }
 
 #[tauri::command]
@@ -516,6 +519,7 @@ async fn main() -> anyhow::Result<()> {
             chat_gpt_stream,
             get_topics,
             get_models,
+            get_model,
             export_to_file,
             export_to_markdown,
             read_config,

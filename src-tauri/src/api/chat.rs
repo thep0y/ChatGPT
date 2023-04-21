@@ -1,8 +1,5 @@
 use crate::{
-    chat::{
-        client::{new_http_client, new_http_client_with_proxy},
-        create_headers, API_BASE_URL,
-    },
+    api::{client::new_client, create_headers, url::api_url},
     config::ProxyConfig,
     error::Result,
 };
@@ -80,21 +77,9 @@ pub async fn chat_gpt_client(
     api_key: &str,
     request: ChatGPTRequest,
 ) -> Result<ChatGPTResponse> {
-    let client = {
-        if proxy_config.method == "proxy" {
-            new_http_client_with_proxy(&proxy_config.to_string())?
-        } else {
-            new_http_client()?
-        }
-    };
+    let client = new_client(proxy_config)?;
 
-    let url = {
-        if proxy_config.method == "proxy" {
-            format!("{}{}", API_BASE_URL, API)
-        } else {
-            format!("{}{}", &proxy_config.to_string(), API)
-        }
-    };
+    let url = api_url(proxy_config, API);
 
     let mut headers = create_headers(api_key);
     headers.append("Content-Type", "application/json".parse().unwrap());
@@ -123,23 +108,9 @@ pub async fn chat_gpt_steam_client(
     api_key: &str,
     request: ChatGPTRequest,
 ) -> Result<EventSource> {
-    let client = {
-        if proxy_config.method == "proxy" {
-            new_http_client_with_proxy(&proxy_config.to_string())?
-        } else {
-            new_http_client()?
-        }
-    };
+    let client = new_client(proxy_config)?;
 
-    let url = {
-        if proxy_config.method == "proxy" {
-            format!("{}{}", API_BASE_URL, API)
-        } else {
-            let reverse_proxy = &proxy_config.to_string();
-            debug!("使用的反向代理：{}", reverse_proxy);
-            format!("{}{}", reverse_proxy, API)
-        }
-    };
+    let url = api_url(proxy_config, API);
 
     let mut headers = create_headers(api_key);
     headers.append("Content-Type", "application/json".parse().unwrap());

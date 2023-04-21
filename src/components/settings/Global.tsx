@@ -9,9 +9,16 @@ import {
   Col,
   InputNumber,
   Switch,
-  Divider
+  Divider,
+  Tooltip,
+  Space,
+  Button,
+  message
 } from 'antd'
 import { UserMessageMode } from '~/lib/fs'
+import { SwapOutlined } from '@ant-design/icons'
+import { invoke } from '@tauri-apps/api'
+import { Models } from '~/lib'
 
 const PROTOCOLS: Array<SelectOption<string>> = [
   {
@@ -268,6 +275,19 @@ const Settings = memo(({
     closeSettings()
   }
 
+  const onCheckConnect = async (): Promise<void> => {
+    const res = await invoke<Model>('get_model', {
+      proxyConfig: {
+        ...config?.proxy,
+        reverse_proxy: config?.proxy?.reverseProxy
+      },
+      apiKey: config?.openApiKey,
+      model: Models.GPT_3_5
+    })
+
+    if (res.id) void message.success('代理有效')
+  }
+
   return (
     <Modal
       open={open}
@@ -286,99 +306,106 @@ const Settings = memo(({
         <Divider>基础设置</Divider>
 
         <Form.Item name="proxy" label="代理" initialValue={config.proxy}>
-          <Input.Group compact>
-            <Select
-              placeholder="选择代理方式"
-              value={proxyMethod}
-              onChange={(value) => {
-                onProxyMethodChange(value)
-              }}
-            >
-              <Select.Option key="reverse-proxy" value="reverse-proxy">
-                反向代理
-              </Select.Option>
+          <Space>
+            <Input.Group compact>
+              <Select
+                placeholder="选择代理方式"
+                value={proxyMethod}
+                onChange={(value) => {
+                  onProxyMethodChange(value)
+                }}
+              >
+                <Select.Option key="reverse-proxy" value="reverse-proxy">
+                  反向代理
+                </Select.Option>
 
-              <Select.Option key="proxy" value="proxy">
-                代理
-              </Select.Option>
-            </Select>
+                <Select.Option key="proxy" value="proxy">
+                  代理
+                </Select.Option>
+              </Select>
 
-            {proxyMethod == null
-              ? null
-              : proxyMethod === 'proxy'
-                ? (
-                  <>
-                    <Form.Item
-                      name={['proxy', 'protocol']}
-                      initialValue={proxy.protocol}
-                      noStyle
-                      rules={[{ required: true, message: '请选择代理协议！' }]}
-                    >
-                      <Select
-                        style={{ width: 91 }}
-                        value={proxy.protocol}
-                        placeholder="选择协议"
-                        optionFilterProp="children"
-                        onChange={(value) => {
-                          onProxyInputChange('protocol', value)
-                        }}
+              {proxyMethod == null
+                ? null
+                : proxyMethod === 'proxy'
+                  ? (
+                    <>
+                      <Form.Item
+                        name={['proxy', 'protocol']}
+                        initialValue={proxy.protocol}
+                        noStyle
+                        rules={[{ required: true, message: '请选择代理协议！' }]}
                       >
-                        {protocolOptions}
-                      </Select>
-                    </Form.Item>
+                        <Select
+                          style={{ width: 91 }}
+                          value={proxy.protocol}
+                          placeholder="选择协议"
+                          optionFilterProp="children"
+                          onChange={(value) => {
+                            onProxyInputChange('protocol', value)
+                          }}
+                        >
+                          {protocolOptions}
+                        </Select>
+                      </Form.Item>
 
+                      <Form.Item
+                        name={['proxy', 'host']}
+                        initialValue={proxy.host}
+                        noStyle
+                        rules={[{ required: true, message: '请输入代理地址！' }]}
+                      >
+                        <Input
+                          placeholder="HOST"
+                          value={proxy.host}
+                          style={{ width: 160 }}
+                          onChange={(e) => {
+                            onProxyInputChange('host', e.target.value)
+                          }}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        name={['proxy', 'port']}
+                        noStyle
+                        initialValue={proxy.port}
+                        rules={[{ required: true, message: '请输入代理端口！' }]}
+                      >
+                        <InputNumber
+                          min={PORT_MIN}
+                          max={PORT_MAX}
+                          value={proxy.port}
+                          placeholder="PORT"
+                          onChange={(value) => {
+                            onProxyInputChange('port', value ?? 1)
+                          }}
+                        />
+                      </Form.Item>
+                    </>
+                    )
+                  : (
                     <Form.Item
-                      name={['proxy', 'host']}
-                      initialValue={proxy.host}
+                      name="reverse-proxy"
+                      initialValue={config.proxy?.reverseProxy}
                       noStyle
-                      rules={[{ required: true, message: '请输入代理地址！' }]}
+                      rules={[{ required: true, message: '请输入反向代理地址！' }]}
                     >
                       <Input
-                        placeholder="HOST"
-                        value={proxy.host}
-                        style={{ width: 160 }}
+                        placeholder="REVERSE PROXY"
+                        value={reverseProxy}
+                        style={{ width: 240 }}
                         onChange={(e) => {
-                          onProxyInputChange('host', e.target.value)
+                          onReverseProxyInputChange(e.target.value)
                         }}
                       />
                     </Form.Item>
+                    )}
 
-                    <Form.Item
-                      name={['proxy', 'port']}
-                      noStyle
-                      initialValue={proxy.port}
-                      rules={[{ required: true, message: '请输入代理端口！' }]}
-                    >
-                      <InputNumber
-                        min={PORT_MIN}
-                        max={PORT_MAX}
-                        value={proxy.port}
-                        placeholder="PORT"
-                        onChange={(value) => {
-                          onProxyInputChange('port', value ?? 1)
-                        }}
-                      />
-                    </Form.Item>
-                  </>
-                  )
-                : (
-                  <Form.Item
-                    name="reverse-proxy"
-                    initialValue={config.proxy?.reverseProxy}
-                    noStyle
-                    rules={[{ required: true, message: '请输入反向代理地址！' }]}
-                  >
-                    <Input
-                      placeholder="REVERSE PROXY"
-                      value={reverseProxy}
-                      style={{ width: 240 }}
-                      onChange={(e) => {
-                        onReverseProxyInputChange(e.target.value)
-                      }}
-                    />
-                  </Form.Item>
-                  )}
-          </Input.Group>
+            </Input.Group>
+
+            <Tooltip title='设置好代理后应点击此按钮检查连通性，避免在使用过程中出现网络错误'>
+              <Button shape="circle" onClick={onCheckConnect} icon={<SwapOutlined />} />
+            </Tooltip>
+          </Space>
         </Form.Item>
 
         <Form.Item
