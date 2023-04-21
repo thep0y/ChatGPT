@@ -123,6 +123,7 @@ const MessageInput = memo(({
             autoSize={{ minRows: 1, maxRows: 10 }}
             style={{ borderRadius: 0 }}
             showCount
+            allowClear
           />
 
           {statusButton()}
