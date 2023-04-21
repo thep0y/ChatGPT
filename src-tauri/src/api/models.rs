@@ -81,7 +81,7 @@ pub async fn retrieve_model(
     let response = client
         .get(&url)
         .headers(create_headers(api_key))
-        .timeout(Duration::from_secs(1))
+        .timeout(Duration::from_secs(5)) // TODO: 超时时间写到配置文件中
         .send()
         .await
         .map_err(|e| e.to_string())?

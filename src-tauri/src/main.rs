@@ -121,7 +121,13 @@ async fn get_models(proxy_config: ProxyConfig, api_key: String) -> Result<Models
 
 #[tauri::command]
 async fn get_model(proxy_config: ProxyConfig, api_key: String, model: String) -> Result<Model> {
-    retrieve_model(&proxy_config, &api_key, &model).await
+    match retrieve_model(&proxy_config, &api_key, &model).await {
+        Ok(r) => Ok(r),
+        Err(e) => {
+            error!("获取模型响应时出错：{}", e);
+            return Err(e.to_string());
+        }
+    }
 }
 
 #[tauri::command]

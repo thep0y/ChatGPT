@@ -449,7 +449,6 @@ const ChatPage: React.FC = () => {
               }}
               waiting={waiting}
               config={config}
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               topicID={topicID}
               retry={retry}
             />
