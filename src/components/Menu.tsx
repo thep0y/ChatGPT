@@ -212,7 +212,8 @@ const ChatMenu = memo(({
       name: t.name,
       config: config.topics ? config.topics[t.id] : { ...defaultTopicConfig },
       onSettingsChange: handleTopicConfigChange,
-      closeSettings: closeTopicSettings
+      closeSettings: closeTopicSettings,
+      onDeleteMenuItem: deleteItem
     })
   }
 
@@ -271,6 +272,11 @@ const ChatMenu = memo(({
         <div className="content" />
       </Spin>
     )
+  }
+
+  const deleteItem = (id: React.Key): void => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    setTopics(pre => pre.filter(v => v!.key! !== id))
   }
 
   return (

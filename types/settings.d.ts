@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: Mon Apr 17 2023
+ * Modified At: Fri Apr 21 2023
  * Modified By: thepoy
  */
 
@@ -67,4 +67,5 @@ interface TopicSettingsProps extends PromptSettingsProps {
   config?: TopicConfig
   description?: string
   onSettingsChange?: (topicID: string, config: TopicConfig) => void
+  onDeleteMenuItem?: (id: React.Key) => void
 }

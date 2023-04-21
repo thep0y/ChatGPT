@@ -432,6 +432,43 @@ async fn clear_topic(pool: tauri::State<'_, SQLitePool>, topic_id: u32) -> Resul
     }
 }
 
+#[tauri::command]
+async fn delete_topic(pool: tauri::State<'_, SQLitePool>, topic_id: u32) -> Result<()> {
+    trace!("删除主题");
+
+    let conn = match pool.get() {
+        Ok(c) => c,
+        Err(e) => {
+            error!("从连接池中获取连接时出错：{}", e);
+            return Err(e.to_string());
+        }
+    };
+
+    let sql = format!(
+        r#"
+        BEGIN;
+        DELETE FROM assistant_message WHERE user_message_id IN (
+            SELECT id FROM user_message WHERE topic_id = {}
+        );
+        DELETE FROM user_message WHERE topic_id = {};
+        DELETE FROM topic WHERE id = {};
+        COMMIT;
+        "#,
+        topic_id, topic_id, topic_id
+    );
+
+    match conn.execute_batch(&sql) {
+        Ok(()) => {
+            debug!("已删除主题：{}", topic_id);
+            return Ok(());
+        }
+        Err(e) => {
+            error!("删除主题时出错：{}", e);
+            return Err(e.to_string());
+        }
+    }
+}
+
 fn init_database(pool: &SQLitePool) -> anyhow::Result<()> {
     let conn = pool.get()?;
 
@@ -486,7 +523,8 @@ async fn main() -> anyhow::Result<()> {
             get_messages_by_topic_id,
             new_topic,
             update_topic,
-            clear_topic
+            clear_topic,
+            delete_topic
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

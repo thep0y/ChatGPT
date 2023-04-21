@@ -57,7 +57,8 @@ const Settings: React.FC<TopicSettingsProps> = ({
   name,
   description,
   onSettingsChange,
-  closeSettings
+  closeSettings,
+  onDeleteMenuItem
 }) => {
   if (config === undefined && topicID === undefined) {
     return null
@@ -78,8 +79,12 @@ const Settings: React.FC<TopicSettingsProps> = ({
     closeSettings?.()
   }
 
-  const onDelete = (): void => {
-    console.log('删除主题')
+  const onDelete = async (): Promise<void> => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const id = parseInt(topicID!)
+
+    await invoke('delete_topic', { topicId: id })
+    onDeleteMenuItem?.(id)
     closeSettings?.()
   }
 
