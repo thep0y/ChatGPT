@@ -59,6 +59,10 @@ const MessageInput = memo(({
     }
   }
 
+  const handleAbort = (): void => {
+    onAbortStream(chatMessage)
+  }
+
   const statusButton = (): React.ReactNode => {
     const disabled = waiting || chatMessage.trim() === ''
     const icon = waiting
@@ -82,7 +86,7 @@ const MessageInput = memo(({
     }
     const streamBtnProps: ButtonProps = {
       ...commonBtnProps,
-      onClick: waiting ? onAbortStream : handleEnter
+      onClick: waiting ? handleAbort : handleEnter
     }
 
     return config.useStream && waiting

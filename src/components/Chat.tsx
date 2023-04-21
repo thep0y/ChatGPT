@@ -129,6 +129,8 @@ const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) =>
   const [progress, setProgress] = useState(0)
   const [key, setKey] = useState(0)
 
+  console.log('渲染的消息', messages)
+
   const handleSaveMarkdown = useCallback(async () => {
     if (messages.length === 0) {
       await message.warning('当前消息列表为空')

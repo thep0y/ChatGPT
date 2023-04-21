@@ -12,7 +12,7 @@ interface MessageListProps {
 
 interface MessageInputProps {
   onSendMessage: (message: string, stream: boolean) => Promise<void>
-  onAbortStream: () => void
+  onAbortStream: (content: string) => void
   resetMessageList: () => void
   waiting: boolean
   config: Config

@@ -74,11 +74,11 @@ impl UserMessage {
     }
 }
 
-pub fn user_message_exists(conn: &Connection, user_message_id: u32) -> Result<bool> {
-    let query = "SELECT EXISTS(SELECT 1 FROM user_message WHERE id = ? LIMIT 1)";
-    conn.query_row(query, [user_message_id], |row| row.get(0))
-        .with_context(|| format!("查询 user_message 失败：id={}", user_message_id))
-}
+// pub fn user_message_exists(conn: &Connection, user_message_id: u32) -> Result<bool> {
+//     let query = "SELECT EXISTS(SELECT 1 FROM user_message WHERE id = ? LIMIT 1)";
+//     conn.query_row(query, [user_message_id], |row| row.get(0))
+//         .with_context(|| format!("查询 user_message 失败：id={}", user_message_id))
+// }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AssistantMessage {
@@ -112,11 +112,11 @@ impl AssistantMessage {
     }
 }
 
-pub fn assistant_message_exists(conn: &Connection, assistant_message_id: u32) -> Result<bool> {
-    let query = "SELECT EXISTS(SELECT 1 FROM assistant_message WHERE id = ? LIMIT 1)";
-    conn.query_row(query, [assistant_message_id], |row| row.get(0))
-        .with_context(|| format!("查询 assistant_message 失败：id={}", assistant_message_id))
-}
+// pub fn assistant_message_exists(conn: &Connection, assistant_message_id: u32) -> Result<bool> {
+//     let query = "SELECT EXISTS(SELECT 1 FROM assistant_message WHERE id = ? LIMIT 1)";
+//     conn.query_row(query, [assistant_message_id], |row| row.get(0))
+//         .with_context(|| format!("查询 assistant_message 失败：id={}", assistant_message_id))
+// }
 
 pub fn init_messages(conn: &Connection) -> Result<()> {
     conn.execute(USER_MESSAGE_TABLE, ())

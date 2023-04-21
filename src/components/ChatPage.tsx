@@ -1,4 +1,4 @@
-import React, { useState, lazy, useEffect, useCallback } from 'react'
+import React, { useState, lazy, useEffect, useCallback, useLayoutEffect } from 'react'
 import { Layout, FloatButton, Spin, message, Modal } from 'antd'
 import {
   SettingOutlined,
@@ -99,6 +99,29 @@ const messageExists = (messages: Message[], time: number): boolean => {
   return false
 }
 
+const conversationsToMessages = (conversations: Conversation[]): Message[] => {
+  const tempMessages: Message[] = []
+
+  for (const c of conversations) {
+    const userMessage: Message = {
+      content: c.user.message,
+      time: c.user.created_at,
+      role: 'user'
+    }
+    const assistantMessage: Message = {
+      content: c.assistant.message,
+      time: c.assistant.created_at * 1000,
+      role: 'assistant'
+    }
+
+    if (!messageExists(tempMessages, userMessage.time)) {
+      tempMessages.push(userMessage, assistantMessage)
+    }
+  }
+
+  return tempMessages
+}
+
 const addPromptMessages = (sendedMessages: ChatMessage[], inChinese?: boolean): void => {
   const roleMessage = inChinese ? PROMPT_ROLE_MESSAGE_IN_CHINESE : PROMPT_ROLE_MESSAGE
   const assistantMessage = inChinese ? PROMPT_ASSISTANT_RESPONSE_IN_CHINESE : PROMPT_ASSISTANT_RESPONSE
@@ -141,29 +164,6 @@ const fillMessages = (sendedMessages: ChatMessage[], messages: Message[], topicC
   }
 }
 
-const fillMessagesOfTopic = (conversations: Conversation[], setMessages: React.Dispatch<React.SetStateAction<Message[]>>): void => {
-  const tempMessages: Message[] = []
-
-  for (const c of conversations) {
-    const userMessage: Message = {
-      content: c.user.message,
-      time: c.user.created_at,
-      role: 'user'
-    }
-    const assistantMessage: Message = {
-      content: c.assistant.message,
-      time: c.assistant.created_at * 1000,
-      role: 'assistant'
-    }
-
-    if (!messageExists(tempMessages, userMessage.time)) {
-      tempMessages.push(userMessage, assistantMessage)
-    }
-  }
-
-  setMessages((pre) => [...pre, ...tempMessages])
-}
-
 const { confirm } = Modal
 
 const ChatPage: React.FC = () => {
@@ -175,13 +175,11 @@ const ChatPage: React.FC = () => {
   const { topicID } = useParams<'topicID'>()
   const [searchParams] = useSearchParams()
 
+  const [retryContent, setRetryContent] = useState('')
+
   const topicIDNumber = parseInt(topicID)
 
   const topicName = searchParams.get('name') ?? '未知主题名'
-
-  useEffect(() => {
-    setMessages([])
-  }, [topicID])
 
   useEffect(() => {
     const fetchConfig = async (): Promise<void> => {
@@ -198,7 +196,11 @@ const ChatPage: React.FC = () => {
     void fetchConfig()
   }, [])
 
-  const getMessagesByTopic = async (topicID: string): Promise<void> => {
+  useLayoutEffect(() => {
+    void getMessagesByTopic(topicID)
+  }, [topicID])
+
+  const getMessagesByTopic = useCallback(async (topicID: string): Promise<void> => {
     try {
       const conversations = await invoke<Conversation[]>(
         'get_messages_by_topic_id',
@@ -212,17 +214,20 @@ const ChatPage: React.FC = () => {
         await showConfirm(topicID)
       }
 
-      fillMessagesOfTopic(conversations, setMessages)
+      const ms = conversationsToMessages(conversations)
+
+      setMessages(ms)
     } catch (e) {
       void message.error((e as any).toString())
     }
-  }
+  }, [topicID])
+
   const showConfirm = async (topicID: string): Promise<void> => {
     confirm({
       title: '注意',
       icon: <ExclamationCircleFilled />,
       content:
-        '在完善新的问题之前应先清空之前的对话，否则会影响新问题的对话逻辑。',
+      '在完善新的问题之前应先清空之前的对话，否则会影响新问题的对话逻辑。',
       okText: '继续',
       cancelText: '清空',
       cancelButtonProps: { danger: true, type: 'primary' },
@@ -243,15 +248,12 @@ const ChatPage: React.FC = () => {
     })
   }
 
-  useEffect(() => {
-    void getMessagesByTopic(topicID)
-  }, [topicID])
-
-  const handleAbortStream = async (): Promise<void> => {
+  const handleAbortStream = async (content: string): Promise<void> => {
     await appWindow.emit('abort-stream')
     void message.info('已中断流式响应')
 
     setMessages((pre) => [...pre.slice(0, pre.length - 2)])
+    setRetryContent(content)
 
     // TODO: 添加重试按钮快捷发送上一个问题。
   }
@@ -350,6 +352,7 @@ const ChatPage: React.FC = () => {
         if (stream) await sendStreamRequest(args)
         else await sendRequest(args)
       } catch (e) {
+        setRetryContent(content)
         await message.error(e as any)
       } finally {
         setWaiting(false)
@@ -378,6 +381,8 @@ const ChatPage: React.FC = () => {
       </Spin>
     )
   }
+
+  console.log('消息列表', messages)
 
   return (
     <>
@@ -444,7 +449,7 @@ const ChatPage: React.FC = () => {
               config={config}
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               topicID={topicID}
-              retryContent=""
+              retryContent={retryContent}
             />
           </React.Suspense>
         </Content>
