@@ -188,6 +188,11 @@ const ChatMenu = memo(({
     setPromptSettingsStatus({ open: false })
   }
 
+  const deleteItem = (id: React.Key): void => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    setTopics(pre => pre.filter(v => v!.key! !== id))
+  }
+
   const openTopicSettings = (
     e: React.MouseEvent,
     t: Topic,
@@ -272,11 +277,6 @@ const ChatMenu = memo(({
         <div className="content" />
       </Spin>
     )
-  }
-
-  const deleteItem = (id: React.Key): void => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    setTopics(pre => pre.filter(v => v!.key! !== id))
   }
 
   return (
