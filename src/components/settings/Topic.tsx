@@ -45,8 +45,6 @@ const reducer = (
       return { ...state, systemRole: action.payload }
     case 'SET_SYSTEM_ROLE_AVAILABLE':
       return { ...state, systemRoleAvailable: action.payload }
-    default:
-      return state
   }
 }
 
@@ -75,31 +73,32 @@ const Settings: React.FC<TopicSettingsProps> = ({
     systemRoleAvailable: !!config?.system_role
   })
 
-  const onCancel = (): void => {
+  const onCancel = useCallback(() => {
     closeSettings?.()
-  }
+  }, [closeSettings])
 
-  const onDelete = async (): Promise<void> => {
+  const onDelete = useCallback(async (): Promise<void> => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const id = parseInt(topicID!)
 
     await invoke('delete_topic', { topicId: id })
     onDeleteMenuItem?.(id)
     closeSettings?.()
+  }, [topicID, onDeleteMenuItem, closeSettings])
+
+  const updateTopic = async (): Promise<void> => {
+    if (name === state.topicName && description === state.description) return
+
+    await invoke('update_topic', {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      topidId: parseInt(topicID!),
+      newName: state.topicName,
+      newDescription: state.description
+    })
   }
 
   const onOk = (): void => {
-    if (name !== state.topicName || description !== state.description) {
-      void invoke('update_topic', {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        topidId: parseInt(topicID!),
-        newName: state.topicName,
-        newDescription: state.description
-      })
-
-      console.log('主题名', state.topicName)
-      console.log('主题描述', state.description)
-    }
+    void updateTopic()
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     onSettingsChange?.(topicID!, {
@@ -117,36 +116,80 @@ const Settings: React.FC<TopicSettingsProps> = ({
 
   const onConversationCountChange = useCallback(
     (newValue: number | null): void => {
-      if (newValue != null) { dispatch({ type: 'SET_CONVERSATION_COUNT', payload: newValue }) }
+      newValue && dispatch({ type: 'SET_CONVERSATION_COUNT', payload: newValue })
     },
     []
   )
 
-  const setSystemRoleAvailable = (status: boolean): void => {
+  const setSystemRoleAvailable = useCallback((status: boolean): void => {
     dispatch({ type: 'SET_SYSTEM_ROLE_AVAILABLE', payload: status })
-  }
+  }, [])
 
   const onUseFirstConversationChange = useCallback((status: boolean): void => {
     dispatch({ type: 'SET_USE_FIRST_CONVERSATION', payload: status })
   }, [])
 
-  const onSystemRoleChange = (e: ChangeEvent<HTMLTextAreaElement>): void => {
+  const onSystemRoleChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>): void => {
     dispatch({ type: 'SET_SYSTEM_ROLE', payload: e.currentTarget.value })
-  }
+  }, [])
 
-  const onTopicNameChange = (e: ChangeEvent<HTMLInputElement>): void => {
+  const onTopicNameChange = useCallback((e: ChangeEvent<HTMLInputElement>): void => {
     dispatch({ type: 'SET_TOPIC_NAME', payload: e.currentTarget.value })
-  }
+  }, [])
 
-  const onTopicDescriptionChange = (
+  const onTopicDescriptionChange = useCallback((
     e: ChangeEvent<HTMLTextAreaElement>
   ): void => {
     dispatch({ type: 'SET_TOPIC_DESCRIPTION', payload: e.currentTarget.value })
-  }
+  }, [])
 
-  const cancelDelete = (): void => {
+  const onCancelDelete = useCallback((): void => {
     void message.info('下次注意点，别乱点按钮！')
-  }
+  }, [])
+
+  const desc = (
+    <div>
+      <p>
+        这将删除此主题及其所属的全部消息，
+      </p>
+
+      <p>
+        这是一个不可恢复的操作。
+      </p>
+    </div>
+  )
+
+  const footer = [
+    <Popconfirm
+      key='delete'
+      title='确认删除此主题吗？'
+      description={desc}
+      onCancel={onCancelDelete}
+      onConfirm={onDelete}
+      okText="确定"
+      cancelText="取消"
+    >
+      <Button
+        type="primary"
+        danger
+      >
+        删除
+      </Button>
+    </Popconfirm>,
+    <Button
+      key="cancel"
+      onClick={onCancel}
+    >
+      取消
+    </Button>,
+    <Button
+      key="submit"
+      type="primary"
+      onClick={onOk}
+    >
+      保存
+    </Button>
+  ]
 
   return (
     <Modal
@@ -156,36 +199,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
       open={open}
       onCancel={onCancel}
       onOk={onOk}
-      footer={[
-        <Popconfirm
-          key='delete'
-          title='确认删除此主题吗？'
-          onCancel={cancelDelete}
-          onConfirm={onDelete}
-          okText="确定"
-          cancelText="取消"
-        >
-          <Button
-            type="primary"
-            danger
-          >
-            删除
-          </Button>
-        </Popconfirm>,
-        <Button
-          key="cancel"
-          onClick={onCancel}
-        >
-          取消
-        </Button>,
-        <Button
-          key="submit"
-          type="primary"
-          onClick={onOk}
-        >
-          保存
-        </Button>
-      ]}
+      footer={footer}
     >
       <Form
         labelCol={{ span: 6 }}
