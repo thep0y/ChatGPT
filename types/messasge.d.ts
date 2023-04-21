@@ -17,6 +17,7 @@ interface MessageInputProps {
   waiting: boolean
   config: Config
   topicID: string
+  retryContent: string
 }
 
 declare interface Topic {

@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   chat.d.ts
  * Created At:  2023-03-21 20:38:24
- * Modified At: Fri Apr 14 2023
+ * Modified At: Fri Apr 21 2023
  * Modified By: thepoy
  */
 
@@ -88,3 +88,16 @@ declare interface MessageChunk {
 }
 
 type UpdateScrollbar = () => void
+
+interface ChatRequestArgs {
+  proxyConfig: {
+    reverse_proxy?: string
+    method?: ProxyMethod
+    proxy?: Proxy
+    reverseProxy?: string
+  }
+  apiKey?: string
+  request: ChatGPTRequest
+  topicId: number
+  createdAt: number
+}

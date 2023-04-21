@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
-import { isEqual, now, readConfig, saveConfig } from '~/lib'
+import { isEqual, newChatRequest, now, readConfig, saveConfig } from '~/lib'
 import { useParams, useSearchParams } from 'react-router-dom'
 import {
   PROMPT_ASSISTANT_RESPONSE,
@@ -99,6 +99,71 @@ const messageExists = (messages: Message[], time: number): boolean => {
   return false
 }
 
+const addPromptMessages = (sendedMessages: ChatMessage[], inChinese?: boolean): void => {
+  const roleMessage = inChinese ? PROMPT_ROLE_MESSAGE_IN_CHINESE : PROMPT_ROLE_MESSAGE
+  const assistantMessage = inChinese ? PROMPT_ASSISTANT_RESPONSE_IN_CHINESE : PROMPT_ASSISTANT_RESPONSE
+
+  sendedMessages.unshift(
+    { role: 'user', content: roleMessage },
+    { role: 'assistant', content: assistantMessage }
+  )
+}
+
+const addConversationMessages = (sendedMessages: ChatMessage[], messages: Message[], conversationCount: number, useFirstConversation: boolean): void => {
+  const firstMessageIndex = useFirstConversation ? 2 : 0
+  const lastMessageIndex = Math.min(messages.length - 1, firstMessageIndex + (conversationCount * 2) - 1)
+
+  for (let i = lastMessageIndex; i >= firstMessageIndex; i--) {
+    sendedMessages.unshift(messages[i])
+  }
+}
+
+const addSystemRoleMessage = (sendedMessages: ChatMessage[], systemRole: string): void => {
+  sendedMessages.unshift({ role: 'system', content: systemRole })
+}
+
+const fillMessages = (sendedMessages: ChatMessage[], messages: Message[], topicConfig?: TopicConfig, inChinese?: boolean): void => {
+  if (inChinese !== undefined) {
+    sendedMessages.unshift(...messages)
+    addPromptMessages(sendedMessages, inChinese)
+  }
+
+  if (topicConfig?.use_context) {
+    const conversationCount = Math.floor(messages.length / 2) - (topicConfig.use_first_conversation ? 1 : 0)
+
+    if (conversationCount > 0) {
+      addConversationMessages(sendedMessages, messages, conversationCount, topicConfig.use_first_conversation)
+    }
+  }
+
+  if (topicConfig?.system_role) {
+    addSystemRoleMessage(sendedMessages, topicConfig.system_role)
+  }
+}
+
+const fillMessagesOfTopic = (conversations: Conversation[], setMessages: React.Dispatch<React.SetStateAction<Message[]>>): void => {
+  const tempMessages: Message[] = []
+
+  for (const c of conversations) {
+    const userMessage: Message = {
+      content: c.user.message,
+      time: c.user.created_at,
+      role: 'user'
+    }
+    const assistantMessage: Message = {
+      content: c.assistant.message,
+      time: c.assistant.created_at * 1000,
+      role: 'assistant'
+    }
+
+    if (!messageExists(tempMessages, userMessage.time)) {
+      tempMessages.push(userMessage, assistantMessage)
+    }
+  }
+
+  setMessages((pre) => [...pre, ...tempMessages])
+}
+
 const { confirm } = Modal
 
 const ChatPage: React.FC = () => {
@@ -109,6 +174,8 @@ const ChatPage: React.FC = () => {
   const [config, setConfig] = useState<Config | null>(null)
   const { topicID } = useParams<'topicID'>()
   const [searchParams] = useSearchParams()
+
+  const topicIDNumber = parseInt(topicID)
 
   const topicName = searchParams.get('name') ?? '未知主题名'
 
@@ -135,7 +202,7 @@ const ChatPage: React.FC = () => {
     try {
       const conversations = await invoke<Conversation[]>(
         'get_messages_by_topic_id',
-        { topicId: parseInt(topicID) }
+        { topicId: topicIDNumber }
       )
 
       console.log('当前消息', messages)
@@ -145,26 +212,7 @@ const ChatPage: React.FC = () => {
         await showConfirm(topicID)
       }
 
-      for (const c of conversations) {
-        const userMessage: Message = {
-          content: c.user.message,
-          time: c.user.created_at,
-          role: 'user'
-        }
-        const assistantMessage: Message = {
-          content: c.assistant.message,
-          time: c.assistant.created_at * 1000,
-          role: 'assistant'
-        }
-
-        setMessages((pre) => {
-          if (!messageExists(pre, userMessage.time)) {
-            return [...pre, userMessage, assistantMessage]
-          }
-
-          return pre
-        })
-      }
+      fillMessagesOfTopic(conversations, setMessages)
     } catch (e) {
       void message.error((e as any).toString())
     }
@@ -185,7 +233,7 @@ const ChatPage: React.FC = () => {
         console.log('清空主题', topicID)
 
         try {
-          await invoke('clear_topic', { topicId: parseInt(topicID) })
+          await invoke('clear_topic', { topicId: topicIDNumber })
 
           setMessages([])
         } catch (e) {
@@ -196,8 +244,7 @@ const ChatPage: React.FC = () => {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    void getMessagesByTopic(topicID!)
+    void getMessagesByTopic(topicID)
   }, [topicID])
 
   const handleAbortStream = async (): Promise<void> => {
@@ -209,14 +256,76 @@ const ChatPage: React.FC = () => {
     // TODO: 添加重试按钮快捷发送上一个问题。
   }
 
-  const handleSendMessage = useCallback(
-    async (content: string, stream: boolean = true): Promise<void> => {
-      const createdAt = now()
+  const newMessage = (content: string): number => {
+    const createdAt = now()
+
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { content, role: 'user', time: createdAt }
+    ])
+
+    return createdAt
+  }
+
+  const sendStreamRequest = async (args: ChatRequestArgs): Promise<void> => {
+    console.log('使用的代理配置', config?.proxy)
+
+    try {
+      const unlisten = await appWindow.listen<string>(
+        'stream',
+        async (e) => {
+          await handleStreamResponse(e, setMessages)
+        }
+      )
+
+      try {
+        const messageID = await invoke<number>('chat_gpt_stream', args as any)
+
+        console.log('用户消息 id', messageID)
+      } catch (e) {
+        void message.error((e as string))
+
+        setMessages((prevMessages) => [
+          ...prevMessages.slice(0, prevMessages.length - 1)
+        ])
+      }
+
+      unlisten()
+    } catch (e) {
+      void message.error((e as string))
 
       setMessages((prevMessages) => [
-        ...prevMessages,
-        { content, role: 'user', time: createdAt }
+        ...prevMessages.slice(0, prevMessages.length - 1)
       ])
+    }
+  }
+
+  const sendRequest = async (args: ChatRequestArgs): Promise<void> => {
+    const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', args as any)
+
+    // chatgpt 的响应的时间戳是精确到秒的，需要 x1000 js 才能正确识别
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        content: addNewLine(resp.choices[0].message.content),
+        role: resp.choices[0].message.role,
+        time: resp.created * 1000
+      }
+    ])
+  }
+
+  const createConfigProperties = (): Omit<ChatRequestArgs, 'request' | 'createdAt'> => ({
+    proxyConfig: {
+      ...config?.proxy,
+      reverse_proxy: config?.proxy?.reverseProxy
+    },
+    apiKey: config?.openApiKey,
+    topicId: topicIDNumber
+  })
+
+  const handleSendMessage = useCallback(
+    async (content: string, stream: boolean = true): Promise<void> => {
+      const createdAt = newMessage(content)
 
       setWaiting(true)
 
@@ -227,129 +336,19 @@ const ChatPage: React.FC = () => {
         }
       ]
 
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const topicConfig = config?.topics?.[topicID!]
-
-      if (topicID === '2') {
-        sendedMessages.unshift(...messages)
-
-        if (config?.prompt.inChinese) {
-          sendedMessages.unshift(
-            {
-              role: 'user',
-              content: PROMPT_ROLE_MESSAGE_IN_CHINESE
-            },
-            {
-              role: 'assistant',
-              content: PROMPT_ASSISTANT_RESPONSE_IN_CHINESE
-            }
-          )
-        } else {
-          sendedMessages.unshift(
-            {
-              role: 'user',
-              content: PROMPT_ROLE_MESSAGE
-            },
-            {
-              role: 'assistant',
-              content: PROMPT_ASSISTANT_RESPONSE
-            }
-          )
-        }
-      } else {
-        if (topicConfig) {
-          if (topicConfig.use_context) {
-            if (topicConfig.use_first_conversation) {
-              if (messages.length >= 2) {
-                sendedMessages.unshift(messages[0], messages[1])
-              }
-            }
-
-            if (topicConfig.conversation_count >= 1) {
-              let conversationCount = topicConfig.conversation_count
-
-              if (messages.length / 2 < conversationCount) {
-                conversationCount = messages.length / 2
-              }
-
-              if (topicConfig.use_first_conversation) {
-                conversationCount -= 1
-              }
-
-              if (conversationCount > 0) {
-                for (let i = 0; i < conversationCount * 2; i++) {
-                  sendedMessages.unshift(messages[messages.length - i - 1])
-                }
-              }
-            }
-          }
-
-          if (topicConfig.system_role !== '') {
-            sendedMessages.unshift({
-              role: 'system',
-              content: topicConfig.system_role
-            })
-          }
-        }
-      }
+      fillMessages(sendedMessages, messages, config?.topics?.[topicID], topicIDNumber === 2 ? config?.prompt?.inChinese : undefined)
 
       console.log('发送的消息', sendedMessages)
 
       try {
-        const request: ChatGPTRequest = {
-          messages: sendedMessages,
-          model: 'gpt-3.5-turbo',
-          stream
-        }
-
         const args = {
-          proxyConfig: {
-            ...config?.proxy,
-            reverse_proxy: config?.proxy?.reverseProxy
-          },
-          apiKey: config?.openApiKey,
-          request,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          topicId: parseInt(topicID!),
+          ...createConfigProperties(),
+          request: newChatRequest(sendedMessages, stream),
           createdAt
         }
 
-        if (stream) {
-          const unlisten = await appWindow.listen<string>(
-            'stream',
-            async (e) => {
-              await handleStreamResponse(e, setMessages)
-            }
-          )
-
-          console.log('使用的代理配置', config?.proxy)
-
-          try {
-            const messageID = await invoke<number>('chat_gpt_stream', args)
-
-            console.log('用户消息 id', messageID)
-          } catch (e) {
-            void message.error((e as string))
-
-            setMessages((prevMessages) => [
-              ...prevMessages.slice(0, prevMessages.length - 1)
-            ])
-          }
-
-          unlisten()
-        } else {
-          const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', args)
-
-          // chatgpt 的响应的时间戳是精确到秒的，需要 x1000 js 才能正确识别
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-              content: addNewLine(resp.choices[0].message.content),
-              role: resp.choices[0].message.role,
-              time: resp.created * 1000
-            }
-          ])
-        }
+        if (stream) await sendStreamRequest(args)
+        else await sendRequest(args)
       } catch (e) {
         await message.error(e as any)
       } finally {
@@ -444,7 +443,8 @@ const ChatPage: React.FC = () => {
               waiting={waiting}
               config={config}
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              topicID={topicID!}
+              topicID={topicID}
+              retryContent=""
             />
           </React.Suspense>
         </Content>

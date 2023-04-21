@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   index.ts
  * Created At:  2023-03-21 21:03:16
- * Modified At: 2023-03-26 20:50:48
+ * Modified At: Fri Apr 21 2023
  * Modified By: thepoy
  */
 
@@ -11,6 +11,7 @@ export * from './model'
 export * from './time'
 export * from './message'
 export * from './config'
+export * from './request'
 
 /**
  * isEqual 函数用于比较两个对象是否相等

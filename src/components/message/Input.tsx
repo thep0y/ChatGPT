@@ -23,9 +23,10 @@ const MessageInput = memo(({
   resetMessageList,
   waiting,
   config,
-  topicID
+  topicID,
+  retryContent
 }: MessageInputProps) => {
-  const [chatMessage, setChatMessage] = useState('')
+  const [chatMessage, setChatMessage] = useState(retryContent)
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>): void => {
     // TODO: 双击回车发送消息，不能对所有的消息都 trim 处理
