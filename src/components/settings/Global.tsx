@@ -75,6 +75,7 @@ interface SettingsState {
   openApiKey: string
   imageScale: number
   useStream: boolean
+  useEnter: boolean
   export: ExportConfig
 }
 
@@ -85,6 +86,7 @@ type SettingsAction =
   | { type: 'SET_OPEN_API_KEY', payload: string }
   | { type: 'SET_IMAGE_SCALE', payload: number }
   | { type: 'SET_USE_STREAM', payload: boolean }
+  | { type: 'SET_USE_ENTER', payload: boolean }
   | { type: 'SET_MARKDOWN_USER_MESSAGE_MODE', payload: UserMessageMode }
   | { type: 'RESET', payload: SettingsState }
 
@@ -95,6 +97,7 @@ const initialState: SettingsState = {
   openApiKey: '',
   imageScale: 4,
   useStream: true,
+  useEnter: false,
   export: {
     markdown: {
       mode: UserMessageMode.TITLE
@@ -122,6 +125,8 @@ const settingsReducer = (
       return { ...state, imageScale: action.payload }
     case 'SET_USE_STREAM':
       return { ...state, useStream: action.payload }
+    case 'SET_USE_ENTER':
+      return { ...state, useEnter: action.payload }
     case 'SET_MARKDOWN_USER_MESSAGE_MODE':
       return {
         ...state,
@@ -157,6 +162,7 @@ const Settings = memo(({
     dispatch({ type: 'SET_IMAGE_SCALE', payload: config.imageScale })
     dispatch({ type: 'SET_MARKDOWN_USER_MESSAGE_MODE', payload: config.export.markdown.mode })
     dispatch({ type: 'SET_USE_STREAM', payload: config.useStream })
+    dispatch({ type: 'SET_USE_ENTER', payload: config.useEnter })
   }, [config])
 
   const onProxyMethodChange = useCallback((value: ProxyMethod): void => {
@@ -199,6 +205,11 @@ const Settings = memo(({
     dispatch({ type: 'SET_USE_STREAM', payload: status })
   }, [])
 
+  const onUseEnterChange = useCallback((status: boolean): void => {
+    dispatch({ type: 'SET_USE_ENTER', payload: status })
+    console.log(state)
+  }, [])
+
   const resetSettings = useCallback((): void => {
     dispatch({
       type: 'RESET',
@@ -213,6 +224,7 @@ const Settings = memo(({
     openApiKey,
     imageScale,
     useStream,
+    useEnter,
     export: { markdown: { mode } }
   } = state
 
@@ -230,6 +242,7 @@ const Settings = memo(({
         imageScale,
         openApiKey,
         useStream,
+        useEnter,
         export: {
           markdown: {
             mode
@@ -242,7 +255,7 @@ const Settings = memo(({
     } catch (info) {
       console.log('Validate Failed:', info)
     }
-  }, [proxy, imageScale, openApiKey, useStream, reverseProxy, proxyMethod, mode])
+  }, [state])
 
   const protocolOptions = useMemo(
     () =>
@@ -443,9 +456,15 @@ const Settings = memo(({
         <Form.Item
           name="use-stream"
           label="是否使用流式响应"
-          className="collection-create-form_last-form-item"
         >
           <Switch checked={useStream} onChange={onUseStreamChange} />
+        </Form.Item>
+
+        <Form.Item
+          name="use-enter"
+          label="是否使用回车键发送消息"
+        >
+          <Switch checked={useEnter} onChange={onUseEnterChange} />
         </Form.Item>
 
         <Divider>导出</Divider>

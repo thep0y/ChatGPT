@@ -72,6 +72,7 @@ pub struct Config {
     pub open_api_key: String,
     pub image_scale: u8,
     pub use_stream: Option<bool>,
+    pub use_enter: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub topics: Option<HashMap<String, TopicConfig>>,
 }

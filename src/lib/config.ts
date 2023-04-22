@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   config.ts
  * Created At:  2023-03-26 18:30:56
- * Modified At: Mon Apr 17 2023
+ * Modified At: Sat Apr 22 2023
  * Modified By: thepoy
  */
 
@@ -15,6 +15,7 @@ export const defaultConfig: Config = {
   openApiKey: '',
   imageScale: 4,
   useStream: false,
+  useEnter: false,
   prompt: {
     inChinese: true
   },
@@ -39,6 +40,7 @@ interface ConfigStruct {
   open_api_key: string
   image_scale: number
   use_stream: boolean
+  use_enter: boolean
   topics?: Record<string, TopicConfig>
   export?: ExportConfig
 }
@@ -86,6 +88,7 @@ export const readConfig = async (): Promise<Config> => {
       openApiKey: config?.open_api_key ?? '',
       imageScale: config?.image_scale ?? 4,
       useStream: config?.use_stream ?? false,
+      useEnter: config?.use_enter ?? false,
       topics: config?.topics,
       export: {
         markdown: {
@@ -112,6 +115,7 @@ export const saveConfig = async (config: Config): Promise<void> => {
       open_api_key: config.openApiKey,
       image_scale: config.imageScale,
       use_stream: config.useStream,
+      use_enter: config.useEnter,
       topics: config.topics,
       export: config.export
     }

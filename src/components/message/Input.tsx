@@ -46,9 +46,9 @@ const MessageInput = memo(
       (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
         // TODO: 双击回车发送消息，不能对所有的消息都 trim 处理
         // 回车发送后可能会添加一个新的换行，需要 trim 一下
-        setChatMessage(e.target.value.trim())
+        setChatMessage(config.useEnter ? e.target.value.trim() : e.target.value)
       },
-      []
+      [config.useEnter]
     )
 
     const handleEnter = useCallback(async (): Promise<void> => {
@@ -141,7 +141,7 @@ const MessageInput = memo(
               value={chatMessage}
               placeholder="输入你要发送给 ChatGPT 的消息"
               onChange={handleChange}
-              onPressEnter={handleEnter}
+              onPressEnter={config.useEnter ? handleEnter : undefined}
               maxLength={4000}
               autoSize={{ minRows: 1, maxRows: 10 }}
               style={{ borderRadius: 0 }}

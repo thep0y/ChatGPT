@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: Fri Apr 21 2023
+ * Modified At: Sat Apr 22 2023
  * Modified By: thepoy
  */
 
@@ -30,6 +30,7 @@ declare interface Config {
   openApiKey: string
   imageScale: number
   useStream: boolean
+  useEnter: boolean
   topics?: Record<string, TopicConfig>
 }
 

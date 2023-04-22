@@ -371,6 +371,8 @@ const ChatPage: React.FC = () => {
     setConfig(newConfig)
     setOpenSetting(false)
 
+    console.log('新配置', newConfig)
+
     if (isEqual(config, newConfig)) return
 
     void saveConfig(newConfig)
