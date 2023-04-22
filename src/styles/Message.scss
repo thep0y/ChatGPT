@@ -1,0 +1,27 @@
+/*
+ * Author:      thepoy
+ * Email:       thepoy@163.com
+ * File Name:   Message.scss
+ * Created At:  2023-04-22 22:47:38
+ * Modified At: 2023-04-22 23:16:02
+ * Modified By: thepoy
+ */
+
+.code-block {
+  position: relative;
+
+  .copy-button {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background-color: #00000000;
+    border-color: #00000000;
+    color: #00000000;
+
+    &:hover {
+      background-color: #ffffff00;
+      border-color: #ffffff81;
+      color: #ffffff81;
+    }
+  }
+}

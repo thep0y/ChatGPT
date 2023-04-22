@@ -1,14 +1,19 @@
-import React, { memo, useMemo } from 'react'
+import React, { memo, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import type { CodeProps } from 'react-markdown/lib/ast-to-react'
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async'
 import { dark as CodeStyle } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
+import { Button, Tooltip } from 'antd'
+import { CheckOutlined, CopyOutlined } from '@ant-design/icons'
+import { CopyToClipboard } from 'react-copy-to-clipboard'
 
 import 'katex/dist/katex.min.css'
+import '~/styles/Message.scss'
 
-const CodeBlock: React.FC<CodeProps> = ({ children, className }) => {
+const CodeBlock: React.FC<CodeProps & { time: number }> = ({ children, className, time }) => {
+  const [copied, setCopied] = useState(false)
   const match = useMemo(
     () => /language-(\w+)/.exec(className ?? ''),
     [className]
@@ -16,20 +21,36 @@ const CodeBlock: React.FC<CodeProps> = ({ children, className }) => {
 
   CodeStyle['code[class*="language-"]'].fontFamily = 'inherit'
 
+  const onCopy = async (): Promise<void> => {
+    setCopied(true)
+  }
+
+  const onBlur = (): void => {
+    setCopied(false)
+  }
+
   return (
-    <SyntaxHighlighter
-      style={CodeStyle as any}
-      customStyle={{ fontFamily: 'var(--user-monospace)' }}
-      language={match?.[1]}
-      PreTag="div"
-      showLineNumbers
-      showInlineLineNumbers
-      lineNumberStyle={{ minWidth: '2rem' }}
-      wrapLines
-    >
-      {/* {String(children).replace(/\n$/, '')} */}
-      {String(children)}
-    </SyntaxHighlighter>
+    <div className="code-block">
+      <CopyToClipboard text={String(children)}>
+        <Tooltip title='复制' placement='left'>
+          <Button className='copy-button' onClick={onCopy} onMouseLeave={onBlur}>{copied ? <CheckOutlined /> : <CopyOutlined /> }</Button>
+        </Tooltip>
+      </CopyToClipboard>
+
+      <SyntaxHighlighter
+        style={CodeStyle as any}
+        customStyle={{ fontFamily: 'var(--user-monospace)' }}
+        language={match?.[1]}
+        PreTag="div"
+        showLineNumbers
+        showInlineLineNumbers
+        lineNumberStyle={{ minWidth: '2rem' }}
+        wrapLines
+      >
+        {/* {String(children).replace(/\n$/, '')} */}
+        {String(children)}
+      </SyntaxHighlighter>
+    </div>
   )
 }
 
@@ -50,7 +71,7 @@ const Message = memo(({ content, role, time, showTopicList }: Message & { showTo
   }: CodeProps): React.ReactElement => {
     if (!(inline ?? false)) {
       return (
-        <CodeBlock className={className} node={node}>
+        <CodeBlock className={className} node={node} time={time}>
           {children}
         </CodeBlock>
       )
