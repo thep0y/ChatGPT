@@ -3,7 +3,8 @@ import { Layout, FloatButton, Spin, message, Modal } from 'antd'
 import {
   SettingOutlined,
   MenuOutlined,
-  ExclamationCircleFilled
+  ExclamationCircleFilled,
+  ReloadOutlined
 } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
@@ -14,7 +15,8 @@ import {
   PROMPT_ASSISTANT_RESPONSE_IN_CHINESE,
   PROMPT_ROLE_MESSAGE,
   PROMPT_ROLE_MESSAGE_IN_CHINESE,
-  addNewLine
+  addNewLine,
+  deleteMessage
 } from '~/lib/message'
 import { appWindow } from '@tauri-apps/api/window'
 import '~/styles/ChatPage.scss'
@@ -378,6 +380,23 @@ const ChatPage: React.FC = () => {
     setOpenSetting(false)
   }
 
+  const removeLastMessages = useCallback((n: number): void => {
+    console.log(messages)
+    setMessages((prevMessages) => [
+      ...prevMessages.slice(0, prevMessages.length - n)
+    ])
+  }, [messages])
+
+  const handleRedo = async (): Promise<boolean> => {
+    const res = await deleteMessage(messages[messages.length - 2].time)
+
+    if (!res) return false
+
+    res && removeLastMessages(2)
+
+    return true
+  }
+
   if (config == null) {
     return (
       <Spin tip="正在读取配置文件">
@@ -406,10 +425,18 @@ const ChatPage: React.FC = () => {
         }}
       />
 
+      <FloatButton
+        icon={<ReloadOutlined />}
+        style={{ right: 8, bottom: 0 }}
+        tooltip="刷新页面"
+        onClick={() => {
+          window.location.reload()
+        }}
+      />
+
       <GlobalSettings
         config={config}
         open={openSetting}
-        // onCreate={onCreate}
         closeSettings={closeSettings}
         onConfigChange={handleConfigChange}
       />
@@ -447,10 +474,12 @@ const ChatPage: React.FC = () => {
               resetMessageList={() => {
                 setMessages([])
               }}
+              redo={handleRedo}
               waiting={waiting}
               config={config}
               topicID={topicID}
               retry={retry}
+              lastUserMessage={messages[messages.length - 2].content}
             />
           </React.Suspense>
         </Content>

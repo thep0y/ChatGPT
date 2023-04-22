@@ -161,3 +161,36 @@ pub fn get_messages(conn: &Connection, topic_id: u32) -> Result<Vec<Conversation
 
     Ok(conversations)
 }
+
+pub fn delete_user_message_by_time(conn: &Connection, create_at: u64) -> Result<()> {
+    let sql = format!(
+        r#"
+        BEGIN;
+        DELETE FROM assistant_message WHERE user_message_id = (
+            SELECT id FROM user_message WHERE created_at = {}
+        );
+        DELETE FROM user_message WHERE created_at = {};
+        COMMIT;
+        "#,
+        create_at, create_at
+    );
+
+    conn.execute_batch(&sql)
+        .with_context(|| format!("删除用户消息时出错"))
+}
+
+// pub fn delete_user_message_by_id(conn: &Connection, id: u32) -> Result<()> {
+//     let sql = format!(
+//         r#"
+//         BEGIN;
+//         DELETE FROM assistant_message WHERE user_message_id = {}
+//         );
+//         DELETE FROM user_message WHERE id = {};
+//         COMMIT;
+//         "#,
+//         id, id
+//     );
+
+//     conn.execute_batch(&sql)
+//         .with_context(|| format!("删除用户消息时出错"))
+// }

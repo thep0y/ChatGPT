@@ -2,7 +2,9 @@ import React, { useState, memo, useCallback, useEffect } from 'react'
 import {
   LoadingOutlined,
   SendOutlined,
-  CloseCircleFilled, ClearOutlined
+  CloseCircleFilled,
+  ClearOutlined,
+  RedoOutlined
 } from '@ant-design/icons'
 import {
   Affix,
@@ -17,126 +19,149 @@ import { invoke } from '@tauri-apps/api'
 
 const { TextArea } = Input
 
-const MessageInput = memo(({
-  onSendMessage,
-  onAbortStream,
-  resetMessageList,
-  waiting,
-  config,
-  topicID,
-  retry
-}: MessageInputProps) => {
-  const [chatMessage, setChatMessage] = useState('')
-  const [lastInputMessage, setLastInputMessage] = useState('')
+const MessageInput = memo(
+  ({
+    onSendMessage,
+    onAbortStream,
+    resetMessageList,
+    redo,
+    waiting,
+    config,
+    topicID,
+    retry,
+    lastUserMessage
+  }: MessageInputProps) => {
+    const [chatMessage, setChatMessage] = useState('')
+    const [lastInputMessage, setLastInputMessage] = useState(lastUserMessage)
 
-  useEffect(() => {
-    if (retry) {
+    console.log('最后一条用户消息', lastInputMessage)
+
+    useEffect(() => {
+      if (retry) {
+        setChatMessage(lastInputMessage)
+      }
+    })
+
+    const handleChange = useCallback(
+      (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
+        // TODO: 双击回车发送消息，不能对所有的消息都 trim 处理
+        // 回车发送后可能会添加一个新的换行，需要 trim 一下
+        setChatMessage(e.target.value.trim())
+      },
+      []
+    )
+
+    const handleEnter = useCallback(async (): Promise<void> => {
+      const message = chatMessage.trim()
+
+      if (message === '') {
+        setChatMessage(message)
+
+        return
+      }
+
+      void onSendMessage(message, config.useStream)
+
+      setLastInputMessage(message)
+
+      setChatMessage('')
+    }, [chatMessage, config.useStream, onSendMessage])
+
+    const clearMessages = async (): Promise<void> => {
+      try {
+        await invoke('clear_topic', { topicId: parseInt(topicID) })
+
+        resetMessageList()
+      } catch (e) {
+        void message.error(e as string)
+      }
+    }
+
+    const handleAbort = (): void => {
+      onAbortStream()
       setChatMessage(lastInputMessage)
     }
-  })
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>): void => {
-    // TODO: 双击回车发送消息，不能对所有的消息都 trim 处理
-    // 回车发送后可能会添加一个新的换行，需要 trim 一下
-    setChatMessage(e.target.value.trim())
-  }, [])
+    const handleRedo = async (): Promise<void> => {
+      const ok = await redo()
 
-  const handleEnter = useCallback(async (): Promise<void> => {
-    const message = chatMessage.trim()
+      if (!ok) return
 
-    if (message === '') {
-      setChatMessage(message)
-
-      return
+      void onSendMessage(lastInputMessage, config.useStream)
     }
 
-    void onSendMessage(message, config.useStream)
+    const statusButton = (): React.ReactNode => {
+      const disabled = waiting || chatMessage.trim() === ''
+      const icon = waiting
+        ? (
+            config.useStream
+              ? (
+                <CloseCircleFilled />
+                )
+              : (
+                <LoadingOutlined />
+                )
+          )
+        : (
+          <SendOutlined />
+          )
+      const commonBtnProps: ButtonProps = {
+        type: 'primary',
+        onClick: handleEnter,
+        disabled: config.useStream ? (waiting ? false : disabled) : disabled,
+        danger: waiting
+      }
+      const streamBtnProps: ButtonProps = {
+        ...commonBtnProps,
+        onClick: waiting ? handleAbort : handleEnter
+      }
 
-    setLastInputMessage(message)
-
-    setChatMessage('')
-  }, [chatMessage, config.useStream, onSendMessage])
-
-  const clearMessages = async (): Promise<void> => {
-    try {
-      await invoke('clear_topic', { topicId: parseInt(topicID) })
-
-      resetMessageList()
-    } catch (e) {
-      void message.error((e as string))
-    }
-  }
-
-  const handleAbort = (): void => {
-    onAbortStream()
-    setChatMessage(lastInputMessage)
-  }
-
-  const statusButton = (): React.ReactNode => {
-    const disabled = waiting || chatMessage.trim() === ''
-    const icon = waiting
-      ? (
-          config.useStream
-            ? (
-              <CloseCircleFilled />
-              )
-            : (
-              <LoadingOutlined />
-              )
-        )
-      : (
-        <SendOutlined />
-        )
-    const commonBtnProps: ButtonProps = {
-      type: 'primary',
-      onClick: handleEnter,
-      disabled: config.useStream ? (waiting ? false : disabled) : disabled,
-      danger: waiting
-    }
-    const streamBtnProps: ButtonProps = {
-      ...commonBtnProps,
-      onClick: waiting ? handleAbort : handleEnter
-    }
-
-    return config.useStream && waiting
-      ? (
-        <Tooltip title="中断流式响应">
-          <Button {...streamBtnProps}>{icon}</Button>
-        </Tooltip>
-        )
-      : (
-        <Button {...commonBtnProps}>{icon}</Button>
-        )
-  }
-
-  return (
-    <div id="input-message">
-      <Affix style={{ width: '90%', maxWidth: 800 }}>
-        <Space.Compact block>
-          <Tooltip title='清空当前主题消息'>
-            <Button type='primary' disabled={waiting} onClick={clearMessages}>
-              <ClearOutlined />
-            </Button>
+      return config.useStream && waiting
+        ? (
+          <Tooltip title="中断流式响应">
+            <Button {...streamBtnProps}>{icon}</Button>
           </Tooltip>
+          )
+        : (
+          <Button {...commonBtnProps}>{icon}</Button>
+          )
+    }
 
-          <TextArea
-            value={chatMessage}
-            placeholder="输入你要发送给 ChatGPT 的消息"
-            onChange={handleChange}
-            onPressEnter={handleEnter}
-            maxLength={4000}
-            autoSize={{ minRows: 1, maxRows: 10 }}
-            style={{ borderRadius: 0 }}
-            showCount
-            allowClear
-          />
+    return (
+      <div id="input-message">
+        <Affix style={{ width: '90%', maxWidth: 800 }}>
+          <Space.Compact block>
+            <Tooltip title="清空当前主题消息">
+              <Button type="primary" disabled={waiting} onClick={clearMessages}>
+                <ClearOutlined />
+              </Button>
+            </Tooltip>
 
-          {statusButton()}
-        </Space.Compact>
-      </Affix>
-    </div>
-  )
-})
+            <TextArea
+              value={chatMessage}
+              placeholder="输入你要发送给 ChatGPT 的消息"
+              onChange={handleChange}
+              onPressEnter={handleEnter}
+              maxLength={4000}
+              autoSize={{ minRows: 1, maxRows: 10 }}
+              style={{ borderRadius: 0 }}
+              showCount
+              allowClear
+            />
+
+            {statusButton()}
+
+            <Tooltip title="重新发送最后的问题">
+              <Button onClick={handleRedo}>
+                <RedoOutlined />
+              </Button>
+            </Tooltip>
+          </Space.Compact>
+        </Affix>
+      </div>
+    )
+  }
+)
 
 MessageInput.displayName = 'MessageInput'
 

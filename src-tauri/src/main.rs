@@ -16,7 +16,7 @@ extern crate log;
 extern crate simplelog;
 
 use crate::api::chat::MessageChunk;
-use crate::db::message::{AssistantMessage, UserMessage};
+use crate::db::message::{delete_user_message_by_time, AssistantMessage, UserMessage};
 use crate::db::topic::{insert_topic, update_topic_by_id};
 use crate::error::Result;
 use crate::logger::{log_level, logger_config};
@@ -369,6 +369,31 @@ async fn update_topic(
 }
 
 #[tauri::command]
+async fn delete_message_by_time(pool: tauri::State<'_, SQLitePool>, create_at: u64) -> Result<()> {
+    trace!("删除用户消息：create_at={}", create_at);
+
+    let conn = match pool.get() {
+        Ok(c) => c,
+        Err(e) => {
+            error!("从连接池中获取连接时出错：{}", e);
+            return Err(e.to_string());
+        }
+    };
+
+    match delete_user_message_by_time(&conn, create_at) {
+        Ok(c) => c,
+        Err(e) => {
+            error!("删除消息时出错：{}", e);
+            return Err(e.to_string());
+        }
+    };
+
+    debug!("已删除消息：create_at={}", create_at);
+
+    Ok(())
+}
+
+#[tauri::command]
 async fn new_topic(
     pool: tauri::State<'_, SQLitePool>,
     name: String,
@@ -535,7 +560,8 @@ async fn main() -> anyhow::Result<()> {
             new_topic,
             update_topic,
             clear_topic,
-            delete_topic
+            delete_topic,
+            delete_message_by_time
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

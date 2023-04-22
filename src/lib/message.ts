@@ -5,6 +5,9 @@
  * modified 2023-03-24 13:26:29
  */
 
+import { invoke } from '@tauri-apps/api'
+import { message } from 'antd'
+
 export const addNewLine = (src: string): string => {
   return src.replace(/([^\n])\n([^\n])/g, '$1\n\n$2')
 }
@@ -33,3 +36,21 @@ export const PROMPT_ASSISTANT_RESPONSE = 'Hello there! I\'m excited to help crea
 export const PROMPT_ROLE_MESSAGE_IN_CHINESE = PROMPT_ROLE_MESSAGE + '\n\nResponse me in Chinese.'
 
 export const PROMPT_ASSISTANT_RESPONSE_IN_CHINESE = '你好，我想知道你需要的提示是关于什么的？请告诉我更多的细节，让我更好地为您生成最好的提示。'
+
+export const deleteMessage = async (createAt: number): Promise<boolean> => {
+  if (!createAt) {
+    void message.error('无效的时间戳')
+
+    return false
+  }
+
+  try {
+    await invoke<null>('delete_message_by_time', { createAt })
+
+    return true
+  } catch (e) {
+    void message.error('删除消息失败：' + (e as string))
+
+    return false
+  }
+}
