@@ -396,6 +396,8 @@ const ChatPage: React.FC = () => {
 
     res && removeLastMessages(2)
 
+    setRetry(false)
+
     return true
   }
 

@@ -34,13 +34,15 @@ const MessageInput = memo(
     const [chatMessage, setChatMessage] = useState('')
     const [lastInputMessage, setLastInputMessage] = useState(lastUserMessage)
 
-    useEffect(() => {
-      if (retry) {
-        setChatMessage(lastInputMessage)
-      }
+    console.log(lastUserMessage)
 
+    useEffect(() => {
       setLastInputMessage(lastUserMessage)
-    })
+
+      if (retry) {
+        setChatMessage(lastUserMessage)
+      }
+    }, [lastUserMessage])
 
     const handleChange = useCallback(
       (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
@@ -48,7 +50,7 @@ const MessageInput = memo(
         // 回车发送后可能会添加一个新的换行，需要 trim 一下
         setChatMessage(config.useEnter ? e.target.value.trim() : e.target.value)
       },
-      [config.useEnter]
+      [config.useEnter, chatMessage]
     )
 
     const handleEnter = useCallback(async (): Promise<void> => {
