@@ -34,12 +34,12 @@ const MessageInput = memo(
     const [chatMessage, setChatMessage] = useState('')
     const [lastInputMessage, setLastInputMessage] = useState(lastUserMessage)
 
-    console.log('最后一条用户消息', lastInputMessage)
-
     useEffect(() => {
       if (retry) {
         setChatMessage(lastInputMessage)
       }
+
+      setLastInputMessage(lastUserMessage)
     })
 
     const handleChange = useCallback(
@@ -151,11 +151,17 @@ const MessageInput = memo(
 
             {statusButton()}
 
-            <Tooltip title="重新发送最后的问题">
-              <Button onClick={handleRedo}>
-                <RedoOutlined />
-              </Button>
-            </Tooltip>
+            {
+              lastInputMessage
+                ? (
+                  <Tooltip title="重新发送最后的问题">
+                    <Button onClick={handleRedo}>
+                      <RedoOutlined />
+                    </Button>
+                  </Tooltip>
+                  )
+                : null
+            }
           </Space.Compact>
         </Affix>
       </div>

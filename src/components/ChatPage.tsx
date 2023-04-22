@@ -479,7 +479,7 @@ const ChatPage: React.FC = () => {
               config={config}
               topicID={topicID}
               retry={retry}
-              lastUserMessage={messages[messages.length - 2].content}
+              lastUserMessage={messages.length >= 2 ? messages[messages.length - 2].content : ''}
             />
           </React.Suspense>
         </Content>
