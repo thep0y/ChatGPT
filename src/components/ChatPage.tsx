@@ -407,32 +407,31 @@ const ChatPage: React.FC = () => {
 
   return (
     <>
-      <FloatButton
-        icon={<SettingOutlined />}
-        style={{ right: 8, bottom: 110 }}
-        tooltip="设置"
-        onClick={() => {
-          setOpenSetting(true)
-        }}
-      />
+      <FloatButton.Group shape="circle" style={{ right: 8, bottom: 54 }}>
+        <FloatButton
+          icon={<SettingOutlined />}
+          tooltip="设置"
+          onClick={() => {
+            setOpenSetting(true)
+          }}
+        />
 
-      <FloatButton
-        icon={<MenuOutlined />}
-        style={{ right: 8 }}
-        tooltip="显示/隐藏主题列表"
-        onClick={() => {
-          setShowTopicList((pre) => !pre)
-        }}
-      />
+        <FloatButton
+          icon={<MenuOutlined />}
+          tooltip="显示/隐藏主题列表"
+          onClick={() => {
+            setShowTopicList((pre) => !pre)
+          }}
+        />
 
-      <FloatButton
-        icon={<ReloadOutlined />}
-        style={{ right: 8, bottom: 0 }}
-        tooltip="刷新页面"
-        onClick={() => {
-          window.location.reload()
-        }}
-      />
+        <FloatButton
+          icon={<ReloadOutlined />}
+          tooltip="刷新页面"
+          onClick={() => {
+            window.location.reload()
+          }}
+        />
+      </FloatButton.Group>
 
       <GlobalSettings
         config={config}
