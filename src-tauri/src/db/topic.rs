@@ -14,11 +14,11 @@ const TOPIC_TABLE: &str = r#"
 "#;
 
 const TOPIC_INSERT: &str = r#"
-    INSERT INTO topic (name, created_at) VALUES (?1, ?2)
+    INSERT INTO topic (name, created_at, description) VALUES (?1, ?2, ?3)
 "#;
 
 const TOPIC_INSERT_WITH_ID: &str = r#"
-    INSERT INTO topic (id, name, created_at) VALUES (?1, ?2, ?3)
+    INSERT INTO topic (id, name, created_at, description) VALUES (?1, ?2, ?3, ?4)
 "#;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -54,11 +54,17 @@ impl Topic {
 
     pub fn insert(&self, conn: &Connection) -> Result<usize> {
         let count = if self.id > 0 {
-            conn.execute(TOPIC_INSERT_WITH_ID, (self.id, &self.name, self.created_at))
-                .with_context(|| format!("插入主题时出错：name={}", self.name))?
+            conn.execute(
+                TOPIC_INSERT_WITH_ID,
+                (self.id, &self.name, self.created_at, &self.description),
+            )
+            .with_context(|| format!("插入主题时出错：name={}", self.name))?
         } else {
-            conn.execute(TOPIC_INSERT, (&self.name, self.created_at))
-                .with_context(|| format!("插入主题时出错：name={}", self.name))?
+            conn.execute(
+                TOPIC_INSERT,
+                (&self.name, self.created_at, &self.description),
+            )
+            .with_context(|| format!("插入主题时出错：name={}", self.name))?
         };
 
         Ok(count)
@@ -117,6 +123,8 @@ pub fn insert_topic(conn: &Connection, topic: &Topic) -> Result<()> {
             return Ok(());
         }
     }
+
+    debug!("插入主题：{:?}", topic);
 
     topic.insert(conn)?;
 
