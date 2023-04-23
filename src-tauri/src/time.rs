@@ -1,8 +1,14 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use time::OffsetDateTime;
 
 pub fn now() -> Result<u64> {
-    let odt = OffsetDateTime::now_local().with_context(|| format!("创建主题时出错"))?;
+    let odt = match OffsetDateTime::now_local() {
+        Ok(t) => t,
+        Err(e) => {
+            error!("获取本地时区失败：{}", e);
+            OffsetDateTime::now_utc()
+        }
+    };
 
     Ok(odt.unix_timestamp() as u64)
 }
