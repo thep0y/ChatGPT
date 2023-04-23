@@ -33,7 +33,14 @@ const CodeBlock: React.FC<CodeProps & { time: number }> = ({ children, className
     <div className="code-block">
       <CopyToClipboard text={String(children)}>
         <Tooltip title='复制' placement='left'>
-          <Button className='copy-button' onClick={onCopy} onMouseLeave={onBlur}>{copied ? <CheckOutlined /> : <CopyOutlined /> }</Button>
+          <Button
+            size='small'
+            className='copy-button'
+            onClick={onCopy}
+            onMouseLeave={onBlur}
+          >
+            {copied ? <CheckOutlined /> : <CopyOutlined /> }
+          </Button>
         </Tooltip>
       </CopyToClipboard>
 
