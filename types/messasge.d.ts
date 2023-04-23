@@ -8,6 +8,7 @@
 interface MessageListProps {
   messages: Message[]
   showTopicList: boolean
+  showLineNumbers: boolean
 }
 
 interface MessageInputProps {

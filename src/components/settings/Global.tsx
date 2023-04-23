@@ -82,6 +82,7 @@ interface SettingsState {
   imageScale: number
   useStream: boolean
   useEnter: boolean
+  showLineNumbers: boolean
   export: ExportConfig
 }
 
@@ -93,6 +94,7 @@ type SettingsAction =
   | { type: 'SET_IMAGE_SCALE', payload: number }
   | { type: 'SET_USE_STREAM', payload: boolean }
   | { type: 'SET_USE_ENTER', payload: boolean }
+  | { type: 'SET_SHOW_LINE_NUMBERS', payload: boolean }
   | { type: 'SET_MARKDOWN_USER_MESSAGE_MODE', payload: UserMessageMode }
   | { type: 'RESET', payload: SettingsState }
 
@@ -104,6 +106,7 @@ const initialState: SettingsState = {
   imageScale: 4,
   useStream: true,
   useEnter: false,
+  showLineNumbers: false,
   export: {
     markdown: {
       mode: UserMessageMode.TITLE
@@ -133,6 +136,8 @@ const settingsReducer = (
       return { ...state, useStream: action.payload }
     case 'SET_USE_ENTER':
       return { ...state, useEnter: action.payload }
+    case 'SET_SHOW_LINE_NUMBERS':
+      return { ...state, showLineNumbers: action.payload }
     case 'SET_MARKDOWN_USER_MESSAGE_MODE':
       return {
         ...state,
@@ -142,7 +147,7 @@ const settingsReducer = (
           }
         }
       }
-    default:
+    case 'RESET':
       return state
   }
 }
@@ -171,6 +176,7 @@ const Settings = memo(
       })
       dispatch({ type: 'SET_USE_STREAM', payload: config.useStream })
       dispatch({ type: 'SET_USE_ENTER', payload: config.useEnter })
+      dispatch({ type: 'SET_SHOW_LINE_NUMBERS', payload: config.showLineNumbers })
     }, [config])
 
     const onProxyMethodChange = useCallback(
@@ -224,6 +230,11 @@ const Settings = memo(
       console.log(state)
     }, [])
 
+    const onShowLineNumbersChange = useCallback((status: boolean): void => {
+      dispatch({ type: 'SET_SHOW_LINE_NUMBERS', payload: status })
+      console.log(state)
+    }, [])
+
     const resetSettings = useCallback((): void => {
       dispatch({
         type: 'RESET',
@@ -239,6 +250,7 @@ const Settings = memo(
       imageScale,
       useStream,
       useEnter,
+      showLineNumbers,
       export: {
         markdown: { mode }
       }
@@ -259,6 +271,7 @@ const Settings = memo(
           openApiKey,
           useStream,
           useEnter,
+          showLineNumbers,
           export: {
             markdown: {
               mode
@@ -484,6 +497,14 @@ const Settings = memo(
             tooltip="开启后会影响换行，需使用回车键换行时应关闭此功能"
           >
             <Switch checked={useEnter} onChange={onUseEnterChange} />
+          </Form.Item>
+
+          <Form.Item
+            name="show-line-numbers"
+            label="代码块中是否显示行号"
+            tooltip="开启后在选择并复制文字时也会复制行号"
+          >
+            <Switch checked={showLineNumbers} onChange={onShowLineNumbersChange} />
           </Form.Item>
 
           <Divider>导出</Divider>

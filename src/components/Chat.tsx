@@ -25,7 +25,7 @@ const Scrollbar = lazy(
   async () => await import('~/components/scrollbar/Scrollbar')
 )
 
-type ChatProps = MessageListProps & { config: Config, topicName: string }
+type ChatProps = Omit<MessageListProps, 'showLineNumbers'> & { config: Config, topicName: string }
 
 const IMAGE_FILTER_OPTION: SaveDialogOptions = {
   filters: [
@@ -219,7 +219,7 @@ const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) =>
         <div id="chat">
           <div ref={messageListComponentRef}>
             <React.Suspense fallback={null}>
-              <MessageList messages={messages} showTopicList={showTopicList} />
+              <MessageList messages={messages} showTopicList={showTopicList} showLineNumbers={config.showLineNumbers} />
             </React.Suspense>
           </div>
         </div>

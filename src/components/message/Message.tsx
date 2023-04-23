@@ -12,7 +12,12 @@ import { CopyToClipboard } from 'react-copy-to-clipboard'
 import 'katex/dist/katex.min.css'
 import '~/styles/Message.scss'
 
-const CodeBlock: React.FC<CodeProps & { time: number }> = ({ children, className, time }) => {
+interface CodeBlockProps extends CodeProps {
+  time: number
+  showLineNumbers: boolean
+}
+
+const CodeBlock: React.FC<CodeBlockProps> = ({ children, className, time, showLineNumbers }) => {
   const [copied, setCopied] = useState(false)
 
   const match = useMemo(
@@ -50,9 +55,8 @@ const CodeBlock: React.FC<CodeProps & { time: number }> = ({ children, className
         customStyle={{ fontFamily: 'var(--user-monospace)' }}
         language={match?.[1]}
         PreTag="div"
-        showLineNumbers
-        showInlineLineNumbers
-        lineNumberStyle={{ minWidth: '2rem' }}
+        showLineNumbers={showLineNumbers}
+        lineNumberStyle={showLineNumbers ? { minWidth: '2rem' } : undefined}
         wrapLines
       >
         {/* {String(children).replace(/\n$/, '')} */}
@@ -66,7 +70,12 @@ const InlineCode: React.FC<CodeProps> = ({ className, children }) => {
   return <code className={className}>{children}</code>
 }
 
-const Message = memo(({ content, role, time, showTopicList }: Message & { showTopicList: boolean }) => {
+interface MessageProps extends Message {
+  showTopicList: boolean
+  showLineNumbers: boolean
+}
+
+const Message = memo(({ content, role, time, showTopicList, showLineNumbers }: MessageProps) => {
   const sent = role === 'user'
 
   const remarkPlugins = useMemo(() => [remarkMath], [])
@@ -82,7 +91,12 @@ const Message = memo(({ content, role, time, showTopicList }: Message & { showTo
   }: CodeProps): React.ReactElement => {
     if (!(inline ?? false)) {
       return (
-        <CodeBlock className={className} node={node} time={time}>
+        <CodeBlock
+          className={className}
+          node={node}
+          time={time}
+          showLineNumbers={showLineNumbers}
+        >
           {children}
         </CodeBlock>
       )

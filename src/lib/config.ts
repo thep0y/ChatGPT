@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   config.ts
  * Created At:  2023-03-26 18:30:56
- * Modified At: Sat Apr 22 2023
+ * Modified At: Sun Apr 23 2023
  * Modified By: thepoy
  */
 
@@ -16,6 +16,7 @@ export const defaultConfig: Config = {
   imageScale: 4,
   useStream: false,
   useEnter: false,
+  showLineNumbers: false,
   prompt: {
     inChinese: true
   },
@@ -41,6 +42,7 @@ interface ConfigStruct {
   image_scale: number
   use_stream: boolean
   use_enter: boolean
+  show_line_numbers: boolean
   topics?: Record<string, TopicConfig>
   export?: ExportConfig
 }
@@ -87,8 +89,9 @@ export const readConfig = async (): Promise<Config> => {
       prompt: { inChinese: config?.prompt?.in_chinese ?? true },
       openApiKey: config?.open_api_key ?? '',
       imageScale: config?.image_scale ?? 4,
-      useStream: config?.use_stream ?? false,
+      useStream: config?.use_stream ?? true,
       useEnter: config?.use_enter ?? false,
+      showLineNumbers: config?.show_line_numbers ?? false,
       topics: config?.topics,
       export: {
         markdown: {
@@ -116,6 +119,7 @@ export const saveConfig = async (config: Config): Promise<void> => {
       image_scale: config.imageScale,
       use_stream: config.useStream,
       use_enter: config.useEnter,
+      show_line_numbers: config.showLineNumbers,
       topics: config.topics,
       export: config.export
     }

@@ -2,7 +2,7 @@ import React, { lazy, memo } from 'react'
 
 const Message = lazy(async () => await import('~/components/message/Message'))
 
-const MessageList = memo(({ messages, showTopicList }: MessageListProps) => (
+const MessageList = memo(({ messages, showTopicList, showLineNumbers }: MessageListProps) => (
   <ol className="list">
     {messages.map(({ content, role, time }) => (
       <React.Suspense fallback={null} key={time}>
@@ -11,6 +11,7 @@ const MessageList = memo(({ messages, showTopicList }: MessageListProps) => (
           role={role}
           time={time}
           showTopicList={showTopicList}
+          showLineNumbers={showLineNumbers}
         />
       </React.Suspense>
     ))}

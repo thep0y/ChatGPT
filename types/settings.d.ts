@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: Sat Apr 22 2023
+ * Modified At: Sun Apr 23 2023
  * Modified By: thepoy
  */
 
@@ -31,6 +31,7 @@ declare interface Config {
   imageScale: number
   useStream: boolean
   useEnter: boolean
+  showLineNumbers: boolean
   topics?: Record<string, TopicConfig>
 }
 
