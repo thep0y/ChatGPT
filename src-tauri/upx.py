@@ -4,7 +4,7 @@
 # @Email:       thepoy@163.com
 # @File Name:   upx.py
 # @Created At:  2023-03-19 21:31:57
-# @Modified At: 2023-04-10 21:13:25
+# @Modified At: 2023-04-23 20:33:43
 # @Modified By: thepoy
 
 import shutil
@@ -128,7 +128,7 @@ def compress():
 
 def execute(cmd: str):
     print(f"upx: exucuting '{cmd}'")
-    output = subprocess.check_output(cmd)
+    output = subprocess.check_output(cmd.split())
     print(output.decode())
 
 
