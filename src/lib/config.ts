@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   config.ts
  * Created At:  2023-03-26 18:30:56
- * Modified At: Sun Apr 23 2023
+ * Modified At: 2023-04-23 20:13:28
  * Modified By: thepoy
  */
 
@@ -14,7 +14,7 @@ export const defaultConfig: Config = {
   proxy: undefined,
   openApiKey: '',
   imageScale: 4,
-  useStream: false,
+  useStream: true,
   useEnter: false,
   showLineNumbers: false,
   prompt: {
