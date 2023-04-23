@@ -222,7 +222,6 @@ const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) =>
               <MessageList messages={messages} showTopicList={showTopicList} />
             </React.Suspense>
           </div>
-
         </div>
       </Scrollbar>
 

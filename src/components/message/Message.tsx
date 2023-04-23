@@ -14,6 +14,7 @@ import '~/styles/Message.scss'
 
 const CodeBlock: React.FC<CodeProps & { time: number }> = ({ children, className, time }) => {
   const [copied, setCopied] = useState(false)
+
   const match = useMemo(
     () => /language-(\w+)/.exec(className ?? ''),
     [className]
@@ -70,6 +71,9 @@ const Message = memo(({ content, role, time, showTopicList }: Message & { showTo
 
   const remarkPlugins = useMemo(() => [remarkMath], [])
   const rehypePlugins = useMemo(() => [rehypeKatex], [])
+
+  const [copied, setCopied] = useState(false)
+
   const renderCodeBlock = ({
     node,
     inline,
@@ -91,8 +95,31 @@ const Message = memo(({ content, role, time, showTopicList }: Message & { showTo
     )
   }
 
+  const onCopy = async (): Promise<void> => {
+    setCopied(true)
+  }
+
+  const onBlur = (): void => {
+    setCopied(false)
+  }
+
   return (
     <li className={`shared ${showTopicList ? 'max-with-menu' : 'max'} ${sent ? 'sent' : 'received'}`}>
+      <CopyToClipboard text={content}>
+        <Tooltip title='复制' placement='left'>
+          <Button
+            size='small'
+            shape="circle"
+            className='copy-button'
+            // type="primary"
+            onClick={onCopy}
+            onMouseLeave={onBlur}
+          >
+            {copied ? <CheckOutlined /> : <CopyOutlined /> }
+          </Button>
+        </Tooltip>
+      </CopyToClipboard>
+
       <ReactMarkdown
         components={{ code: renderCodeBlock }}
         remarkPlugins={remarkPlugins}

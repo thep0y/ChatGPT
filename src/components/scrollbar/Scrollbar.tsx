@@ -5,7 +5,7 @@ import '~/styles/Scrollbar.scss'
 import { smoothScrollTo } from '.'
 
 interface CustomScrollbarProps {
-  children: React.ReactNode
+  children: React.ReactElement<React.ProfilerProps>
 }
 
 const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children }) => {
@@ -28,7 +28,7 @@ const CustomScrollbar: React.FC<CustomScrollbarProps> = ({ children }) => {
     return () => {
       ps.destroy()
     }
-  })
+  }, [children])
 
   return (
     <div className="custom-scrollbar" ref={scrollRef}>

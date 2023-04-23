@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   Message.scss
  * Created At:  2023-04-22 22:47:38
- * Modified At: 2023-04-22 23:16:02
+ * Modified At: 2023-04-23 09:29:13
  * Modified By: thepoy
  */
 
@@ -17,11 +17,32 @@
     background-color: #00000000;
     border-color: #00000000;
     color: #00000000;
+    box-shadow: initial !important;
 
     &:hover {
       background-color: #ffffff00;
       border-color: #ffffff81;
       color: #ffffff81;
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.02) !important;
+    }
+  }
+}
+
+.shared {
+  .copy-button {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background-color: #00000000;
+    border-color: #00000000;
+    color: #00000000;
+    box-shadow: initial !important;
+
+    &:hover {
+      background-color: #ffffff;
+      border-color: #d9d9d9;
+      color: #000;
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.02) !important;
     }
   }
 }
