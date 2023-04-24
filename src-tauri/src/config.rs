@@ -50,11 +50,30 @@ impl ProxyConfig {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+pub struct PromptConfig {
+    pub in_chinese: Option<bool>,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct MarkdownConfig {
+    mode: usize,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct ExportConfig {
+    markdown: MarkdownConfig,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Config {
     pub proxy: ProxyConfig,
+    pub prompt: Option<PromptConfig>,
+    pub export: Option<ExportConfig>,
     pub open_api_key: String,
     pub image_scale: u8,
     pub use_stream: Option<bool>,
+    pub use_enter: Option<bool>,
+    pub show_line_numbers: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub topics: Option<HashMap<String, TopicConfig>>,
 }

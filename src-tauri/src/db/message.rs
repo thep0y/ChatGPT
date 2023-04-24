@@ -20,14 +20,14 @@ const USER_MESSAGE_INSERT: &str = r#"
 
 const ASSISTANT_MESSAGE_TABLE: &str = r#"
     CREATE TABLE IF NOT EXISTS assistant_message (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            message TEXT NOT NULL,
-            created_at INTEGER NOT NULL,
-            user_message_id INTEGER NOT NULL,
-            CONSTRAINT fk_user_message
-            FOREIGN KEY (user_message_id)
-            REFERENCES user_message (id)
-        )
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        message TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        user_message_id INTEGER NOT NULL,
+        CONSTRAINT fk_user_message
+        FOREIGN KEY (user_message_id)
+        REFERENCES user_message (id)
+    )
         "#;
 
 const ASSISTANT_MESSAGE_INSERT: &str = r#"
@@ -74,11 +74,11 @@ impl UserMessage {
     }
 }
 
-pub fn user_message_exists(conn: &Connection, user_message_id: u32) -> Result<bool> {
-    let query = "SELECT EXISTS(SELECT 1 FROM user_message WHERE id = ? LIMIT 1)";
-    conn.query_row(query, [user_message_id], |row| row.get(0))
-        .with_context(|| format!("查询 user_message 失败：id={}", user_message_id))
-}
+// pub fn user_message_exists(conn: &Connection, user_message_id: u32) -> Result<bool> {
+//     let query = "SELECT EXISTS(SELECT 1 FROM user_message WHERE id = ? LIMIT 1)";
+//     conn.query_row(query, [user_message_id], |row| row.get(0))
+//         .with_context(|| format!("查询 user_message 失败：id={}", user_message_id))
+// }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AssistantMessage {
@@ -112,11 +112,11 @@ impl AssistantMessage {
     }
 }
 
-pub fn assistant_message_exists(conn: &Connection, assistant_message_id: u32) -> Result<bool> {
-    let query = "SELECT EXISTS(SELECT 1 FROM assistant_message WHERE id = ? LIMIT 1)";
-    conn.query_row(query, [assistant_message_id], |row| row.get(0))
-        .with_context(|| format!("查询 assistant_message 失败：id={}", assistant_message_id))
-}
+// pub fn assistant_message_exists(conn: &Connection, assistant_message_id: u32) -> Result<bool> {
+//     let query = "SELECT EXISTS(SELECT 1 FROM assistant_message WHERE id = ? LIMIT 1)";
+//     conn.query_row(query, [assistant_message_id], |row| row.get(0))
+//         .with_context(|| format!("查询 assistant_message 失败：id={}", assistant_message_id))
+// }
 
 pub fn init_messages(conn: &Connection) -> Result<()> {
     conn.execute(USER_MESSAGE_TABLE, ())
@@ -161,3 +161,36 @@ pub fn get_messages(conn: &Connection, topic_id: u32) -> Result<Vec<Conversation
 
     Ok(conversations)
 }
+
+pub fn delete_user_message_by_time(conn: &Connection, create_at: u64) -> Result<()> {
+    let sql = format!(
+        r#"
+        BEGIN;
+        DELETE FROM assistant_message WHERE user_message_id = (
+            SELECT id FROM user_message WHERE created_at = {}
+        );
+        DELETE FROM user_message WHERE created_at = {};
+        COMMIT;
+        "#,
+        create_at, create_at
+    );
+
+    conn.execute_batch(&sql)
+        .with_context(|| format!("删除用户消息时出错"))
+}
+
+// pub fn delete_user_message_by_id(conn: &Connection, id: u32) -> Result<()> {
+//     let sql = format!(
+//         r#"
+//         BEGIN;
+//         DELETE FROM assistant_message WHERE user_message_id = {}
+//         );
+//         DELETE FROM user_message WHERE id = {};
+//         COMMIT;
+//         "#,
+//         id, id
+//     );
+
+//     conn.execute_batch(&sql)
+//         .with_context(|| format!("删除用户消息时出错"))
+// }

@@ -1,5 +1,5 @@
 import React, { type ChangeEvent, memo, useCallback, useReducer } from 'react'
-import { Modal, Form, Input, InputNumber, Switch } from 'antd'
+import { Modal, Form, Input, InputNumber, Switch, Button, Popconfirm, message } from 'antd'
 import { invoke } from '@tauri-apps/api'
 
 const { TextArea } = Input
@@ -9,6 +9,7 @@ const CONVERSATION_MAX_COUNT = 5
 
 interface SettingsState {
   topicName: string
+  description: string
   useContext: boolean
   conversationCount: number
   useFirstConversation: boolean
@@ -18,16 +19,22 @@ interface SettingsState {
 
 type SettingsAction =
   | { type: 'SET_TOPIC_NAME', payload: string }
+  | { type: 'SET_TOPIC_DESCRIPTION', payload: string }
   | { type: 'SET_USE_CONTEXT', payload: boolean }
   | { type: 'SET_CONVERSATION_COUNT', payload: number }
   | { type: 'SET_USE_FIRST_CONVERSATION', payload: boolean }
   | { type: 'SET_SYSTEM_ROLE', payload: string }
   | { type: 'SET_SYSTEM_ROLE_AVAILABLE', payload: boolean }
 
-const reducer = (state: SettingsState, action: SettingsAction): SettingsState => {
+const reducer = (
+  state: SettingsState,
+  action: SettingsAction
+): SettingsState => {
   switch (action.type) {
     case 'SET_TOPIC_NAME':
       return { ...state, topicName: action.payload }
+    case 'SET_TOPIC_DESCRIPTION':
+      return { ...state, description: action.payload }
     case 'SET_USE_CONTEXT':
       return { ...state, useContext: action.payload }
     case 'SET_CONVERSATION_COUNT':
@@ -38,8 +45,6 @@ const reducer = (state: SettingsState, action: SettingsAction): SettingsState =>
       return { ...state, systemRole: action.payload }
     case 'SET_SYSTEM_ROLE_AVAILABLE':
       return { ...state, systemRoleAvailable: action.payload }
-    default:
-      return state
   }
 }
 
@@ -48,8 +53,10 @@ const Settings: React.FC<TopicSettingsProps> = ({
   config,
   open,
   name,
+  description,
   onSettingsChange,
-  closeSettings
+  closeSettings,
+  onDeleteMenuItem
 }) => {
   if (config === undefined && topicID === undefined) {
     return null
@@ -58,6 +65,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
   const [state, dispatch] = useReducer(reducer, {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     topicName: name!,
+    description: description ?? '',
     useContext: config?.use_context ?? true,
     conversationCount: config?.conversation_count ?? 1,
     useFirstConversation: config?.use_first_conversation ?? false,
@@ -65,15 +73,32 @@ const Settings: React.FC<TopicSettingsProps> = ({
     systemRoleAvailable: !!config?.system_role
   })
 
-  const onCancel = (): void => {
+  const onCancel = useCallback(() => {
     closeSettings?.()
+  }, [closeSettings])
+
+  const onDelete = useCallback(async (): Promise<void> => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const id = parseInt(topicID!)
+
+    await invoke('delete_topic', { topicId: id })
+    onDeleteMenuItem?.(id)
+    closeSettings?.()
+  }, [topicID, onDeleteMenuItem, closeSettings])
+
+  const updateTopic = async (): Promise<void> => {
+    if (name === state.topicName && description === state.description) return
+
+    await invoke('update_topic', {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      topidId: parseInt(topicID!),
+      newName: state.topicName,
+      newDescription: state.description
+    })
   }
 
   const onOk = (): void => {
-    if (name !== state.topicName) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      void invoke('update_topic', { topidId: parseInt(topicID!), newName: state.topicName })
-    }
+    void updateTopic()
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     onSettingsChange?.(topicID!, {
@@ -91,26 +116,80 @@ const Settings: React.FC<TopicSettingsProps> = ({
 
   const onConversationCountChange = useCallback(
     (newValue: number | null): void => {
-      if (newValue != null) dispatch({ type: 'SET_CONVERSATION_COUNT', payload: newValue })
+      newValue && dispatch({ type: 'SET_CONVERSATION_COUNT', payload: newValue })
     },
     []
   )
 
-  const setSystemRoleAvailable = (status: boolean): void => {
+  const setSystemRoleAvailable = useCallback((status: boolean): void => {
     dispatch({ type: 'SET_SYSTEM_ROLE_AVAILABLE', payload: status })
-  }
+  }, [])
 
   const onUseFirstConversationChange = useCallback((status: boolean): void => {
     dispatch({ type: 'SET_USE_FIRST_CONVERSATION', payload: status })
   }, [])
 
-  const onSystemRoleChange = (e: ChangeEvent<HTMLTextAreaElement>): void => {
+  const onSystemRoleChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>): void => {
     dispatch({ type: 'SET_SYSTEM_ROLE', payload: e.currentTarget.value })
-  }
+  }, [])
 
-  const onTopicNameChange = (e: ChangeEvent<HTMLInputElement>): void => {
+  const onTopicNameChange = useCallback((e: ChangeEvent<HTMLInputElement>): void => {
     dispatch({ type: 'SET_TOPIC_NAME', payload: e.currentTarget.value })
-  }
+  }, [])
+
+  const onTopicDescriptionChange = useCallback((
+    e: ChangeEvent<HTMLTextAreaElement>
+  ): void => {
+    dispatch({ type: 'SET_TOPIC_DESCRIPTION', payload: e.currentTarget.value })
+  }, [])
+
+  const onCancelDelete = useCallback((): void => {
+    void message.info('下次注意点，别乱点按钮！')
+  }, [])
+
+  const desc = (
+    <div>
+      <p>
+        这将删除此主题及其所属的全部消息，
+      </p>
+
+      <p>
+        这是一个不可恢复的操作。
+      </p>
+    </div>
+  )
+
+  const footer = [
+    <Popconfirm
+      key='delete'
+      title='确认删除此主题吗？'
+      description={desc}
+      onCancel={onCancelDelete}
+      onConfirm={onDelete}
+      okText="确定"
+      cancelText="取消"
+    >
+      <Button
+        type="primary"
+        danger
+      >
+        删除
+      </Button>
+    </Popconfirm>,
+    <Button
+      key="cancel"
+      onClick={onCancel}
+    >
+      取消
+    </Button>,
+    <Button
+      key="submit"
+      type="primary"
+      onClick={onOk}
+    >
+      保存
+    </Button>
+  ]
 
   return (
     <Modal
@@ -120,6 +199,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
       open={open}
       onCancel={onCancel}
       onOk={onOk}
+      footer={footer}
     >
       <Form
         labelCol={{ span: 6 }}
@@ -136,11 +216,46 @@ const Settings: React.FC<TopicSettingsProps> = ({
           />
         </Form.Item>
 
-        <Form.Item
-          name="use-context"
-          label="是否使用上下文"
-        >
-          <Switch defaultChecked={state.useContext} onChange={onUseContextChange} />
+        <Form.Item label="主题描述">
+          <TextArea
+            defaultValue={description}
+            maxLength={200}
+            onChange={onTopicDescriptionChange}
+            showCount
+            autoSize
+          />
+        </Form.Item>
+
+        <Form.Item name="use-role" label="使用角色设定">
+          <Switch
+            defaultChecked={state.systemRoleAvailable}
+            onChange={(v) => {
+              setSystemRoleAvailable(v)
+            }}
+          />
+        </Form.Item>
+
+        {state.systemRoleAvailable
+          ? (
+            <Form.Item label="系统角色">
+              <TextArea
+                showCount
+                maxLength={40}
+                autoSize
+                rows={2}
+                defaultValue={state.systemRole}
+                onChange={onSystemRoleChange}
+                placeholder="输入为此对话中的 ChatGPT 设定的角色语句"
+              />
+            </Form.Item>
+            )
+          : null}
+
+        <Form.Item name="use-context" label="是否使用上下文">
+          <Switch
+            defaultChecked={state.useContext}
+            onChange={onUseContextChange}
+          />
         </Form.Item>
 
         {state.useContext
@@ -155,38 +270,12 @@ const Settings: React.FC<TopicSettingsProps> = ({
                 />
               </Form.Item>
 
-              <Form.Item
-                name="use-first-conversation"
-                label="使用第一组对话"
-              >
+              <Form.Item name="use-first-conversation" label="使用第一组对话">
                 <Switch
                   defaultChecked={state.useFirstConversation}
                   onChange={onUseFirstConversationChange}
                 />
               </Form.Item>
-
-              <Form.Item
-                name="use-role"
-                label="使用角色设定"
-              >
-                <Switch defaultChecked={state.systemRoleAvailable} onChange={(v) => { setSystemRoleAvailable(v) }} />
-              </Form.Item>
-
-              {state.systemRoleAvailable
-                ? (
-                  <Form.Item label="系统角色">
-                    <TextArea
-                      showCount
-                      maxLength={40}
-                      autoSize
-                      rows={2}
-                      defaultValue={state.systemRole}
-                      onChange={onSystemRoleChange}
-                      placeholder='输入为此对话中的 ChatGPT 设定的角色语句'
-                    />
-                  </Form.Item>
-                  )
-                : null}
             </>
             )
           : null}

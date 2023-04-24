@@ -1,12 +1,23 @@
-import React, { useState, lazy, useEffect, useCallback } from 'react'
-import { Layout, FloatButton, Spin, message } from 'antd'
-import { SettingOutlined, MenuOutlined } from '@ant-design/icons'
+import React, { useState, lazy, useEffect, useCallback, useLayoutEffect } from 'react'
+import { Layout, FloatButton, Spin, message, Modal } from 'antd'
+import {
+  SettingOutlined,
+  MenuOutlined,
+  ExclamationCircleFilled,
+  ReloadOutlined
+} from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
-import { isEqual, now, readConfig, saveConfig } from '~/lib'
-import { useParams } from 'react-router-dom'
-import { addNewLine } from '~/lib/message'
-import { smoothScrollTo } from '~/components/scrollbar'
+import { isEqual, newChatRequest, now, readConfig, saveConfig } from '~/lib'
+import { useParams, useSearchParams } from 'react-router-dom'
+import {
+  PROMPT_ASSISTANT_RESPONSE,
+  PROMPT_ASSISTANT_RESPONSE_IN_CHINESE,
+  PROMPT_ROLE_MESSAGE,
+  PROMPT_ROLE_MESSAGE_IN_CHINESE,
+  addNewLine,
+  deleteMessage
+} from '~/lib/message'
 import { appWindow } from '@tauri-apps/api/window'
 import '~/styles/ChatPage.scss'
 
@@ -19,7 +30,6 @@ const MessageInput = lazy(
   async () => await import('~/components/message/Input')
 )
 
-// const { Header, Content } = Layout
 const { Content, Sider } = Layout
 
 const handleStreamResponse = async (
@@ -70,8 +80,6 @@ const handleStreamResponse = async (
       }
     ])
 
-    console.log('流消息', '向最后一条消息的 content 中添加文字')
-
     return
   }
 
@@ -93,6 +101,73 @@ const messageExists = (messages: Message[], time: number): boolean => {
   return false
 }
 
+const conversationsToMessages = (conversations: Conversation[]): Message[] => {
+  const tempMessages: Message[] = []
+
+  for (const c of conversations) {
+    const userMessage: Message = {
+      content: c.user.message,
+      time: c.user.created_at,
+      role: 'user'
+    }
+    const assistantMessage: Message = {
+      content: c.assistant.message,
+      time: c.assistant.created_at * 1000,
+      role: 'assistant'
+    }
+
+    if (!messageExists(tempMessages, userMessage.time)) {
+      tempMessages.push(userMessage, assistantMessage)
+    }
+  }
+
+  return tempMessages
+}
+
+const addPromptMessages = (sendedMessages: ChatMessage[], inChinese?: boolean): void => {
+  const roleMessage = inChinese ? PROMPT_ROLE_MESSAGE_IN_CHINESE : PROMPT_ROLE_MESSAGE
+  const assistantMessage = inChinese ? PROMPT_ASSISTANT_RESPONSE_IN_CHINESE : PROMPT_ASSISTANT_RESPONSE
+
+  sendedMessages.unshift(
+    { role: 'user', content: roleMessage },
+    { role: 'assistant', content: assistantMessage }
+  )
+}
+
+const addConversationMessages = (sendedMessages: ChatMessage[], messages: Message[], conversationCount: number, useFirstConversation: boolean): void => {
+  const firstMessageIndex = useFirstConversation ? 2 : 0
+  const lastMessageIndex = Math.min(messages.length - 1, firstMessageIndex + (conversationCount * 2) - 1)
+
+  for (let i = lastMessageIndex; i >= firstMessageIndex; i--) {
+    sendedMessages.unshift(messages[i])
+  }
+}
+
+const addSystemRoleMessage = (sendedMessages: ChatMessage[], systemRole: string): void => {
+  sendedMessages.unshift({ role: 'system', content: systemRole })
+}
+
+const fillMessages = (sendedMessages: ChatMessage[], messages: Message[], topicConfig?: TopicConfig, inChinese?: boolean): void => {
+  if (inChinese !== undefined) {
+    sendedMessages.unshift(...messages)
+    addPromptMessages(sendedMessages, inChinese)
+  }
+
+  if (topicConfig?.use_context) {
+    const conversationCount = Math.floor(messages.length / 2) - (topicConfig.use_first_conversation ? 1 : 0)
+
+    if (conversationCount > 0) {
+      addConversationMessages(sendedMessages, messages, conversationCount, topicConfig.use_first_conversation)
+    }
+  }
+
+  if (topicConfig?.system_role) {
+    addSystemRoleMessage(sendedMessages, topicConfig.system_role)
+  }
+}
+
+const { confirm } = Modal
+
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [waiting, setWaiting] = useState<boolean>(false)
@@ -100,12 +175,14 @@ const ChatPage: React.FC = () => {
   const [showTopicList, setShowTopicList] = useState(false)
   const [config, setConfig] = useState<Config | null>(null)
   const { topicID } = useParams<'topicID'>()
+  const [searchParams] = useSearchParams()
 
-  console.log('主题 id', topicID)
+  const [retry, setRetry] = useState(false)
+  // const [abort, setAbort] = useState(false)
 
-  useEffect(() => {
-    setMessages([])
-  }, [topicID])
+  const topicIDNumber = parseInt(topicID)
+
+  const topicName = searchParams.get('name') ?? '未知主题名'
 
   useEffect(() => {
     const fetchConfig = async (): Promise<void> => {
@@ -122,79 +199,142 @@ const ChatPage: React.FC = () => {
     void fetchConfig()
   }, [])
 
-  const getMessagesByTopic = async (topicID: string): Promise<void> => {
+  useLayoutEffect(() => {
+    void getMessagesByTopic(topicID)
+  }, [topicID])
+
+  const getMessagesByTopic = useCallback(async (topicID: string): Promise<void> => {
     try {
       const conversations = await invoke<Conversation[]>(
         'get_messages_by_topic_id',
-        { topicId: parseInt(topicID) }
+        { topicId: topicIDNumber }
       )
 
       console.log('当前消息', messages)
       console.log('会话', conversations)
 
-      for (const c of conversations) {
-        const userMessage: Message = {
-          content: c.user.message,
-          time: c.user.created_at,
-          role: 'user'
-        }
-        const assistantMessage: Message = {
-          content: c.assistant.message,
-          time: c.assistant.created_at * 1000,
-          role: 'assistant'
-        }
-
-        setMessages((pre) => {
-          if (!messageExists(pre, userMessage.time)) {
-            return [...pre, userMessage, assistantMessage]
-          }
-
-          return pre
-        })
+      if (topicID === '2' && conversations.length > 0) {
+        await showConfirm(topicID)
       }
+
+      const ms = conversationsToMessages(conversations)
+
+      setMessages(ms)
     } catch (e) {
       void message.error((e as any).toString())
     }
-  }
-
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    void getMessagesByTopic(topicID!)
   }, [topicID])
 
-  // 滚动到底部
-  const scrollToBottom = useCallback(() => {
-    const scrollbar = document.getElementById('custom-scrollbar')
+  const showConfirm = async (topicID: string): Promise<void> => {
+    confirm({
+      title: '注意',
+      icon: <ExclamationCircleFilled />,
+      content:
+      '在完善新的问题之前应先清空之前的对话，否则会影响新问题的对话逻辑。',
+      okText: '继续',
+      cancelText: '清空',
+      cancelButtonProps: { danger: true, type: 'primary' },
+      onOk () {
+        console.log('do nothing')
+      },
+      async onCancel () {
+        console.log('清空主题', topicID)
 
-    if (scrollbar != null) {
-      smoothScrollTo(scrollbar, scrollbar.scrollHeight, 1000)
-    }
-  }, [])
+        try {
+          await invoke('clear_topic', { topicId: topicIDNumber })
 
-  // 监听消息变化并滚动到底部
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages, scrollToBottom])
+          setMessages([])
+        } catch (e) {
+          void message.error(e as string)
+        }
+      }
+    })
+  }
 
   const handleAbortStream = async (): Promise<void> => {
     await appWindow.emit('abort-stream')
     void message.info('已中断流式响应')
-
-    setMessages(pre => [...pre.slice(0, pre.length - 2)])
-
-    // TODO: 添加重试按钮快捷发送上一个问题。
   }
+
+  const newMessage = (content: string): number => {
+    const createdAt = now()
+
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { content, role: 'user', time: createdAt }
+    ])
+
+    return createdAt
+  }
+
+  const sendStreamRequest = async (args: ChatRequestArgs, input: string): Promise<void> => {
+    console.log('使用的代理配置', config?.proxy)
+
+    try {
+      const unlisten = await appWindow.listen<string>(
+        'stream',
+        async (e) => {
+          await handleStreamResponse(e, setMessages)
+        }
+      )
+
+      try {
+        const messageID = await invoke<number>('chat_gpt_stream', args as any)
+
+        if (messageID === 0) {
+          setMessages((pre) => [...pre.slice(0, pre.length - 2)])
+        }
+      } catch (e) {
+        void message.error((e as string))
+
+        setRetry(true)
+
+        setMessages((prevMessages) => [
+          ...prevMessages.slice(0, prevMessages.length - 1)
+        ])
+      }
+
+      unlisten()
+    } catch (e) {
+      void message.error((e as string))
+
+      setRetry(true)
+
+      setMessages((prevMessages) => [
+        ...prevMessages.slice(0, prevMessages.length - 1)
+      ])
+    }
+  }
+
+  const sendRequest = async (args: ChatRequestArgs): Promise<void> => {
+    const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', args as any)
+
+    // chatgpt 的响应的时间戳是精确到秒的，需要 x1000 js 才能正确识别
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        content: addNewLine(resp.choices[0].message.content),
+        role: resp.choices[0].message.role,
+        time: resp.created * 1000
+      }
+    ])
+  }
+
+  const createConfigProperties = (): Omit<ChatRequestArgs, 'request' | 'createdAt'> => ({
+    proxyConfig: {
+      ...config?.proxy,
+      reverse_proxy: config?.proxy?.reverseProxy
+    },
+    apiKey: config?.openApiKey,
+    topicId: topicIDNumber
+  })
 
   const handleSendMessage = useCallback(
     async (content: string, stream: boolean = true): Promise<void> => {
-      const createdAt = now()
-
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { content, role: 'user', time: createdAt }
-      ])
+      const createdAt = newMessage(content)
 
       setWaiting(true)
+      setRetry(false)
 
       const sendedMessages: ChatMessage[] = [
         {
@@ -203,99 +343,22 @@ const ChatPage: React.FC = () => {
         }
       ]
 
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const topicConfig = config?.topics?.[topicID!]
-
-      if (topicConfig) {
-        if (topicConfig.use_first_conversation) {
-          if (messages.length >= 2) {
-            sendedMessages.unshift(messages[0], messages[1])
-          }
-        }
-
-        if (topicConfig.conversation_count >= 1) {
-          let conversationCount = topicConfig.conversation_count
-
-          if (messages.length / 2 < conversationCount) {
-            conversationCount = messages.length / 2
-          }
-
-          if (topicConfig.use_first_conversation) {
-            conversationCount -= 1
-          }
-
-          if (conversationCount > 0) {
-            for (let i = 0; i < conversationCount * 2; i++) {
-              sendedMessages.unshift(messages[messages.length - i - 1])
-            }
-          }
-        }
-
-        if (topicConfig.system_role !== '') {
-          sendedMessages.unshift({
-            role: 'system',
-            content: topicConfig.system_role
-          })
-        }
-      }
+      fillMessages(sendedMessages, messages, config?.topics?.[topicID], topicIDNumber === 2 ? config?.prompt?.inChinese : undefined)
 
       console.log('发送的消息', sendedMessages)
 
       try {
-        const request: ChatGPTRequest = {
-          messages: sendedMessages,
-          model: 'gpt-3.5-turbo',
-          stream
+        const args = {
+          ...createConfigProperties(),
+          request: newChatRequest(sendedMessages, stream),
+          createdAt
         }
 
-        if (stream) {
-          // const role: Role = 'assistant'
-
-          const unlisten = await appWindow.listen<string>(
-            'stream',
-            async (e) => {
-              await handleStreamResponse(e, setMessages)
-            }
-          )
-
-          console.log('使用的代理配置', config?.proxy)
-
-          const messageID = await invoke<number>('chat_gpt_stream', {
-            proxyConfig: {
-              ...config?.proxy,
-              reverse_proxy: config?.proxy?.reverseProxy
-            },
-            apiKey: config?.openApiKey,
-            request,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            topicId: parseInt(topicID!),
-            createdAt
-          })
-
-          console.log('用户消息 id', messageID)
-
-          unlisten()
-        } else {
-          const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', {
-            proxyConfig: {
-              ...config?.proxy,
-              reverse_proxy: config?.proxy?.reverseProxy
-            },
-            apiKey: config?.openApiKey,
-            request
-          })
-
-          // chatgpt 的响应的时间戳是精确到秒的，需要 x1000 js 才能正确识别
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-              content: addNewLine(resp.choices[0].message.content),
-              role: resp.choices[0].message.role,
-              time: resp.created * 1000
-            }
-          ])
-        }
+        if (stream) await sendStreamRequest(args, content)
+        else await sendRequest(args)
       } catch (e) {
+        setRetry(true)
+
         await message.error(e as any)
       } finally {
         setWaiting(false)
@@ -308,6 +371,8 @@ const ChatPage: React.FC = () => {
     setConfig(newConfig)
     setOpenSetting(false)
 
+    console.log('新配置', newConfig)
+
     if (isEqual(config, newConfig)) return
 
     void saveConfig(newConfig)
@@ -315,6 +380,25 @@ const ChatPage: React.FC = () => {
 
   const closeSettings = (): void => {
     setOpenSetting(false)
+  }
+
+  const removeLastMessages = useCallback((n: number): void => {
+    console.log(messages)
+    setMessages((prevMessages) => [
+      ...prevMessages.slice(0, prevMessages.length - n)
+    ])
+  }, [messages])
+
+  const handleRedo = async (): Promise<boolean> => {
+    const res = await deleteMessage(messages[messages.length - 2].time)
+
+    if (!res) return false
+
+    res && removeLastMessages(2)
+
+    setRetry(false)
+
+    return true
   }
 
   if (config == null) {
@@ -327,37 +411,40 @@ const ChatPage: React.FC = () => {
 
   return (
     <>
-      <FloatButton
-        icon={<SettingOutlined />}
-        style={{ right: 8, bottom: 110 }}
-        tooltip='设置'
-        onClick={() => {
-          setOpenSetting(true)
-        }}
-      />
+      <FloatButton.Group shape="circle" style={{ right: 8, bottom: 54 }}>
+        <FloatButton
+          icon={<SettingOutlined />}
+          tooltip="设置"
+          onClick={() => {
+            setOpenSetting(true)
+          }}
+        />
 
-      <FloatButton
-        icon={<MenuOutlined />}
-        style={{ right: 8 }}
-        tooltip='显示/隐藏主题列表'
-        onClick={() => {
-          setShowTopicList((pre) => !pre)
-        }}
-      />
+        <FloatButton
+          icon={<MenuOutlined />}
+          tooltip="显示/隐藏主题列表"
+          onClick={() => {
+            setShowTopicList((pre) => !pre)
+          }}
+        />
+
+        <FloatButton
+          icon={<ReloadOutlined />}
+          tooltip="刷新页面"
+          onClick={() => {
+            window.location.reload()
+          }}
+        />
+      </FloatButton.Group>
 
       <GlobalSettings
         config={config}
         open={openSetting}
-        // onCreate={onCreate}
         closeSettings={closeSettings}
         onConfigChange={handleConfigChange}
       />
 
       <Layout className="layout">
-        {/* <Header className="chat-title">
-        <h2> 这是对话标题，使用上下文时此处显示对话主题 </h2>
-      </Header> */}
-
         {showTopicList
           ? (
             <Sider>
@@ -376,6 +463,7 @@ const ChatPage: React.FC = () => {
           <React.Suspense fallback={null}>
             <Chat
               key={topicID}
+              topicName={topicName}
               messages={messages}
               config={config}
               showTopicList={showTopicList}
@@ -386,8 +474,15 @@ const ChatPage: React.FC = () => {
             <MessageInput
               onSendMessage={handleSendMessage}
               onAbortStream={handleAbortStream}
+              resetMessageList={() => {
+                setMessages([])
+              }}
+              redo={handleRedo}
               waiting={waiting}
               config={config}
+              topicID={topicID}
+              retry={retry}
+              lastUserMessage={messages.length >= 2 ? messages[messages.length - 2].content : ''}
             />
           </React.Suspense>
         </Content>

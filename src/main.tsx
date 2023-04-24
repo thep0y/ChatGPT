@@ -11,14 +11,18 @@ if (import.meta.env.DEV) {
   const tempLog = console.log
 
   console.log = (prefix: string, msg: any): void => {
-    tempLog.apply(console, [`[${new Date().toLocaleString()}]`, prefix, '>>>', msg])
+    if (msg) {
+      tempLog.apply(console, [`[${new Date().toLocaleString()}]`, prefix, '>>>', msg])
+    } else {
+      tempLog.apply(console, [`[${new Date().toLocaleString()}]`, prefix])
+    }
   }
 }
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/1" />,
+    element: <Navigate to="/1?name=自由主题" />,
     children: [
 
     ]

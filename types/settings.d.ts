@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: 2023-04-08 20:32:18
+ * Modified At: Sun Apr 23 2023
  * Modified By: thepoy
  */
 
@@ -25,10 +25,22 @@ declare interface Config {
     proxy?: Proxy
     reverseProxy?: ReverseProxy
   }
+  prompt: PromptConfig
+  export: ExportConfig
   openApiKey: string
   imageScale: number
   useStream: boolean
+  useEnter: boolean
+  showLineNumbers: boolean
   topics?: Record<string, TopicConfig>
+}
+
+declare interface ExportConfig {
+  markdown: MarkdownConfig
+}
+
+declare interface MarkdownConfig {
+  mode: number
 }
 
 declare interface TopicConfig {
@@ -38,11 +50,24 @@ declare interface TopicConfig {
   system_role: string
 }
 
-interface TopicSettingsProps {
+declare interface PromptConfig {
+  inChinese: boolean
+}
+
+interface PromptSettingsProps {
   open: boolean
   closeSettings?: () => void
+  config?: PromptConfig
+  onSettingsChange?: (
+    promptConfig: PromptConfig
+  ) => void
+}
+
+interface TopicSettingsProps extends PromptSettingsProps {
   topicID?: string
-  config?: TopicConfig
   name?: string
+  config?: TopicConfig
+  description?: string
   onSettingsChange?: (topicID: string, config: TopicConfig) => void
+  onDeleteMenuItem?: (id: React.Key) => void
 }

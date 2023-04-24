@@ -1,5 +1,13 @@
-import React, { lazy, useCallback, useEffect, useState } from 'react'
-import { type MenuProps, Spin, Menu, Button, message, Input } from 'antd'
+import React, { lazy, memo, useCallback, useEffect, useState } from 'react'
+import {
+  type MenuProps,
+  Spin,
+  Menu,
+  Button,
+  message,
+  Input,
+  Tooltip
+} from 'antd'
 import {
   PlusOutlined,
   MessageOutlined,
@@ -12,6 +20,10 @@ import { isEqual, now, saveConfig } from '~/lib'
 
 const TopicSettings = lazy(
   async () => await import('~/components/settings/Topic')
+)
+
+const PromptSettings = lazy(
+  async () => await import('~/components/settings/Prompt')
 )
 
 type MenuItem = Required<MenuProps>['items'][number]
@@ -49,7 +61,7 @@ const newTopic = (
   return getItem(label, key, onClick, <MessageOutlined />)
 }
 
-const defaultOpenSettings: TopicSettingsProps = { open: false }
+const defaultOpenSettings = { open: false }
 const defaultTopicConfig: TopicConfig = {
   use_context: true,
   conversation_count: 1,
@@ -58,13 +70,16 @@ const defaultTopicConfig: TopicConfig = {
 }
 
 // TODO: 功能比较简单，为了使用自定义滚动条应重写此组件
-const ChatMenu: React.FC<ChatMenuProps> = ({
+const ChatMenu = memo(({
   selectedID,
   config,
   onConfigChange: setConfig
-}) => {
+}: ChatMenuProps) => {
   const [topics, setTopics] = useState<MenuItem[]>([])
-  const [openSettings, setOpenSettings] = useState<TopicSettingsProps>({
+  const [topicSettingsStatus, setTopicSettingsStatus] = useState<TopicSettingsProps>({
+    ...defaultOpenSettings
+  })
+  const [promptSettingsStatus, setPromptSettingsStatus] = useState<PromptSettingsProps>({
     ...defaultOpenSettings
   })
   const navigate = useNavigate()
@@ -85,6 +100,7 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
 
       const id = await invoke<number>('new_topic', {
         name: topicName,
+        description: '',
         createdAt
       })
 
@@ -103,7 +119,7 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
 
       setTopics((pre) => [...pre.slice(0, pre.length - 1), topic])
 
-      handleConfigChange(id.toString(), defaultTopicConfig)
+      handleTopicConfigChange(id.toString(), defaultTopicConfig)
 
       navigate('/' + id.toString())
     },
@@ -129,7 +145,7 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
     setTopics((pre) => [...pre, t])
   }, [topics])
 
-  const handleConfigChange = (
+  const handleTopicConfigChange = (
     topicID: string,
     topicConfig: TopicConfig
   ): void => {
@@ -142,15 +158,40 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
     }
 
     setConfig(newConfig)
-    setOpenSettings({ open: false })
+    setTopicSettingsStatus({ open: false })
 
     if (isEqual(config, newConfig)) return
 
     void saveConfig(newConfig)
   }
 
-  const closeSettings = (): void => {
-    setOpenSettings({ open: false })
+  const handlePromptConfigChange = (
+    promptConfig: PromptConfig
+  ): void => {
+    const newConfig: Config = {
+      ...config,
+      prompt: { ...promptConfig }
+    }
+
+    setConfig(newConfig)
+    setTopicSettingsStatus({ open: false })
+
+    if (isEqual(config, newConfig)) return
+
+    void saveConfig(newConfig)
+  }
+
+  const closeTopicSettings = (): void => {
+    setTopicSettingsStatus({ open: false })
+  }
+  const closePromptSettings = (): void => {
+    setPromptSettingsStatus({ open: false })
+  }
+
+  const deleteItem = (id: React.Key): void => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    setTopics(pre => pre.filter(v => v!.key! !== id))
+    navigate('/1')
   }
 
   const openTopicSettings = (
@@ -160,13 +201,25 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
   ): void => {
     e.stopPropagation()
 
-    setOpenSettings({
+    if (t.id === 2) {
+      setPromptSettingsStatus({
+        open: true,
+        onSettingsChange: handlePromptConfigChange,
+        closeSettings: closePromptSettings,
+        config: config.prompt
+      })
+
+      return
+    }
+
+    setTopicSettingsStatus({
       open: true,
       topicID: t.id.toString(),
       name: t.name,
       config: config.topics ? config.topics[t.id] : { ...defaultTopicConfig },
-      onSettingsChange: handleConfigChange,
-      closeSettings
+      onSettingsChange: handleTopicConfigChange,
+      closeSettings: closeTopicSettings,
+      onDeleteMenuItem: deleteItem
     })
   }
 
@@ -177,24 +230,37 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
 
         setTopics(
           topics.map((t) => {
-            const label = <Link to={'/' + t.id.toString()}>{t.name}</Link>
+            const label = (
+              <Tooltip title={t.description === '' ? t.name : t.description} placement='right'>
+                <Link to={'/' + t.id.toString() + '?name=' + t.name}>
+                  {t.name}
+                </Link>
+              </Tooltip>
+            )
+
+            const icon =
+              t.id === 1
+                ? (
+                  <MessageOutlined />
+                  )
+                : (
+                  <Tooltip title="主题设置" placement="topLeft">
+                    <SettingFilled
+                      className="topic-settings"
+                      onClick={(e) => {
+                        openTopicSettings(e, t, config)
+                      }}
+                    />
+                  </Tooltip>
+                  )
 
             return getItem(
               label,
               t.id,
               () => {
-                navigate('/' + t.id.toString())
+                navigate('/' + t.id.toString() + '?name=' + t.name)
               },
-              <Button
-                className="topic-settings"
-                shape="circle"
-                onClick={(e) => {
-                  openTopicSettings(e, t, config)
-                }}
-                style={{ zIndex: 99 }}
-                disabled={t.id === 1}
-                icon={<SettingFilled />}
-              />
+              icon
             )
           })
         )
@@ -217,7 +283,8 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
   return (
     <>
       {/* TODO: TopicSettings 的渲染时间需要优化，不该在加载 menu 时渲染 */}
-      <TopicSettings {...openSettings} />
+      <TopicSettings {...topicSettingsStatus} />
+      <PromptSettings {...promptSettingsStatus} />
 
       <Menu
         style={{ overflowY: 'scroll' }}
@@ -239,10 +306,12 @@ const ChatMenu: React.FC<ChatMenuProps> = ({
         onSelect={(e) => {
           console.log('选择主题', e)
         }}
-        defaultSelectedKeys={[selectedID]}
+        selectedKeys={[selectedID]}
       />
     </>
   )
-}
+})
+
+ChatMenu.displayName = 'ChatMenu'
 
 export default ChatMenu

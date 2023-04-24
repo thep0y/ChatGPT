@@ -1,4 +1,4 @@
-import React, { useState, memo, useRef, useCallback, lazy } from 'react'
+import React, { useState, memo, useRef, useCallback, lazy, useLayoutEffect } from 'react'
 import { FloatButton, message } from 'antd'
 import {
   SaveOutlined,
@@ -15,52 +15,78 @@ import {
 } from '@tauri-apps/api/dialog'
 
 import '~/styles/Chat.scss'
-import { saveFile } from '~/lib/fs'
+import { UserMessageMode, saveFile, saveMarkdown } from '~/lib/fs'
 import Progress from '~/components/Progress'
 import { now } from '~/lib'
+import { type TypeOpen } from 'antd/es/message/interface'
 
 const MessageList = lazy(async () => await import('~/components/message/List'))
 const Scrollbar = lazy(
   async () => await import('~/components/scrollbar/Scrollbar')
 )
 
-type ChatProps = MessageListProps & { config: Config }
+type ChatProps = Omit<MessageListProps, 'showLineNumbers'> & { config: Config, topicName: string }
 
-const MESSAGE_SAVEING_FILTER_OPTION: SaveDialogOptions = {
+const IMAGE_FILTER_OPTION: SaveDialogOptions = {
   filters: [
     {
       name: '图片',
-      extensions: ['png']
+      extensions: ['png', 'svg', 'jpeg']
     }
   ] as DialogFilter[]
 } as const
 
-const handleSaveError = (
+const MARKDOWN_FILTER_OPTION: SaveDialogOptions = {
+  filters: [
+    {
+      name: 'markdown',
+      extensions: ['md']
+    }
+  ] as DialogFilter[]
+} as const
+
+const handleSaveMessage = (
   errorMsg: string,
-  setSaving: React.Dispatch<React.SetStateAction<Saving>>
+  setSaving: React.Dispatch<React.SetStateAction<Saving>>,
+  method: TypeOpen = message.error
 ): void => {
-  void message.error(errorMsg)
-  setSaving((pre) => ({ status: !pre.status, name: pre.name }))
+  void method(errorMsg)
+  setSaving((pre) => ({ status: false, name: pre.name }))
 }
 
 interface ExportTask {
   filepath: string
-  blob: Blob
+  blob: Blob | null
+}
+
+const toMarkdown = async (topicName: string, setSaving: React.Dispatch<React.SetStateAction<Saving>>): Promise<string | null> => {
+  const filePath = await save({
+    ...MARKDOWN_FILTER_OPTION,
+    defaultPath: `${topicName}-${now()}.md`
+  })
+
+  if (filePath === null) {
+    handleSaveMessage('markdown 的保存路径选择失败', setSaving, message.info)
+
+    return null
+  }
+
+  return filePath
 }
 
 const toImage = async (
+  topicName: string,
   messageListComponentRef: React.RefObject<HTMLDivElement>,
   setSaving: React.Dispatch<React.SetStateAction<Saving>>,
   imageScale: number
 ): Promise<ExportTask | null> => {
   const filePath = await save({
-    ...MESSAGE_SAVEING_FILTER_OPTION,
-    defaultPath: `ChatGPT 对话-${now()}.png`
+    ...IMAGE_FILTER_OPTION,
+    defaultPath: `${topicName}-${now()}.png`
   })
 
-  setSaving({ status: true, name: '图片' })
   if (filePath === null) {
-    handleSaveError('图片的保存路径选择失败', setSaving)
+    handleSaveMessage('图片的保存路径选择失败', setSaving, message.info)
 
     return null
   }
@@ -68,10 +94,12 @@ const toImage = async (
   const target = messageListComponentRef.current
 
   if (target == null) {
-    handleSaveError('当前消息列表为空', setSaving)
+    handleSaveMessage('当前消息列表为空', setSaving, message.info)
 
     return null
   }
+
+  setSaving({ status: true, name: '图片' })
 
   const lis: NodeListOf<HTMLElement> = target.querySelectorAll('li.shared')
 
@@ -88,18 +116,43 @@ const toImage = async (
 
     return { blob, filepath: filePath }
   } catch (e) {
-    handleSaveError((e as any).toString(), setSaving)
+    console.error(e)
+    handleSaveMessage((e as any).toString(), setSaving)
 
     return null
   }
 }
 
-const Chat = memo(({ messages, config, showTopicList }: ChatProps) => {
+const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) => {
   const messageListComponentRef = useRef<HTMLDivElement>(null)
   const [saving, setSaving] = useState<Saving>({ status: false, name: '' })
   const [progress, setProgress] = useState(0)
+  const [key, setKey] = useState(0)
+
+  console.log('渲染的消息', messages)
+
+  const handleSaveMarkdown = useCallback(async () => {
+    if (messages.length === 0) {
+      await message.warning('当前消息列表为空')
+    }
+
+    const path = await toMarkdown(topicName, setSaving)
+
+    if (path == null) {
+      return
+    }
+
+    if (config.export.markdown.mode === UserMessageMode.TITLE) {
+      void message.warning('如果用户消息中含有多行文件，应在设置中设置导出形式为“引用块”')
+    }
+
+    await saveMarkdown(config.export.markdown.mode, path, topicName, messages, setProgress)
+
+    void message.success('markdown 已保存到：' + path)
+  }, [messageListComponentRef, messages, setSaving, setProgress, config])
 
   const handleSaveImage = useCallback(async () => {
+    // TODO: 在其他主题中，保存图片有 bug
     if (messages.length === 0) {
       await message.warning('当前消息列表为空')
 
@@ -107,6 +160,7 @@ const Chat = memo(({ messages, config, showTopicList }: ChatProps) => {
     }
 
     const res = await toImage(
+      topicName,
       messageListComponentRef,
       setSaving,
       config.imageScale
@@ -118,6 +172,13 @@ const Chat = memo(({ messages, config, showTopicList }: ChatProps) => {
 
     const { blob, filepath } = res
 
+    if (blob == null) {
+      setSaving((pre) => ({ status: false, name: pre.name }))
+      void message.error('对话过长，图片尺寸过大，请更换导出类型')
+
+      return
+    }
+
     try {
       const buffer = new Uint8Array(await blob.arrayBuffer())
 
@@ -125,12 +186,30 @@ const Chat = memo(({ messages, config, showTopicList }: ChatProps) => {
 
       void message.success('图片已保存到：' + filepath)
     } catch (e) {
-      handleSaveError((e as any).toString(), setSaving)
+      handleSaveMessage((e as any).toString(), setSaving)
     } finally {
       setProgress(0)
-      setSaving((pre) => ({ status: !pre.status, name: pre.name }))
+      setSaving((pre) => ({ status: false, name: pre.name }))
     }
   }, [messageListComponentRef, messages, setSaving, setProgress, config])
+
+  const observer = new ResizeObserver(entries => {
+    // Chat 组件高度变化时需要让 messageListComponentRef 也产生变化
+    // 才能让滚动条的高度更新，这里采用给 messageListComponentRef 添加
+    // 一个变化的属性的办法
+    entries.forEach(entry => {
+      setKey(pre => pre + 1)
+      entry.target.setAttribute('key', key.toString())
+    })
+  })
+
+  useLayoutEffect(() => {
+    const current = messageListComponentRef.current
+
+    if (!current) return
+
+    observer.observe(messageListComponentRef.current)
+  }, [messageListComponentRef.current])
 
   return (
     <>
@@ -140,46 +219,43 @@ const Chat = memo(({ messages, config, showTopicList }: ChatProps) => {
         <div id="chat">
           <div ref={messageListComponentRef}>
             <React.Suspense fallback={null}>
-              <MessageList messages={messages} showTopicList={showTopicList} />
+              <MessageList messages={messages} showTopicList={showTopicList} showLineNumbers={config.showLineNumbers} />
             </React.Suspense>
           </div>
-
-          {messages.length > 1
-            ? (
-              <FloatButton.Group
-                trigger="hover"
-                style={{ right: 8, bottom: 160 }}
-                icon={<SaveOutlined />}
-              >
-                <FloatButton
-                  key="save-txt"
-                  tooltip="保存为 txt"
-                  icon={<FileTextOutlined />}
-                />
-
-                <FloatButton
-                  key="save-pdf"
-                  tooltip="保存为 pdf"
-                  icon={<FilePdfOutlined />}
-                />
-
-                <FloatButton
-                  key="save-markdown"
-                  tooltip="保存为 markdown"
-                  icon={<FileMarkdownOutlined />}
-                />
-
-                <FloatButton
-                  key="save-image"
-                  onClick={handleSaveImage}
-                  tooltip="保存为图片"
-                  icon={<FileImageOutlined />}
-                />
-              </FloatButton.Group>
-              )
-            : null}
         </div>
       </Scrollbar>
+
+      <FloatButton.Group
+        trigger="hover"
+        style={{ right: 8, bottom: 206, marginBottom: 16 }}
+        icon={<SaveOutlined />}
+      >
+        <FloatButton
+          key="save-txt"
+          tooltip="保存为 txt"
+          icon={<FileTextOutlined />}
+        />
+
+        <FloatButton
+          key="save-pdf"
+          tooltip="保存为 pdf"
+          icon={<FilePdfOutlined />}
+        />
+
+        <FloatButton
+          key="save-markdown"
+          tooltip="保存为 markdown"
+          onClick={handleSaveMarkdown}
+          icon={<FileMarkdownOutlined />}
+        />
+
+        <FloatButton
+          key="save-image"
+          onClick={handleSaveImage}
+          tooltip="保存为图片"
+          icon={<FileImageOutlined />}
+        />
+      </FloatButton.Group>
     </>
   )
 })

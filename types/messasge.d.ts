@@ -8,18 +8,25 @@
 interface MessageListProps {
   messages: Message[]
   showTopicList: boolean
+  showLineNumbers: boolean
 }
 
 interface MessageInputProps {
   onSendMessage: (message: string, stream: boolean) => Promise<void>
   onAbortStream: () => void
+  resetMessageList: () => void
+  redo: () => Promise<boolean>
   waiting: boolean
   config: Config
+  topicID: string
+  retry: boolean
+  lastUserMessage: string
 }
 
 declare interface Topic {
   id: number
   name: string
+  description: string
   created_at: number
 }
 
