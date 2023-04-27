@@ -504,6 +504,21 @@ async fn delete_topic(pool: tauri::State<'_, SQLitePool>, topic_id: u32) -> Resu
     }
 }
 
+#[tauri::command]
+async fn switch_top_status(window: tauri::Window, current: bool) -> Result<()> {
+    match window.set_always_on_top(!current) {
+        Ok(()) => {
+            info!("已切换窗口置顶状态 {} => {}", current, !current);
+
+            Ok(())
+        }
+        Err(e) => {
+            error!("切换窗口置顶状态时出错：{}", e);
+            Err(e.to_string())
+        }
+    }
+}
+
 fn init_database(pool: &SQLitePool) -> anyhow::Result<()> {
     let conn = pool.get()?;
 
@@ -561,7 +576,8 @@ async fn main() -> anyhow::Result<()> {
             update_topic,
             clear_topic,
             delete_topic,
-            delete_message_by_time
+            delete_message_by_time,
+            switch_top_status
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

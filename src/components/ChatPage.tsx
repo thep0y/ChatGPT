@@ -4,7 +4,8 @@ import {
   SettingOutlined,
   MenuOutlined,
   ExclamationCircleFilled,
-  ReloadOutlined
+  ReloadOutlined,
+  PushpinOutlined
 } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
@@ -415,6 +416,14 @@ const ChatPage: React.FC = () => {
         <FloatButton
           icon={<SettingOutlined />}
           tooltip="设置"
+          onClick={() => {
+            setOpenSetting(true)
+          }}
+        />
+
+        <FloatButton
+          icon={<PushpinOutlined />}
+          tooltip="置顶"
           onClick={() => {
             setOpenSetting(true)
           }}

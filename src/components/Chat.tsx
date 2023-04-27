@@ -5,7 +5,8 @@ import {
   FileImageOutlined,
   FileMarkdownOutlined,
   FilePdfOutlined,
-  FileTextOutlined
+  FileTextOutlined,
+  PushpinOutlined
 } from '@ant-design/icons'
 import domtoimage from 'dom-to-image-more'
 import {
@@ -227,7 +228,7 @@ const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) =>
 
       <FloatButton.Group
         trigger="hover"
-        style={{ right: 8, bottom: 206, marginBottom: 16 }}
+        style={{ right: 8, bottom: 262, marginBottom: 16 }}
         icon={<SaveOutlined />}
       >
         <FloatButton
