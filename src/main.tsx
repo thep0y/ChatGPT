@@ -3,7 +3,9 @@ import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 // import '~/styles/index.scss'
 // import TitleBar from '~/components/TitleBar'
+import { ConfigProvider, theme } from 'antd'
 import '~/styles/index.scss'
+import { appWindow } from '@tauri-apps/api/window'
 
 const ChatPage = lazy(async () => await import('~/components/ChatPage'))
 
@@ -37,9 +39,15 @@ const router = createBrowserRouter([
   }
 ])
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    {/* <TitleBar /> */}
-    <RouterProvider router={router} />
-  </React.StrictMode>
-)
+appWindow.theme().then(v => {
+  ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+    <React.StrictMode>
+      <ConfigProvider theme={{
+        algorithm: v === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm
+      }}
+      >
+        <RouterProvider router={router} />
+      </ConfigProvider>
+    </React.StrictMode>
+  )
+}).catch(() => {})
