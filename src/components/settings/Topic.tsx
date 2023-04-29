@@ -7,6 +7,10 @@ const { TextArea } = Input
 const CONVERSATION_MIN_COUNT = 1
 const CONVERSATION_MAX_COUNT = 5
 
+const TOPIC_NAME_MAX_LENGTH = 200
+const DESCRIPTION_MAX_LENGTH = 200
+const PROMPT_MAX_LENGTH = 500
+
 interface SettingsState {
   topicName: string
   description: string
@@ -210,7 +214,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
         <Form.Item label="主题名">
           <Input
             defaultValue={name}
-            maxLength={20}
+            maxLength={TOPIC_NAME_MAX_LENGTH}
             showCount
             onChange={onTopicNameChange}
           />
@@ -219,7 +223,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
         <Form.Item label="主题描述">
           <TextArea
             defaultValue={description}
-            maxLength={200}
+            maxLength={DESCRIPTION_MAX_LENGTH}
             onChange={onTopicDescriptionChange}
             showCount
             autoSize
@@ -240,7 +244,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
             <Form.Item label="系统角色">
               <TextArea
                 showCount
-                maxLength={40}
+                maxLength={PROMPT_MAX_LENGTH}
                 autoSize
                 rows={2}
                 defaultValue={state.systemRole}
