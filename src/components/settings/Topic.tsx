@@ -104,6 +104,8 @@ const Settings: React.FC<TopicSettingsProps> = ({
   const onOk = (): void => {
     void updateTopic()
 
+    console.log('系统角色', state.systemRole)
+
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     onSettingsChange?.(topicID!, {
       use_context: state.useContext,
@@ -126,6 +128,8 @@ const Settings: React.FC<TopicSettingsProps> = ({
   )
 
   const setSystemRoleAvailable = useCallback((status: boolean): void => {
+    if (!status) dispatch({ type: 'SET_SYSTEM_ROLE', payload: '' })
+
     dispatch({ type: 'SET_SYSTEM_ROLE_AVAILABLE', payload: status })
   }, [])
 
