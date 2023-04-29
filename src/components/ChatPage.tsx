@@ -173,6 +173,7 @@ const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [waiting, setWaiting] = useState<boolean>(false)
   const [openSetting, setOpenSetting] = useState(false)
+  const [isOnTop, setOnTop] = useState(true)
   const [showTopicList, setShowTopicList] = useState(false)
   const [config, setConfig] = useState<Config | null>(null)
   const { topicID } = useParams<'topicID'>()
@@ -402,6 +403,11 @@ const ChatPage: React.FC = () => {
     return true
   }
 
+  const handleOnTop = (): void => {
+    void invoke('switch_top_status', { current: isOnTop })
+    setOnTop(!isOnTop)
+  }
+
   if (config == null) {
     return (
       <Spin tip="正在读取配置文件">
@@ -424,9 +430,7 @@ const ChatPage: React.FC = () => {
         <FloatButton
           icon={<PushpinOutlined />}
           tooltip="置顶"
-          onClick={() => {
-            setOpenSetting(true)
-          }}
+          onClick={handleOnTop}
         />
 
         <FloatButton
