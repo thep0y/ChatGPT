@@ -149,6 +149,25 @@ async fn write_config(config: Config) -> Result<()> {
 }
 
 #[tauri::command]
+async fn restore_is_on_top() -> Result<()> {
+    trace!("重置 is_on_top");
+
+    let config = config::read_config()?;
+
+    if let Some(mut c) = config {
+        if c.is_on_top {
+            return Ok(());
+        }
+
+        c.is_on_top = true;
+        config::write_config(&c)?;
+        debug!("已重置 is_on_top");
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
 async fn chat_gpt(
     pool: tauri::State<'_, SQLitePool>,
     proxy_config: ProxyConfig,
@@ -504,6 +523,21 @@ async fn delete_topic(pool: tauri::State<'_, SQLitePool>, topic_id: u32) -> Resu
     }
 }
 
+#[tauri::command]
+async fn switch_top_status(window: tauri::Window, current: bool) -> Result<()> {
+    match window.set_always_on_top(!current) {
+        Ok(()) => {
+            info!("已切换窗口置顶状态 {} => {}", current, !current);
+
+            Ok(())
+        }
+        Err(e) => {
+            error!("切换窗口置顶状态时出错：{}", e);
+            Err(e.to_string())
+        }
+    }
+}
+
 fn init_database(pool: &SQLitePool) -> anyhow::Result<()> {
     let conn = pool.get()?;
 
@@ -561,7 +595,9 @@ async fn main() -> anyhow::Result<()> {
             update_topic,
             clear_topic,
             delete_topic,
-            delete_message_by_time
+            delete_message_by_time,
+            switch_top_status,
+            restore_is_on_top
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

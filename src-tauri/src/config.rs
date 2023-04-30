@@ -73,6 +73,8 @@ pub struct Config {
     pub image_scale: u8,
     pub use_stream: Option<bool>,
     pub use_enter: Option<bool>,
+    #[serde(default = "default_is_on_top")]
+    pub is_on_top: bool, // 当前 tauri 没有 api 获取 on top 状态，暂时使用配置文件保存此变量
     pub show_line_numbers: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub topics: Option<HashMap<String, TopicConfig>>,
@@ -95,9 +97,21 @@ pub fn read_config() -> Result<Option<Config>> {
 }
 
 pub fn write_config(config: &Config) -> Result<()> {
+    trace!("保存的配置：{:?}", config);
+
     let config_str = toml::to_string(config).map_err(|e| e.to_string())?;
 
+    trace!("序列化后的配置：{}", config_str);
+
     fs::write(CONFIG_FILE.to_owned(), config_str).map_err(|e| e.to_string())
+}
+
+fn default_temperature() -> f64 {
+    1.00
+}
+
+fn default_is_on_top() -> bool {
+    true
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -106,4 +120,6 @@ pub struct TopicConfig {
     pub conversation_count: u8,
     pub use_first_conversation: bool,
     pub system_role: String,
+    #[serde(default = "default_temperature")]
+    pub temperature: f64,
 }

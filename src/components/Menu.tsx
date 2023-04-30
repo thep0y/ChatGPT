@@ -66,7 +66,8 @@ const defaultTopicConfig: TopicConfig = {
   use_context: true,
   conversation_count: 1,
   use_first_conversation: false,
-  system_role: ''
+  system_role: '',
+  temperature: 1.0
 }
 
 // TODO: 功能比较简单，为了使用自定义滚动条应重写此组件

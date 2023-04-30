@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: Sun Apr 23 2023
+ * Modified At: 2023-04-30 18:47:31
  * Modified By: thepoy
  */
 
@@ -32,6 +32,7 @@ declare interface Config {
   useStream: boolean
   useEnter: boolean
   showLineNumbers: boolean
+  isOnTop: boolean
   topics?: Record<string, TopicConfig>
 }
 
@@ -48,6 +49,7 @@ declare interface TopicConfig {
   conversation_count: number
   use_first_conversation: boolean
   system_role: string
+  temperature: number
 }
 
 declare interface PromptConfig {

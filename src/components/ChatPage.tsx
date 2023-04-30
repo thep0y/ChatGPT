@@ -1,10 +1,18 @@
-import React, { useState, lazy, useEffect, useCallback, useLayoutEffect } from 'react'
+import React, {
+  useState,
+  lazy,
+  useEffect,
+  useCallback,
+  useLayoutEffect
+} from 'react'
 import { Layout, FloatButton, Spin, message, Modal } from 'antd'
 import {
   SettingOutlined,
   MenuOutlined,
   ExclamationCircleFilled,
-  ReloadOutlined
+  ReloadOutlined,
+  PushpinOutlined,
+  PushpinFilled
 } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
@@ -19,6 +27,7 @@ import {
   deleteMessage
 } from '~/lib/message'
 import { appWindow } from '@tauri-apps/api/window'
+import { TauriEvent } from '@tauri-apps/api/event'
 import '~/styles/ChatPage.scss'
 
 const Chat = lazy(async () => await import('~/components/Chat'))
@@ -124,9 +133,16 @@ const conversationsToMessages = (conversations: Conversation[]): Message[] => {
   return tempMessages
 }
 
-const addPromptMessages = (sendedMessages: ChatMessage[], inChinese?: boolean): void => {
-  const roleMessage = inChinese ? PROMPT_ROLE_MESSAGE_IN_CHINESE : PROMPT_ROLE_MESSAGE
-  const assistantMessage = inChinese ? PROMPT_ASSISTANT_RESPONSE_IN_CHINESE : PROMPT_ASSISTANT_RESPONSE
+const addPromptMessages = (
+  sendedMessages: ChatMessage[],
+  inChinese?: boolean
+): void => {
+  const roleMessage = inChinese
+    ? PROMPT_ROLE_MESSAGE_IN_CHINESE
+    : PROMPT_ROLE_MESSAGE
+  const assistantMessage = inChinese
+    ? PROMPT_ASSISTANT_RESPONSE_IN_CHINESE
+    : PROMPT_ASSISTANT_RESPONSE
 
   sendedMessages.unshift(
     { role: 'user', content: roleMessage },
@@ -134,31 +150,71 @@ const addPromptMessages = (sendedMessages: ChatMessage[], inChinese?: boolean): 
   )
 }
 
-const addConversationMessages = (sendedMessages: ChatMessage[], messages: Message[], conversationCount: number, useFirstConversation: boolean): void => {
-  const firstMessageIndex = useFirstConversation ? 2 : 0
-  const lastMessageIndex = Math.min(messages.length - 1, firstMessageIndex + (conversationCount * 2) - 1)
+const addConversationMessages = (
+  sendedMessages: ChatMessage[],
+  messages: Message[],
+  useFirstConversation: boolean,
+  useConversationCount: number
+): void => {
+  console.log('发送消息列表', sendedMessages)
+  console.log('消息列表', messages)
 
-  for (let i = lastMessageIndex; i >= firstMessageIndex; i--) {
-    sendedMessages.unshift(messages[i])
+  // 这里的 messages 中尚不包含刚添加的用户消息，对话数量是用户消息之前的对话数量
+  const conversationCount = messages.length / 2
+
+  if (conversationCount === 0) return
+
+  if (!Number.isInteger(conversationCount)) {
+    throw Error(`对话数量不是整数，messages.length = ${messages.length}`)
   }
+
+  sendedMessages.reverse()
+
+  if (conversationCount <= useConversationCount) {
+    sendedMessages.push(...messages.reverse())
+  } else {
+    const startMessageNo = useFirstConversation
+      ? messages.length - (useConversationCount - 1) * 2
+      : messages.length - useConversationCount * 2
+
+    console.log('初始消息序号', startMessageNo)
+
+    sendedMessages.push(...messages.slice(startMessageNo).reverse())
+
+    // 如果使用第一组对话
+    if (useFirstConversation) {
+      sendedMessages.push(messages[1], messages[0])
+    }
+  }
+
+  sendedMessages.reverse()
 }
 
-const addSystemRoleMessage = (sendedMessages: ChatMessage[], systemRole: string): void => {
+const addSystemRoleMessage = (
+  sendedMessages: ChatMessage[],
+  systemRole: string
+): void => {
   sendedMessages.unshift({ role: 'system', content: systemRole })
 }
 
-const fillMessages = (sendedMessages: ChatMessage[], messages: Message[], topicConfig?: TopicConfig, inChinese?: boolean): void => {
+const fillMessages = (
+  sendedMessages: ChatMessage[],
+  messages: Message[],
+  topicConfig?: TopicConfig,
+  inChinese?: boolean
+): void => {
   if (inChinese !== undefined) {
     sendedMessages.unshift(...messages)
     addPromptMessages(sendedMessages, inChinese)
   }
 
   if (topicConfig?.use_context) {
-    const conversationCount = Math.floor(messages.length / 2) - (topicConfig.use_first_conversation ? 1 : 0)
-
-    if (conversationCount > 0) {
-      addConversationMessages(sendedMessages, messages, conversationCount, topicConfig.use_first_conversation)
-    }
+    addConversationMessages(
+      sendedMessages,
+      messages,
+      topicConfig.use_first_conversation,
+      topicConfig.conversation_count
+    )
   }
 
   if (topicConfig?.system_role) {
@@ -194,6 +250,11 @@ const ChatPage: React.FC = () => {
       if (!config || config.openApiKey === '') {
         setOpenSetting(true)
       }
+
+      void appWindow.once(TauriEvent.WINDOW_CLOSE_REQUESTED, async () => {
+        await invoke('restore_is_on_top')
+        await appWindow.close()
+      })
     }
 
     void fetchConfig()
@@ -203,34 +264,37 @@ const ChatPage: React.FC = () => {
     void getMessagesByTopic(topicID)
   }, [topicID])
 
-  const getMessagesByTopic = useCallback(async (topicID: string): Promise<void> => {
-    try {
-      const conversations = await invoke<Conversation[]>(
-        'get_messages_by_topic_id',
-        { topicId: topicIDNumber }
-      )
+  const getMessagesByTopic = useCallback(
+    async (topicID: string): Promise<void> => {
+      try {
+        const conversations = await invoke<Conversation[]>(
+          'get_messages_by_topic_id',
+          { topicId: topicIDNumber }
+        )
 
-      console.log('当前消息', messages)
-      console.log('会话', conversations)
+        console.log('当前消息', messages)
+        console.log('会话', conversations)
 
-      if (topicID === '2' && conversations.length > 0) {
-        await showConfirm(topicID)
+        if (topicID === '2' && conversations.length > 0) {
+          await showConfirm(topicID)
+        }
+
+        const ms = conversationsToMessages(conversations)
+
+        setMessages(ms)
+      } catch (e) {
+        void message.error((e as any).toString())
       }
-
-      const ms = conversationsToMessages(conversations)
-
-      setMessages(ms)
-    } catch (e) {
-      void message.error((e as any).toString())
-    }
-  }, [topicID])
+    },
+    [topicID]
+  )
 
   const showConfirm = async (topicID: string): Promise<void> => {
     confirm({
       title: '注意',
       icon: <ExclamationCircleFilled />,
       content:
-      '在完善新的问题之前应先清空之前的对话，否则会影响新问题的对话逻辑。',
+        '在完善新的问题之前应先清空之前的对话，否则会影响新问题的对话逻辑。',
       okText: '继续',
       cancelText: '清空',
       cancelButtonProps: { danger: true, type: 'primary' },
@@ -267,16 +331,13 @@ const ChatPage: React.FC = () => {
     return createdAt
   }
 
-  const sendStreamRequest = async (args: ChatRequestArgs, input: string): Promise<void> => {
+  const sendStreamRequest = async (args: ChatRequestArgs): Promise<void> => {
     console.log('使用的代理配置', config?.proxy)
 
     try {
-      const unlisten = await appWindow.listen<string>(
-        'stream',
-        async (e) => {
-          await handleStreamResponse(e, setMessages)
-        }
-      )
+      const unlisten = await appWindow.listen<string>('stream', async (e) => {
+        await handleStreamResponse(e, setMessages)
+      })
 
       try {
         const messageID = await invoke<number>('chat_gpt_stream', args as any)
@@ -285,7 +346,7 @@ const ChatPage: React.FC = () => {
           setMessages((pre) => [...pre.slice(0, pre.length - 2)])
         }
       } catch (e) {
-        void message.error((e as string))
+        void message.error(e as string)
 
         setRetry(true)
 
@@ -296,7 +357,7 @@ const ChatPage: React.FC = () => {
 
       unlisten()
     } catch (e) {
-      void message.error((e as string))
+      void message.error(e as string)
 
       setRetry(true)
 
@@ -320,7 +381,10 @@ const ChatPage: React.FC = () => {
     ])
   }
 
-  const createConfigProperties = (): Omit<ChatRequestArgs, 'request' | 'createdAt'> => ({
+  const createConfigProperties = (): Omit<
+  ChatRequestArgs,
+  'request' | 'createdAt'
+  > => ({
     proxyConfig: {
       ...config?.proxy,
       reverse_proxy: config?.proxy?.reverseProxy
@@ -343,21 +407,37 @@ const ChatPage: React.FC = () => {
         }
       ]
 
-      fillMessages(sendedMessages, messages, config?.topics?.[topicID], topicIDNumber === 2 ? config?.prompt?.inChinese : undefined)
+      fillMessages(
+        sendedMessages,
+        messages,
+        config?.topics?.[topicID],
+        topicIDNumber === 2 ? config?.prompt?.inChinese : undefined
+      )
 
-      console.log('发送的消息', sendedMessages)
+      console.log('要发送的消息', sendedMessages)
 
       try {
         const args = {
           ...createConfigProperties(),
-          request: newChatRequest(sendedMessages, stream),
+          request: newChatRequest(
+            sendedMessages,
+            stream,
+            topicIDNumber === 2
+              ? 1.0
+              : config?.topics?.[topicID].temperature ?? 1.0
+          ),
           createdAt
         }
 
-        if (stream) await sendStreamRequest(args, content)
+        console.log('要发送的参数', args)
+
+        if (stream) await sendStreamRequest(args)
         else await sendRequest(args)
       } catch (e) {
         setRetry(true)
+        setWaiting(false)
+
+        console.error(e)
 
         await message.error(e as any)
       } finally {
@@ -382,12 +462,15 @@ const ChatPage: React.FC = () => {
     setOpenSetting(false)
   }
 
-  const removeLastMessages = useCallback((n: number): void => {
-    console.log(messages)
-    setMessages((prevMessages) => [
-      ...prevMessages.slice(0, prevMessages.length - n)
-    ])
-  }, [messages])
+  const removeLastMessages = useCallback(
+    (n: number): void => {
+      console.log(messages)
+      setMessages((prevMessages) => [
+        ...prevMessages.slice(0, prevMessages.length - n)
+      ])
+    },
+    [messages]
+  )
 
   const handleRedo = async (): Promise<boolean> => {
     const res = await deleteMessage(messages[messages.length - 2].time)
@@ -409,6 +492,16 @@ const ChatPage: React.FC = () => {
     )
   }
 
+  const handleOnTop = (): void => {
+    void invoke('switch_top_status', { current: config.isOnTop })
+
+    const newConfig = { ...config, isOnTop: !config.isOnTop }
+
+    setConfig(newConfig)
+
+    void saveConfig(newConfig)
+  }
+
   return (
     <>
       <FloatButton.Group shape="circle" style={{ right: 8, bottom: 54 }}>
@@ -418,6 +511,12 @@ const ChatPage: React.FC = () => {
           onClick={() => {
             setOpenSetting(true)
           }}
+        />
+
+        <FloatButton
+          icon={config.isOnTop ? <PushpinFilled /> : <PushpinOutlined /> }
+          tooltip={config.isOnTop ? '取消置顶' : '置顶'}
+          onClick={handleOnTop}
         />
 
         <FloatButton
@@ -482,7 +581,11 @@ const ChatPage: React.FC = () => {
               config={config}
               topicID={topicID}
               retry={retry}
-              lastUserMessage={messages.length >= 2 ? messages[messages.length - 2].content : ''}
+              lastUserMessage={
+                messages.length >= 2
+                  ? messages[messages.length - 2].content
+                  : ''
+              }
             />
           </React.Suspense>
         </Content>

@@ -519,7 +519,7 @@ const Settings = memo(
             name="markdown-save-mode"
             label="用户消息样式"
             initialValue={mode}
-            tooltip="Markdown 用户消息保存形式，用户消息是多行文件时，应使用引用块形式保存"
+            tooltip="Markdown 用户消息保存形式，用户消息是多行文本时，应使用引用块形式保存"
           >
             <Select
               style={{ width: 150 }}
