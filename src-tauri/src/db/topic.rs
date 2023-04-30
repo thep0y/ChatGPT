@@ -91,9 +91,9 @@ const FREE_TOPIC_NAME: &str = "自由对话";
 const FREE_TOPIC_DESCRIPTION: &str =
     "不使用上下文的简单问答，可在此主题中提问一些常识或答案偏固定的问题。";
 
-const PROMPT_TOPIC_NAME: &str = "问题完善";
+const PROMPT_TOPIC_NAME: &str = "问题(提示)完善";
 const PROMPT_TOPIC_DESCRIPTION: &str =
-    "当你的问题比较笼统、不精确，已经或可能使 ChatGPT 无法正确理解时，可以通过此主题对你的问题进行完善。需要注意的是，当你完善一个问题后，在完善下一个问题前，应清空历史记录，否则生成的问题可能存在逻辑错误。";
+    "当你的问题(提示)比较笼统、不精确，已经或可能使 ChatGPT 无法正确理解时，可以通过此主题对你的问题(提示)进行完善。需要注意的是，当你完善一个问题(提示)后，在完善下一个问题(提示)前，应清空历史记录，否则生成的问题(提示)可能存在逻辑错误。";
 
 pub fn init_topic(conn: &Connection) -> Result<()> {
     conn.execute(TOPIC_TABLE, ())
