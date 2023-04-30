@@ -97,12 +97,16 @@ pub fn read_config() -> Result<Option<Config>> {
 }
 
 pub fn write_config(config: &Config) -> Result<()> {
+    trace!("保存的配置：{:?}", config);
+
     let config_str = toml::to_string(config).map_err(|e| e.to_string())?;
+
+    trace!("序列化后的配置：{}", config_str);
 
     fs::write(CONFIG_FILE.to_owned(), config_str).map_err(|e| e.to_string())
 }
 
-fn default_temperature() -> f32 {
+fn default_temperature() -> f64 {
     1.00
 }
 
@@ -117,5 +121,5 @@ pub struct TopicConfig {
     pub use_first_conversation: bool,
     pub system_role: String,
     #[serde(default = "default_temperature")]
-    pub temperature: f32,
+    pub temperature: f64,
 }
