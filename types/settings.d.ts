@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: Sun Apr 23 2023
+ * Modified At: 2023-04-30 10:05:30
  * Modified By: thepoy
  */
 
@@ -48,6 +48,7 @@ declare interface TopicConfig {
   conversation_count: number
   use_first_conversation: boolean
   system_role: string
+  temperature: number
 }
 
 declare interface PromptConfig {

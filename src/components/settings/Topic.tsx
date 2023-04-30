@@ -1,5 +1,5 @@
 import React, { type ChangeEvent, memo, useCallback, useReducer } from 'react'
-import { Modal, Form, Input, InputNumber, Switch, Button, Popconfirm, message } from 'antd'
+import { Modal, Form, Input, InputNumber, Switch, Button, Popconfirm, message, Row, Col, Slider } from 'antd'
 import { invoke } from '@tauri-apps/api'
 
 const { TextArea } = Input
@@ -19,6 +19,7 @@ interface SettingsState {
   useFirstConversation: boolean
   systemRole: string
   systemRoleAvailable: boolean
+  temperature: number
 }
 
 type SettingsAction =
@@ -29,6 +30,7 @@ type SettingsAction =
   | { type: 'SET_USE_FIRST_CONVERSATION', payload: boolean }
   | { type: 'SET_SYSTEM_ROLE', payload: string }
   | { type: 'SET_SYSTEM_ROLE_AVAILABLE', payload: boolean }
+  | { type: 'SET_TEMPERATURE', payload: number }
 
 const reducer = (
   state: SettingsState,
@@ -49,6 +51,8 @@ const reducer = (
       return { ...state, systemRole: action.payload }
     case 'SET_SYSTEM_ROLE_AVAILABLE':
       return { ...state, systemRoleAvailable: action.payload }
+    case 'SET_TEMPERATURE':
+      return { ...state, temperature: action.payload }
   }
 }
 
@@ -74,7 +78,8 @@ const Settings: React.FC<TopicSettingsProps> = ({
     conversationCount: config?.conversation_count ?? 1,
     useFirstConversation: config?.use_first_conversation ?? false,
     systemRole: config?.system_role ?? '',
-    systemRoleAvailable: !!config?.system_role
+    systemRoleAvailable: !!config?.system_role,
+    temperature: config?.temperature ?? 1.0
   })
 
   const onCancel = useCallback(() => {
@@ -111,7 +116,8 @@ const Settings: React.FC<TopicSettingsProps> = ({
       use_context: state.useContext,
       conversation_count: state.conversationCount,
       use_first_conversation: state.useFirstConversation,
-      system_role: state.systemRole
+      system_role: state.systemRole,
+      temperature: state.temperature
     })
     closeSettings?.()
   }
@@ -135,6 +141,20 @@ const Settings: React.FC<TopicSettingsProps> = ({
 
   const onUseFirstConversationChange = useCallback((status: boolean): void => {
     dispatch({ type: 'SET_USE_FIRST_CONVERSATION', payload: status })
+  }, [])
+
+  const onTemperatureChange = useCallback((value: number | null): void => {
+    if (!value) {
+      return
+    }
+
+    console.log(value)
+
+    if (typeof value === 'number') {
+      dispatch({ type: 'SET_TEMPERATURE', payload: value })
+    } else {
+      dispatch({ type: 'SET_TEMPERATURE', payload: parseFloat(value) })
+    }
   }, [])
 
   const onSystemRoleChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>): void => {
@@ -243,6 +263,32 @@ const Settings: React.FC<TopicSettingsProps> = ({
           />
         </Form.Item>
 
+        <Form.Item name="temperature" label="分布参数" tooltip='值越大，ChatGPT的回复越随机，值越小，回复越精确。为 0 值将对同样的问题回复相同的内容，为 2 时回复可能会很抽象。默认值为 1，应根据实际情况自行调整。'>
+          <Row>
+            <Col span={16}>
+              <Slider
+                min={0}
+                max={2}
+                value={typeof state.temperature === 'number' ? state.temperature : 0}
+                step={0.1}
+                onChange={onTemperatureChange}
+              />
+            </Col>
+
+            <Col span={2}>
+              <InputNumber
+                min={0}
+                max={2}
+                value={state.temperature}
+                step={0.1}
+                style={{ margin: '0 16px' }}
+                stringMode
+                onChange={onTemperatureChange}
+              />
+            </Col>
+          </Row>
+        </Form.Item>
+
         {state.systemRoleAvailable
           ? (
             <Form.Item label="系统角色">
@@ -251,7 +297,7 @@ const Settings: React.FC<TopicSettingsProps> = ({
                 maxLength={PROMPT_MAX_LENGTH}
                 autoSize
                 rows={2}
-                defaultValue={state.systemRole}
+                value={state.systemRole}
                 onChange={onSystemRoleChange}
                 placeholder="输入为此对话中的 ChatGPT 设定的角色语句"
               />

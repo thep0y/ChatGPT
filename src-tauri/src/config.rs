@@ -100,10 +100,16 @@ pub fn write_config(config: &Config) -> Result<()> {
     fs::write(CONFIG_FILE.to_owned(), config_str).map_err(|e| e.to_string())
 }
 
+fn default_temperature() -> f32 {
+    1.0
+}
+
 #[derive(Deserialize, Serialize, Debug)]
 pub struct TopicConfig {
     pub use_context: bool,
     pub conversation_count: u8,
     pub use_first_conversation: bool,
     pub system_role: String,
+    #[serde(default = "default_temperature")]
+    pub temperature: f32,
 }
