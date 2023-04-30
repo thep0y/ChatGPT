@@ -11,7 +11,8 @@ import {
   MenuOutlined,
   ExclamationCircleFilled,
   ReloadOutlined,
-  PushpinOutlined
+  PushpinOutlined,
+  PushpinFilled
 } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
@@ -26,6 +27,7 @@ import {
   deleteMessage
 } from '~/lib/message'
 import { appWindow } from '@tauri-apps/api/window'
+import { TauriEvent } from '@tauri-apps/api/event'
 import '~/styles/ChatPage.scss'
 
 const Chat = lazy(async () => await import('~/components/Chat'))
@@ -171,7 +173,9 @@ const addConversationMessages = (
   if (conversationCount <= useConversationCount) {
     sendedMessages.push(...messages.reverse())
   } else {
-    const startMessageNo = useFirstConversation ? messages.length - (useConversationCount - 1) * 2 : messages.length - useConversationCount * 2
+    const startMessageNo = useFirstConversation
+      ? messages.length - (useConversationCount - 1) * 2
+      : messages.length - useConversationCount * 2
 
     console.log('初始消息序号', startMessageNo)
 
@@ -224,7 +228,6 @@ const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [waiting, setWaiting] = useState<boolean>(false)
   const [openSetting, setOpenSetting] = useState(false)
-  const [isOnTop, setOnTop] = useState(true)
   const [showTopicList, setShowTopicList] = useState(false)
   const [config, setConfig] = useState<Config | null>(null)
   const { topicID } = useParams<'topicID'>()
@@ -247,6 +250,11 @@ const ChatPage: React.FC = () => {
       if (!config || config.openApiKey === '') {
         setOpenSetting(true)
       }
+
+      void appWindow.once(TauriEvent.WINDOW_CLOSE_REQUESTED, async () => {
+        await invoke('restore_is_on_top')
+        await appWindow.close()
+      })
     }
 
     void fetchConfig()
@@ -323,9 +331,7 @@ const ChatPage: React.FC = () => {
     return createdAt
   }
 
-  const sendStreamRequest = async (
-    args: ChatRequestArgs
-  ): Promise<void> => {
+  const sendStreamRequest = async (args: ChatRequestArgs): Promise<void> => {
     console.log('使用的代理配置', config?.proxy)
 
     try {
@@ -413,7 +419,13 @@ const ChatPage: React.FC = () => {
       try {
         const args = {
           ...createConfigProperties(),
-          request: newChatRequest(sendedMessages, stream, topicIDNumber === 2 ? 1.0 : config?.topics?.[topicID].temperature ?? 1.0),
+          request: newChatRequest(
+            sendedMessages,
+            stream,
+            topicIDNumber === 2
+              ? 1.0
+              : config?.topics?.[topicID].temperature ?? 1.0
+          ),
           createdAt
         }
 
@@ -472,17 +484,22 @@ const ChatPage: React.FC = () => {
     return true
   }
 
-  const handleOnTop = (): void => {
-    void invoke('switch_top_status', { current: isOnTop })
-    setOnTop(!isOnTop)
-  }
-
   if (config == null) {
     return (
       <Spin tip="正在读取配置文件">
         <div className="content" />
       </Spin>
     )
+  }
+
+  const handleOnTop = (): void => {
+    void invoke('switch_top_status', { current: config.isOnTop })
+
+    const newConfig = { ...config, isOnTop: !config.isOnTop }
+
+    setConfig(newConfig)
+
+    void saveConfig(newConfig)
   }
 
   return (
@@ -497,8 +514,8 @@ const ChatPage: React.FC = () => {
         />
 
         <FloatButton
-          icon={<PushpinOutlined />}
-          tooltip="置顶"
+          icon={config.isOnTop ? <PushpinFilled /> : <PushpinOutlined /> }
+          tooltip={config.isOnTop ? '取消置顶' : '置顶'}
           onClick={handleOnTop}
         />
 

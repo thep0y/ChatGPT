@@ -73,6 +73,8 @@ pub struct Config {
     pub image_scale: u8,
     pub use_stream: Option<bool>,
     pub use_enter: Option<bool>,
+    #[serde(default = "default_is_on_top")]
+    pub is_on_top: bool, // 当前 tauri 没有 api 获取 on top 状态，暂时使用配置文件保存此变量
     pub show_line_numbers: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub topics: Option<HashMap<String, TopicConfig>>,
@@ -102,6 +104,10 @@ pub fn write_config(config: &Config) -> Result<()> {
 
 fn default_temperature() -> f32 {
     1.00
+}
+
+fn default_is_on_top() -> bool {
+    true
 }
 
 #[derive(Deserialize, Serialize, Debug)]

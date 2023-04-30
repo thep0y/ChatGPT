@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   config.ts
  * Created At:  2023-03-26 18:30:56
- * Modified At: 2023-04-23 20:13:28
+ * Modified At: 2023-04-30 18:49:04
  * Modified By: thepoy
  */
 
@@ -17,6 +17,7 @@ export const defaultConfig: Config = {
   useStream: true,
   useEnter: false,
   showLineNumbers: false,
+  isOnTop: true,
   prompt: {
     inChinese: true
   },
@@ -43,6 +44,7 @@ interface ConfigStruct {
   use_stream: boolean
   use_enter: boolean
   show_line_numbers: boolean
+  is_on_top: boolean
   topics?: Record<string, TopicConfig>
   export?: ExportConfig
 }
@@ -93,6 +95,7 @@ export const readConfig = async (): Promise<Config> => {
       useEnter: config?.use_enter ?? false,
       showLineNumbers: config?.show_line_numbers ?? false,
       topics: config?.topics,
+      isOnTop: config?.is_on_top,
       export: {
         markdown: {
           mode: config.export?.markdown?.mode ?? 1
@@ -121,7 +124,8 @@ export const saveConfig = async (config: Config): Promise<void> => {
       use_enter: config.useEnter,
       show_line_numbers: config.showLineNumbers,
       topics: config.topics,
-      export: config.export
+      export: config.export,
+      is_on_top: config.isOnTop
     }
 
     await invoke('write_config', { config: configStruct })

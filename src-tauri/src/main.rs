@@ -149,6 +149,25 @@ async fn write_config(config: Config) -> Result<()> {
 }
 
 #[tauri::command]
+async fn restore_is_on_top() -> Result<()> {
+    trace!("重置 is_on_top");
+
+    let config = config::read_config()?;
+
+    if let Some(mut c) = config {
+        if c.is_on_top {
+            return Ok(());
+        }
+
+        c.is_on_top = true;
+        config::write_config(&c)?;
+        debug!("已重置 is_on_top");
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
 async fn chat_gpt(
     pool: tauri::State<'_, SQLitePool>,
     proxy_config: ProxyConfig,
@@ -577,7 +596,8 @@ async fn main() -> anyhow::Result<()> {
             clear_topic,
             delete_topic,
             delete_message_by_time,
-            switch_top_status
+            switch_top_status,
+            restore_is_on_top
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

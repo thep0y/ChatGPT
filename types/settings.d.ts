@@ -3,7 +3,7 @@
  * Email:       thepoy@163.com
  * File Name:   settings.d.ts
  * Created At:  2023-03-26 14:11:02
- * Modified At: 2023-04-30 10:05:30
+ * Modified At: 2023-04-30 18:47:31
  * Modified By: thepoy
  */
 
@@ -32,6 +32,7 @@ declare interface Config {
   useStream: boolean
   useEnter: boolean
   showLineNumbers: boolean
+  isOnTop: boolean
   topics?: Record<string, TopicConfig>
 }
 
