@@ -20,7 +20,7 @@
     "@dnd-kit/utilities": "^3.2.1",
     "@emotion/css": "^11.10.6",
     "@tauri-apps/api": "^1.2.0",
-    "antd": "^5.4.4",
+    "antd": "^5.4.6",
     "dom-to-image-more": "^3.1.4",
     "katex": "^0.16.6",
     "localforage": "^1.10.0",

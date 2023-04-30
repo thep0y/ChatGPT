@@ -7,8 +7,9 @@
 
 import { Models } from './model'
 
-export const newChatRequest = (sendedMessages: ChatMessage[], stream: boolean, model = Models.GPT_3_5): ChatGPTRequest => {
+export const newChatRequest = (sendedMessages: ChatMessage[], stream: boolean, temperature: number, model = Models.GPT_3_5): ChatGPTRequest => {
   return {
+    temperature,
     messages: sendedMessages,
     model,
     stream

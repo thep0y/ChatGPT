@@ -101,7 +101,7 @@ pub fn write_config(config: &Config) -> Result<()> {
 }
 
 fn default_temperature() -> f32 {
-    1.0
+    1.00
 }
 
 #[derive(Deserialize, Serialize, Debug)]

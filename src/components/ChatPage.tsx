@@ -412,7 +412,7 @@ const ChatPage: React.FC = () => {
       try {
         const args = {
           ...createConfigProperties(),
-          request: newChatRequest(sendedMessages, stream),
+          request: newChatRequest(sendedMessages, stream, config?.topics?.[topicID].temperature ?? 1.0),
           createdAt
         }
 

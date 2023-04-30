@@ -11,6 +11,10 @@ const TOPIC_NAME_MAX_LENGTH = 200
 const DESCRIPTION_MAX_LENGTH = 200
 const PROMPT_MAX_LENGTH = 500
 
+const TEMPERATURE_MIN = 0
+const TEMPERATURE_MAX = 2
+const TEMPERATURE_STEP = 0.01
+
 interface SettingsState {
   topicName: string
   description: string
@@ -144,17 +148,11 @@ const Settings: React.FC<TopicSettingsProps> = ({
   }, [])
 
   const onTemperatureChange = useCallback((value: number | null): void => {
-    if (!value) {
+    if (typeof value !== 'number') {
       return
     }
 
-    console.log(value)
-
-    if (typeof value === 'number') {
-      dispatch({ type: 'SET_TEMPERATURE', payload: value })
-    } else {
-      dispatch({ type: 'SET_TEMPERATURE', payload: parseFloat(value) })
-    }
+    dispatch({ type: 'SET_TEMPERATURE', payload: value })
   }, [])
 
   const onSystemRoleChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>): void => {
@@ -267,22 +265,21 @@ const Settings: React.FC<TopicSettingsProps> = ({
           <Row>
             <Col span={16}>
               <Slider
-                min={0}
-                max={2}
+                min={TEMPERATURE_MIN}
+                max={TEMPERATURE_MAX}
                 value={typeof state.temperature === 'number' ? state.temperature : 0}
-                step={0.1}
+                step={TEMPERATURE_STEP}
                 onChange={onTemperatureChange}
               />
             </Col>
 
             <Col span={2}>
               <InputNumber
-                min={0}
-                max={2}
+                min={TEMPERATURE_MIN}
+                max={TEMPERATURE_MAX}
                 value={state.temperature}
-                step={0.1}
+                step={TEMPERATURE_STEP}
                 style={{ margin: '0 16px' }}
-                stringMode
                 onChange={onTemperatureChange}
               />
             </Col>
