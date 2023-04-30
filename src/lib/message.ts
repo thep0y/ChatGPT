@@ -54,3 +54,10 @@ export const deleteMessage = async (createAt: number): Promise<boolean> => {
     return false
   }
 }
+
+export const messageToChatMessage = (message: Message): ChatMessage => {
+  return {
+    role: message.role,
+    content: message.content
+  }
+}
