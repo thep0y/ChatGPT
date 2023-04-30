@@ -9,17 +9,17 @@ import { appWindow } from '@tauri-apps/api/window'
 
 const ChatPage = lazy(async () => await import('~/components/ChatPage'))
 
-if (import.meta.env.DEV) {
-  const tempLog = console.log
+// if (import.meta.env.DEV) {
+//   const tempLog = console.log
 
-  console.log = (prefix: string, msg: any): void => {
-    if (msg) {
-      tempLog.apply(console, [`[${new Date().toLocaleString()}]`, prefix, '>>>', msg])
-    } else {
-      tempLog.apply(console, [`[${new Date().toLocaleString()}]`, prefix])
-    }
-  }
-}
+//   console.log = (prefix: string, msg: any): void => {
+//     if (msg) {
+//       tempLog.apply(console, [`[${new Date().toLocaleString()}]`, prefix, '>>>', msg])
+//     } else {
+//       tempLog.apply(console, [`[${new Date().toLocaleString()}]`, prefix])
+//     }
+//   }
+// }
 
 const router = createBrowserRouter([
   {

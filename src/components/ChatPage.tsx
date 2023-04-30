@@ -324,8 +324,7 @@ const ChatPage: React.FC = () => {
   }
 
   const sendStreamRequest = async (
-    args: ChatRequestArgs,
-    input: string
+    args: ChatRequestArgs
   ): Promise<void> => {
     console.log('使用的代理配置', config?.proxy)
 
@@ -409,17 +408,24 @@ const ChatPage: React.FC = () => {
         topicIDNumber === 2 ? config?.prompt?.inChinese : undefined
       )
 
+      console.log('要发送的消息', sendedMessages)
+
       try {
         const args = {
           ...createConfigProperties(),
-          request: newChatRequest(sendedMessages, stream, config?.topics?.[topicID].temperature ?? 1.0),
+          request: newChatRequest(sendedMessages, stream, topicIDNumber === 2 ? 1.0 : config?.topics?.[topicID].temperature ?? 1.0),
           createdAt
         }
 
-        if (stream) await sendStreamRequest(args, content)
+        console.log('要发送的参数', args)
+
+        if (stream) await sendStreamRequest(args)
         else await sendRequest(args)
       } catch (e) {
         setRetry(true)
+        setWaiting(false)
+
+        console.error(e)
 
         await message.error(e as any)
       } finally {
