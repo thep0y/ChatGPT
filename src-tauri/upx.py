@@ -4,7 +4,7 @@
 # @Email:       thepoy@163.com
 # @File Name:   upx.py
 # @Created At:  2023-03-19 21:31:57
-# @Modified At: 2023-04-24 10:39:48
+# @Modified At: 2023-04-30 21:39:58
 # @Modified By: thepoy
 
 import shutil
@@ -59,7 +59,7 @@ def download_upx(version: str, url: str):
         print("macOS 不支持自动下载 upx")
         return
     elif sys.platform == "linux":
-        print("Automatic download of upx is not yet supported on Linux platform.")
+        print("upx: automatic download of upx is not yet supported on Linux platform.")
         return
     elif sys.platform == "win32":
         exe_file = temp_dir / "upx.exe"
@@ -98,10 +98,12 @@ def compress():
         return
 
     if cmd_exists("upx"):
-        print("Use the upx command in the environment variable.")
+        print("upx: use the upx command in the environment variable.")
         cmd = "upx"
     else:
-        print("upx was not found in the environment variables, and it will be automatically downloaded.")
+        print(
+            "upx: upx was not found in the environment variables, and it will be automatically downloaded."
+        )
 
         if mirror := os.getenv("GITHUB_MIRROR"):
             url = mirror
