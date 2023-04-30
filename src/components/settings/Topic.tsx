@@ -252,15 +252,6 @@ const Settings: React.FC<TopicSettingsProps> = ({
           />
         </Form.Item>
 
-        <Form.Item name="use-role" label="使用角色设定">
-          <Switch
-            defaultChecked={state.systemRoleAvailable}
-            onChange={(v) => {
-              setSystemRoleAvailable(v)
-            }}
-          />
-        </Form.Item>
-
         <Form.Item name="temperature" label="分布参数" tooltip='值越大，ChatGPT的回复越随机，值越小，回复越精确。为 0 值将对同样的问题回复相同的内容，为 2 时回复可能会很抽象。默认值为 1，应根据实际情况自行调整。'>
           <Row>
             <Col span={16}>
@@ -284,6 +275,15 @@ const Settings: React.FC<TopicSettingsProps> = ({
               />
             </Col>
           </Row>
+        </Form.Item>
+
+        <Form.Item name="use-role" label="使用角色设定">
+          <Switch
+            defaultChecked={state.systemRoleAvailable}
+            onChange={(v) => {
+              setSystemRoleAvailable(v)
+            }}
+          />
         </Form.Item>
 
         {state.systemRoleAvailable
