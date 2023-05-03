@@ -422,7 +422,7 @@ const ChatPage: React.FC = () => {
           request: newChatRequest(
             sendedMessages,
             stream,
-            topicIDNumber === 2
+            topicIDNumber <= 2
               ? 1.0
               : config?.topics?.[topicID].temperature ?? 1.0
           ),
