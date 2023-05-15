@@ -5,8 +5,7 @@ import {
   FileImageOutlined,
   FileMarkdownOutlined,
   FilePdfOutlined,
-  FileTextOutlined,
-  PushpinOutlined
+  FileTextOutlined
 } from '@ant-design/icons'
 import domtoimage from 'dom-to-image-more'
 import {
@@ -22,9 +21,6 @@ import { now } from '~/lib'
 import { type TypeOpen } from 'antd/es/message/interface'
 
 const MessageList = lazy(async () => await import('~/components/message/List'))
-const Scrollbar = lazy(
-  async () => await import('~/components/scrollbar/Scrollbar')
-)
 
 type ChatProps = Omit<MessageListProps, 'showLineNumbers'> & { config: Config, topicName: string }
 
@@ -216,15 +212,13 @@ const Chat = memo(({ messages, config, showTopicList, topicName }: ChatProps) =>
     <>
       {saving.status ? <Progress progress={progress} /> : null}
 
-      <Scrollbar>
-        <div id="chat">
-          <div ref={messageListComponentRef}>
-            <React.Suspense fallback={null}>
-              <MessageList messages={messages} showTopicList={showTopicList} showLineNumbers={config.showLineNumbers} />
-            </React.Suspense>
-          </div>
+      <div id="chat">
+        <div ref={messageListComponentRef}>
+          <React.Suspense fallback={null}>
+            <MessageList messages={messages} showTopicList={showTopicList} showLineNumbers={config.showLineNumbers} />
+          </React.Suspense>
         </div>
-      </Scrollbar>
+      </div>
 
       <FloatButton.Group
         trigger="hover"
