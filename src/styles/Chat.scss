@@ -8,6 +8,7 @@
  */
 
 #chat {
+  height: 100%;
   padding-top: 10px;
   overflow-y: scroll;
   overflow-x: hidden;
@@ -45,7 +46,7 @@
   }
 }
 
-[data-theme="dark"] {
+[data-theme='dark'] {
   .list {
     --bg: #161515;
   }
@@ -93,7 +94,7 @@
     position: absolute;
     bottom: 0;
     height: 25px; /* height of our bubble "tail" - should match the border-radius above */
-    content: "";
+    content: '';
   }
 
   &:last-child {
