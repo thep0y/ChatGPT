@@ -10,7 +10,6 @@
 #chat::-webkit-scrollbar {
   width: 8px;
   height: 8px;
-  z-index: 99;
 }
 
 #chat::-webkit-scrollbar-thumb {
@@ -30,7 +29,6 @@
   height: 100%;
   padding-top: 10px;
   overflow-y: overlay;
-  // overflow-y: auto;
   overflow-x: hidden;
 }
 
