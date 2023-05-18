@@ -17,12 +17,14 @@ module.exports = {
   },
   parser: '@typescript-eslint/parser',
   extends: [
+    // 'prettier',
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react/recommended',
   ],
   overrides: [],
   parserOptions: {
+    tsconfigRootDir: __dirname,
     project: ['tsconfig.json', 'tsconfig.node.json'],
     ecmaVersion: 'latest',
     sourceType: 'module',
