@@ -51,7 +51,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ children, className, time, showLi
       </CopyToClipboard>
 
       <SyntaxHighlighter
-        style={CodeStyle as any}
+        style={CodeStyle}
         customStyle={{ fontFamily: 'var(--user-monospace)' }}
         language={match?.[1]}
         PreTag="div"
