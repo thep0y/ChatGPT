@@ -43,7 +43,8 @@ appWindow.theme().then(v => {
   ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
       <ConfigProvider theme={{
-        algorithm: v === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm
+        // algorithm: v === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm
+        algorithm:  theme.defaultAlgorithm
       }}
       >
         <RouterProvider router={router} />
