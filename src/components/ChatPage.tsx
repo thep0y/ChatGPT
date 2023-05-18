@@ -5,15 +5,8 @@ import React, {
   useCallback,
   useLayoutEffect,
 } from 'react'
-import { Layout, FloatButton, Spin, message, Modal, Row, Col } from 'antd'
-import {
-  SettingOutlined,
-  MenuOutlined,
-  ExclamationCircleFilled,
-  ReloadOutlined,
-  PushpinOutlined,
-  PushpinFilled,
-} from '@ant-design/icons'
+import { Layout, Spin, message, Modal } from 'antd'
+import { ExclamationCircleFilled } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
 import { isEqual, newChatRequest, now, readConfig, saveConfig } from '~/lib'
@@ -286,7 +279,7 @@ const ChatPage: React.FC = () => {
 
         setMessages(ms)
       } catch (e) {
-        void message.error((e as any).toString())
+        void message.error(String(e))
       }
     },
     [topicID]
@@ -343,7 +336,7 @@ const ChatPage: React.FC = () => {
       })
 
       try {
-        const messageID = await invoke<number>('chat_gpt_stream', args as any)
+        const messageID = await invoke<number>('chat_gpt_stream', { ...args })
 
         if (messageID === 0) {
           setMessages((pre) => [...pre.slice(0, pre.length - 2)])
@@ -371,7 +364,7 @@ const ChatPage: React.FC = () => {
   }
 
   const sendRequest = async (args: ChatRequestArgs): Promise<void> => {
-    const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', args as any)
+    const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', { ...args })
 
     // chatgpt 的响应的时间戳是精确到秒的，需要 x1000 js 才能正确识别
     setMessages((prevMessages) => [
@@ -442,7 +435,7 @@ const ChatPage: React.FC = () => {
 
         console.error(e)
 
-        await message.error(e as any)
+        await message.error(String(e))
       } finally {
         setWaiting(false)
       }
