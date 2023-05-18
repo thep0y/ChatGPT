@@ -25,9 +25,7 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <Navigate to="/1?name=自由主题" />,
-    children: [
-
-    ]
+    children: [],
   },
   {
     path: '/:topicID',
@@ -35,19 +33,24 @@ const router = createBrowserRouter([
       <React.Suspense>
         <ChatPage />
       </React.Suspense>
-    )
-  }
+    ),
+  },
 ])
 
-appWindow.theme().then(v => {
-  ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-    <React.StrictMode>
-      <ConfigProvider theme={{
-        algorithm: v === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm
-      }}
-      >
-        <RouterProvider router={router} />
-      </ConfigProvider>
-    </React.StrictMode>
-  )
-}).catch(() => {})
+appWindow
+  .theme()
+  .then((v) => {
+    ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+      <React.StrictMode>
+        <ConfigProvider
+          theme={{
+            // algorithm: v === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm
+            algorithm: theme.defaultAlgorithm,
+          }}
+        >
+          <RouterProvider router={router} />
+        </ConfigProvider>
+      </React.StrictMode>
+    )
+  })
+  .catch(() => { })

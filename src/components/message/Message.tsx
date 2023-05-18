@@ -17,7 +17,11 @@ interface CodeBlockProps extends CodeProps {
   showLineNumbers: boolean
 }
 
-const CodeBlock: React.FC<CodeBlockProps> = ({ children, className, time, showLineNumbers }) => {
+const CodeBlock: React.FC<CodeBlockProps> = ({
+  children,
+  className,
+  showLineNumbers,
+}) => {
   const [copied, setCopied] = useState(false)
 
   const match = useMemo(
@@ -38,20 +42,20 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ children, className, time, showLi
   return (
     <div className="code-block">
       <CopyToClipboard text={String(children)}>
-        <Tooltip title='复制' placement='left'>
+        <Tooltip title="复制" placement="left">
           <Button
-            size='small'
-            className='copy-button'
+            size="small"
+            className="copy-button"
             onClick={onCopy}
             onMouseLeave={onBlur}
           >
-            {copied ? <CheckOutlined /> : <CopyOutlined /> }
+            {copied ? <CheckOutlined /> : <CopyOutlined />}
           </Button>
         </Tooltip>
       </CopyToClipboard>
 
       <SyntaxHighlighter
-        style={CodeStyle as any}
+        style={CodeStyle}
         customStyle={{ fontFamily: 'var(--user-monospace)' }}
         language={match?.[1]}
         PreTag="div"
@@ -75,75 +79,81 @@ interface MessageProps extends Message {
   showLineNumbers: boolean
 }
 
-const Message = memo(({ content, role, time, showTopicList, showLineNumbers }: MessageProps) => {
-  const sent = role === 'user'
+const Message = memo(
+  ({ content, role, time, showTopicList, showLineNumbers }: MessageProps) => {
+    const sent = role === 'user'
 
-  const remarkPlugins = useMemo(() => [remarkMath], [])
-  const rehypePlugins = useMemo(() => [rehypeKatex], [])
+    const remarkPlugins = useMemo(() => [remarkMath], [])
+    const rehypePlugins = useMemo(() => [rehypeKatex], [])
 
-  const [copied, setCopied] = useState(false)
+    const [copied, setCopied] = useState(false)
 
-  const renderCodeBlock = ({
-    node,
-    inline,
-    className,
-    children
-  }: CodeProps): React.ReactElement => {
-    if (!(inline ?? false)) {
+    const renderCodeBlock = ({
+      node,
+      inline,
+      className,
+      children,
+    }: CodeProps): React.ReactElement => {
+      if (!(inline ?? false)) {
+        return (
+          <CodeBlock
+            className={className}
+            node={node}
+            time={time}
+            showLineNumbers={showLineNumbers}
+          >
+            {children}
+          </CodeBlock>
+        )
+      }
+
       return (
-        <CodeBlock
-          className={className}
-          node={node}
-          time={time}
-          showLineNumbers={showLineNumbers}
-        >
+        <InlineCode className={className} node={node}>
           {children}
-        </CodeBlock>
+        </InlineCode>
       )
     }
 
+    const onCopy = async (): Promise<void> => {
+      setCopied(true)
+    }
+
+    const onBlur = (): void => {
+      setCopied(false)
+    }
+
     return (
-      <InlineCode className={className} node={node}>
-        {children}
-      </InlineCode>
+      <li
+        className={`shared ${showTopicList ? 'max-with-menu' : 'max'} ${
+          sent ? 'sent' : 'received'
+        }`}
+      >
+        <CopyToClipboard text={content}>
+          <Tooltip title="复制" placement="left">
+            <Button
+              size="small"
+              shape="circle"
+              className="copy-button"
+              // type="primary"
+              onClick={onCopy}
+              onMouseLeave={onBlur}
+            >
+              {copied ? <CheckOutlined /> : <CopyOutlined />}
+            </Button>
+          </Tooltip>
+        </CopyToClipboard>
+
+        <ReactMarkdown
+          components={{ code: renderCodeBlock }}
+          remarkPlugins={remarkPlugins}
+          rehypePlugins={rehypePlugins}
+        >
+          {content}
+        </ReactMarkdown>
+      </li>
     )
   }
-
-  const onCopy = async (): Promise<void> => {
-    setCopied(true)
-  }
-
-  const onBlur = (): void => {
-    setCopied(false)
-  }
-
-  return (
-    <li className={`shared ${showTopicList ? 'max-with-menu' : 'max'} ${sent ? 'sent' : 'received'}`}>
-      <CopyToClipboard text={content}>
-        <Tooltip title='复制' placement='left'>
-          <Button
-            size='small'
-            shape="circle"
-            className='copy-button'
-            // type="primary"
-            onClick={onCopy}
-            onMouseLeave={onBlur}
-          >
-            {copied ? <CheckOutlined /> : <CopyOutlined /> }
-          </Button>
-        </Tooltip>
-      </CopyToClipboard>
-
-      <ReactMarkdown
-        components={{ code: renderCodeBlock }}
-        remarkPlugins={remarkPlugins}
-        rehypePlugins={rehypePlugins}
-      >
-        {content}
-      </ReactMarkdown>
-    </li>
-  )
-})
+)
 
 Message.displayName = 'Message'
 

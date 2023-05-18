@@ -3,15 +3,15 @@
  * Email:       thepoy@163.com
  * File Name:   index.scss
  * Created At:  2023-03-22 23:07:38
- * Modified At: 2023-04-23 09:52:57
+ * Modified At: Thu May 18 2023
  * Modified By: thepoy
  */
 
 :root {
-  --user-font: "SF Pro Display", "苹方-简", "方正悠黑", "方正悠黑 GBK",
-    "方正修黑+", "方正修黑+ GBK", "黑源黑体", sans-serif;
-  --user-monospace: "Luxi Mono", "Source Code Pro", Consolas, Monaco,
-    "Andale Mono", "Ubuntu Mono", "Courier New", "Monaco", var(--user-font);
+  --user-font: 'SF Pro Display', '苹方-简', '方正悠黑', '方正悠黑 GBK',
+    '方正修黑+', '方正修黑+ GBK', '黑源黑体', sans-serif;
+  --user-monospace: 'Luxi Mono', 'Source Code Pro', Consolas, Monaco,
+    'Andale Mono', 'Ubuntu Mono', 'Courier New', 'Monaco', var(--user-font);
 }
 
 * {
@@ -23,10 +23,28 @@ body {
   height: 100%;
 }
 
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-track {
+  background-color: #fff0; /* or add it to the track */
+}
+
 #root {
-  overflow: hidden;
   height: 100%;
   background-color: #f5f5f5;
+  overflow: hidden;
 
   .ant-float-btn-icon {
     color: inherit;

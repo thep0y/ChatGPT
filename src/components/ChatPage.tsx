@@ -3,17 +3,10 @@ import React, {
   lazy,
   useEffect,
   useCallback,
-  useLayoutEffect
+  useLayoutEffect,
 } from 'react'
-import { Layout, FloatButton, Spin, message, Modal } from 'antd'
-import {
-  SettingOutlined,
-  MenuOutlined,
-  ExclamationCircleFilled,
-  ReloadOutlined,
-  PushpinOutlined,
-  PushpinFilled
-} from '@ant-design/icons'
+import { Layout, Spin, message, Modal } from 'antd'
+import { ExclamationCircleFilled } from '@ant-design/icons'
 import { invoke } from '@tauri-apps/api'
 import { type Event } from '@tauri-apps/api/event'
 import { isEqual, newChatRequest, now, readConfig, saveConfig } from '~/lib'
@@ -24,7 +17,7 @@ import {
   PROMPT_ROLE_MESSAGE,
   PROMPT_ROLE_MESSAGE_IN_CHINESE,
   addNewLine,
-  deleteMessage
+  deleteMessage,
 } from '~/lib/message'
 import { appWindow } from '@tauri-apps/api/window'
 import { TauriEvent } from '@tauri-apps/api/event'
@@ -33,6 +26,9 @@ import '~/styles/ChatPage.scss'
 const Chat = lazy(async () => await import('~/components/Chat'))
 const GlobalSettings = lazy(
   async () => await import('~/components/settings/Global')
+)
+const GlobalFloatButtons = lazy(
+  async () => await import('~/components/floatButtons/Global')
 )
 const Menu = lazy(async () => await import('~/components/Menu'))
 const MessageInput = lazy(
@@ -69,8 +65,8 @@ const handleStreamResponse = async (
         content: '',
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         role: choice.delta.role!,
-        time: payload.created * 1000
-      }
+        time: payload.created * 1000,
+      },
     ])
 
     console.log('流消息', '添加一条消息')
@@ -85,8 +81,8 @@ const handleStreamResponse = async (
         ...prevMessages[prevMessages.length - 1],
         content:
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          prevMessages[prevMessages.length - 1].content + choice.delta.content!
-      }
+          prevMessages[prevMessages.length - 1].content + choice.delta.content!,
+      },
     ])
 
     return
@@ -117,12 +113,12 @@ const conversationsToMessages = (conversations: Conversation[]): Message[] => {
     const userMessage: Message = {
       content: c.user.message,
       time: c.user.created_at,
-      role: 'user'
+      role: 'user',
     }
     const assistantMessage: Message = {
       content: c.assistant.message,
       time: c.assistant.created_at * 1000,
-      role: 'assistant'
+      role: 'assistant',
     }
 
     if (!messageExists(tempMessages, userMessage.time)) {
@@ -283,7 +279,7 @@ const ChatPage: React.FC = () => {
 
         setMessages(ms)
       } catch (e) {
-        void message.error((e as any).toString())
+        void message.error(String(e))
       }
     },
     [topicID]
@@ -298,10 +294,10 @@ const ChatPage: React.FC = () => {
       okText: '继续',
       cancelText: '清空',
       cancelButtonProps: { danger: true, type: 'primary' },
-      onOk () {
+      onOk() {
         console.log('do nothing')
       },
-      async onCancel () {
+      async onCancel() {
         console.log('清空主题', topicID)
 
         try {
@@ -311,7 +307,7 @@ const ChatPage: React.FC = () => {
         } catch (e) {
           void message.error(e as string)
         }
-      }
+      },
     })
   }
 
@@ -325,7 +321,7 @@ const ChatPage: React.FC = () => {
 
     setMessages((prevMessages) => [
       ...prevMessages,
-      { content, role: 'user', time: createdAt }
+      { content, role: 'user', time: createdAt },
     ])
 
     return createdAt
@@ -340,7 +336,7 @@ const ChatPage: React.FC = () => {
       })
 
       try {
-        const messageID = await invoke<number>('chat_gpt_stream', args as any)
+        const messageID = await invoke<number>('chat_gpt_stream', { ...args })
 
         if (messageID === 0) {
           setMessages((pre) => [...pre.slice(0, pre.length - 2)])
@@ -351,7 +347,7 @@ const ChatPage: React.FC = () => {
         setRetry(true)
 
         setMessages((prevMessages) => [
-          ...prevMessages.slice(0, prevMessages.length - 1)
+          ...prevMessages.slice(0, prevMessages.length - 1),
         ])
       }
 
@@ -362,13 +358,13 @@ const ChatPage: React.FC = () => {
       setRetry(true)
 
       setMessages((prevMessages) => [
-        ...prevMessages.slice(0, prevMessages.length - 1)
+        ...prevMessages.slice(0, prevMessages.length - 1),
       ])
     }
   }
 
   const sendRequest = async (args: ChatRequestArgs): Promise<void> => {
-    const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', args as any)
+    const resp = await invoke<ChatGPTResponse<Choice>>('chat_gpt', { ...args })
 
     // chatgpt 的响应的时间戳是精确到秒的，需要 x1000 js 才能正确识别
     setMessages((prevMessages) => [
@@ -376,25 +372,25 @@ const ChatPage: React.FC = () => {
       {
         content: addNewLine(resp.choices[0].message.content),
         role: resp.choices[0].message.role,
-        time: resp.created * 1000
-      }
+        time: resp.created * 1000,
+      },
     ])
   }
 
   const createConfigProperties = (): Omit<
-  ChatRequestArgs,
-  'request' | 'createdAt'
+    ChatRequestArgs,
+    'request' | 'createdAt'
   > => ({
     proxyConfig: {
       ...config?.proxy,
-      reverse_proxy: config?.proxy?.reverseProxy
+      reverse_proxy: config?.proxy?.reverseProxy,
     },
     apiKey: config?.openApiKey,
-    topicId: topicIDNumber
+    topicId: topicIDNumber,
   })
 
   const handleSendMessage = useCallback(
-    async (content: string, stream: boolean = true): Promise<void> => {
+    async (content: string, stream = true): Promise<void> => {
       const createdAt = newMessage(content)
 
       setWaiting(true)
@@ -403,8 +399,8 @@ const ChatPage: React.FC = () => {
       const sendedMessages: ChatMessage[] = [
         {
           role: 'user',
-          content
-        }
+          content,
+        },
       ]
 
       fillMessages(
@@ -426,7 +422,7 @@ const ChatPage: React.FC = () => {
               ? 1.0
               : config?.topics?.[topicID].temperature ?? 1.0
           ),
-          createdAt
+          createdAt,
         }
 
         console.log('要发送的参数', args)
@@ -439,7 +435,7 @@ const ChatPage: React.FC = () => {
 
         console.error(e)
 
-        await message.error(e as any)
+        await message.error(String(e))
       } finally {
         setWaiting(false)
       }
@@ -466,7 +462,7 @@ const ChatPage: React.FC = () => {
     (n: number): void => {
       console.log(messages)
       setMessages((prevMessages) => [
-        ...prevMessages.slice(0, prevMessages.length - n)
+        ...prevMessages.slice(0, prevMessages.length - n),
       ])
     },
     [messages]
@@ -504,59 +500,36 @@ const ChatPage: React.FC = () => {
 
   return (
     <>
-      <FloatButton.Group shape="circle" style={{ right: 8, bottom: 54 }}>
-        <FloatButton
-          icon={<SettingOutlined />}
-          tooltip="设置"
-          onClick={() => {
-            setOpenSetting(true)
-          }}
+      <React.Suspense fallback={null}>
+        <GlobalFloatButtons
+          config={config}
+          handleOnTop={handleOnTop}
+          setOpenSetting={setOpenSetting}
+          setShowTopicList={setShowTopicList}
         />
+      </React.Suspense>
 
-        <FloatButton
-          icon={config.isOnTop ? <PushpinFilled /> : <PushpinOutlined /> }
-          tooltip={config.isOnTop ? '取消置顶' : '置顶'}
-          onClick={handleOnTop}
+      <React.Suspense fallback={null}>
+        <GlobalSettings
+          config={config}
+          open={openSetting}
+          closeSettings={closeSettings}
+          onConfigChange={handleConfigChange}
         />
-
-        <FloatButton
-          icon={<MenuOutlined />}
-          tooltip="显示/隐藏主题列表"
-          onClick={() => {
-            setShowTopicList((pre) => !pre)
-          }}
-        />
-
-        <FloatButton
-          icon={<ReloadOutlined />}
-          tooltip="刷新页面"
-          onClick={() => {
-            window.location.reload()
-          }}
-        />
-      </FloatButton.Group>
-
-      <GlobalSettings
-        config={config}
-        open={openSetting}
-        closeSettings={closeSettings}
-        onConfigChange={handleConfigChange}
-      />
+      </React.Suspense>
 
       <Layout className="layout">
-        {showTopicList
-          ? (
-            <Sider>
-              <React.Suspense fallback={null}>
-                <Menu
-                  selectedID={topicID ?? '1'}
-                  config={config}
-                  onConfigChange={setConfig}
-                />
-              </React.Suspense>
-            </Sider>
-            )
-          : null}
+        {showTopicList ? (
+          <Sider>
+            <React.Suspense fallback={null}>
+              <Menu
+                selectedID={topicID ?? '1'}
+                config={config}
+                onConfigChange={setConfig}
+              />
+            </React.Suspense>
+          </Sider>
+        ) : null}
 
         <Content>
           <React.Suspense fallback={null}>

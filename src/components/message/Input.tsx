@@ -4,7 +4,7 @@ import {
   SendOutlined,
   CloseCircleFilled,
   ClearOutlined,
-  RedoOutlined
+  RedoOutlined,
 } from '@ant-design/icons'
 import {
   Affix,
@@ -13,7 +13,7 @@ import {
   Input,
   Space,
   Tooltip,
-  message
+  message,
 } from 'antd'
 import { invoke } from '@tauri-apps/api'
 
@@ -29,7 +29,7 @@ const MessageInput = memo(
     config,
     topicID,
     retry,
-    lastUserMessage
+    lastUserMessage,
   }: MessageInputProps) => {
     const [chatMessage, setChatMessage] = useState('')
     const [lastInputMessage, setLastInputMessage] = useState(lastUserMessage)
@@ -94,45 +94,39 @@ const MessageInput = memo(
 
     const statusButton = (): React.ReactNode => {
       const disabled = waiting || chatMessage.trim() === ''
-      const icon = waiting
-        ? (
-            config.useStream
-              ? (
-                <CloseCircleFilled />
-                )
-              : (
-                <LoadingOutlined />
-                )
-          )
-        : (
-          <SendOutlined />
-          )
+      const icon = waiting ? (
+        config.useStream ? (
+          <CloseCircleFilled />
+        ) : (
+          <LoadingOutlined />
+        )
+      ) : (
+        <SendOutlined />
+      )
       const commonBtnProps: ButtonProps = {
         type: 'primary',
         onClick: handleEnter,
         disabled: config.useStream ? (waiting ? false : disabled) : disabled,
-        danger: waiting
+        danger: waiting,
       }
       const streamBtnProps: ButtonProps = {
         ...commonBtnProps,
-        onClick: waiting ? handleAbort : handleEnter
+        onClick: waiting ? handleAbort : handleEnter,
       }
 
-      return config.useStream && waiting
-        ? (
-          <Tooltip title="中断流式响应">
-            <Button {...streamBtnProps}>{icon}</Button>
-          </Tooltip>
-          )
-        : (
-          <Button {...commonBtnProps}>{icon}</Button>
-          )
+      return config.useStream && waiting ? (
+        <Tooltip title="中断流式响应">
+          <Button {...streamBtnProps}>{icon}</Button>
+        </Tooltip>
+      ) : (
+        <Button {...commonBtnProps}>{icon}</Button>
+      )
     }
 
     return (
       <div id="input-message">
         <Affix style={{ width: '90%', maxWidth: 800 }}>
-          <Space.Compact block>
+          <Space.Compact block style={{ alignItems: 'end' }}>
             <Tooltip title="清空当前主题消息">
               <Button type="primary" disabled={waiting} onClick={clearMessages}>
                 <ClearOutlined />
@@ -153,17 +147,13 @@ const MessageInput = memo(
 
             {statusButton()}
 
-            {
-              lastInputMessage
-                ? (
-                  <Tooltip title="重新发送最后的问题">
-                    <Button onClick={handleRedo}>
-                      <RedoOutlined />
-                    </Button>
-                  </Tooltip>
-                  )
-                : null
-            }
+            {!waiting ?? lastInputMessage ? (
+              <Tooltip title="重新发送最后的问题">
+                <Button onClick={handleRedo}>
+                  <RedoOutlined />
+                </Button>
+              </Tooltip>
+            ) : null}
           </Space.Compact>
         </Affix>
       </div>
