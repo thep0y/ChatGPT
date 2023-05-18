@@ -126,7 +126,7 @@ const MessageInput = memo(
     return (
       <div id="input-message">
         <Affix style={{ width: '90%', maxWidth: 800 }}>
-          <Space.Compact block>
+          <Space.Compact block style={{ alignItems: 'end' }}>
             <Tooltip title="清空当前主题消息">
               <Button type="primary" disabled={waiting} onClick={clearMessages}>
                 <ClearOutlined />
