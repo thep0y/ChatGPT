@@ -7,24 +7,6 @@
  * Modified By: thepoy
  */
 
-#chat::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-#chat::-webkit-scrollbar-thumb {
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.1);
-}
-
-#chat::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-#chat::-webkit-scrollbar-track {
-  background-color: #fff0; /* or add it to the track */
-}
-
 #chat {
   height: 100%;
   padding-top: 10px;
