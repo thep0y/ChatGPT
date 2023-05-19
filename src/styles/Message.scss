@@ -10,6 +10,14 @@
 .code-block {
   position: relative;
 
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.5);
+    }
+  }
+
   .copy-button {
     position: absolute;
     top: 4px;
