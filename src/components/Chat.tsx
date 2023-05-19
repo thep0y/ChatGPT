@@ -5,6 +5,7 @@ import React, {
   useCallback,
   lazy,
   useLayoutEffect,
+  useEffect,
 } from 'react'
 import { FloatButton, message } from 'antd'
 import {
@@ -219,10 +220,17 @@ const Chat = memo(
       })
     }, [])
 
+    const observer = new ResizeObserver(scrollToBottom)
+
     useLayoutEffect(() => {
-      console.log(contentsRef.current)
-      scrollToBottom()
-    }, [contentsRef.current?.scrollWidth, messages])
+      // scrollToBottom()
+      // }, [contentsRef.current?.clientWidth, messages])
+      const current = contentsRef.current
+
+      if (!current) return
+
+      observer.observe(current)
+    }, [topicName, messages])
 
     return (
       <>
