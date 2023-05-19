@@ -219,10 +219,15 @@ const Chat = memo(
       })
     }, [])
 
+    const observer = new ResizeObserver(scrollToBottom)
+
     useLayoutEffect(() => {
-      console.log(contentsRef.current)
-      scrollToBottom()
-    }, [contentsRef.current?.scrollWidth, messages])
+      const current = contentsRef.current
+
+      if (!current) return
+
+      observer.observe(current)
+    }, [topicName, messages])
 
     return (
       <>

@@ -34,7 +34,7 @@ const MessageInput = memo(
     const [chatMessage, setChatMessage] = useState('')
     const [lastInputMessage, setLastInputMessage] = useState(lastUserMessage)
 
-    console.log(lastUserMessage)
+    // console.log(lastUserMessage)
 
     useEffect(() => {
       setLastInputMessage(lastUserMessage)
