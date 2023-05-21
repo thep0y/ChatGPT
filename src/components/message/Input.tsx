@@ -46,9 +46,7 @@ const MessageInput = memo(
 
     const handleChange = useCallback(
       (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
-        // TODO: 双击回车发送消息，不能对所有的消息都 trim 处理
-        // 回车发送后可能会添加一个新的换行，需要 trim 一下
-        setChatMessage(config.useEnter ? e.target.value.trim() : e.target.value)
+        setChatMessage(e.target.value)
       },
       [config.useEnter, chatMessage]
     )
@@ -123,6 +121,22 @@ const MessageInput = memo(
       )
     }
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (!config.useEnter) return
+
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault()
+        setChatMessage((pre) => pre + '\n')
+
+        return
+      }
+
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        void handleEnter()
+      }
+    }
+
     return (
       <div id="input-message">
         <Affix style={{ width: '90%', maxWidth: 800 }}>
@@ -135,9 +149,13 @@ const MessageInput = memo(
 
             <TextArea
               value={chatMessage}
-              placeholder="输入你要发送给 ChatGPT 的消息"
+              placeholder={
+                '输入你要发送给 ChatGPT 的消息' +
+                (config.useEnter ? '，Shift + Enter 换行' : '')
+              }
               onChange={handleChange}
-              onPressEnter={config.useEnter ? handleEnter : undefined}
+              // onPressEnter={config.useEnter ? handleEnter : undefined}
+              onKeyDown={handleKeyDown}
               maxLength={4000}
               autoSize={{ minRows: 1, maxRows: 10 }}
               style={{ borderRadius: 0 }}

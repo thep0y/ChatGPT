@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useMemo,
-  useReducer,
-  useEffect,
-  memo
-} from 'react'
+import React, { useCallback, useMemo, useReducer, useEffect, memo } from 'react'
 import {
   Form,
   Input,
@@ -18,7 +12,7 @@ import {
   Divider,
   Tooltip,
   Button,
-  message
+  message,
 } from 'antd'
 import { UserMessageMode } from '~/lib/fs'
 import { SwapOutlined } from '@ant-design/icons'
@@ -28,31 +22,31 @@ import { Models } from '~/lib'
 const PROTOCOLS: Array<SelectOption<string>> = [
   {
     value: 'http://',
-    label: 'http'
+    label: 'http',
   },
   {
     value: 'https://',
-    label: 'https'
+    label: 'https',
   },
   {
     value: 'socks5://',
-    label: 'socks5'
+    label: 'socks5',
   },
   {
     value: 'socks5h://',
-    label: 'socks5h'
-  }
+    label: 'socks5h',
+  },
 ]
 
 const MARKDOWN_USER_MESSAGE_MODES: Array<SelectOption<number>> = [
   {
     value: UserMessageMode.TITLE,
-    label: '二级标题'
+    label: '二级标题',
   },
   {
     value: UserMessageMode.QUOTE,
-    label: '引用块'
-  }
+    label: '引用块',
+  },
 ]
 
 const IMAGE_SCALE_MIN = 2
@@ -86,16 +80,16 @@ interface SettingsState {
 }
 
 type SettingsAction =
-  | { type: 'SET_PROXY_METHOD', payload: ProxyMethod }
-  | { type: 'SET_PROXY', payload: Proxy }
-  | { type: 'SET_REVERSE_PROXY', payload: string }
-  | { type: 'SET_OPEN_API_KEY', payload: string }
-  | { type: 'SET_IMAGE_SCALE', payload: number }
-  | { type: 'SET_USE_STREAM', payload: boolean }
-  | { type: 'SET_USE_ENTER', payload: boolean }
-  | { type: 'SET_SHOW_LINE_NUMBERS', payload: boolean }
-  | { type: 'SET_MARKDOWN_USER_MESSAGE_MODE', payload: UserMessageMode }
-  | { type: 'RESET', payload: SettingsState }
+  | { type: 'SET_PROXY_METHOD'; payload: ProxyMethod }
+  | { type: 'SET_PROXY'; payload: Proxy }
+  | { type: 'SET_REVERSE_PROXY'; payload: string }
+  | { type: 'SET_OPEN_API_KEY'; payload: string }
+  | { type: 'SET_IMAGE_SCALE'; payload: number }
+  | { type: 'SET_USE_STREAM'; payload: boolean }
+  | { type: 'SET_USE_ENTER'; payload: boolean }
+  | { type: 'SET_SHOW_LINE_NUMBERS'; payload: boolean }
+  | { type: 'SET_MARKDOWN_USER_MESSAGE_MODE'; payload: UserMessageMode }
+  | { type: 'RESET'; payload: SettingsState }
 
 const initialState: SettingsState = {
   proxyMethod: 'proxy',
@@ -108,9 +102,9 @@ const initialState: SettingsState = {
   showLineNumbers: false,
   export: {
     markdown: {
-      mode: UserMessageMode.TITLE
-    }
-  }
+      mode: UserMessageMode.TITLE,
+    },
+  },
 }
 
 const settingsReducer = (
@@ -123,7 +117,7 @@ const settingsReducer = (
     case 'SET_PROXY':
       return {
         ...state,
-        proxy: action.payload
+        proxy: action.payload,
       }
     case 'SET_REVERSE_PROXY':
       return { ...state, reverseProxy: action.payload }
@@ -142,9 +136,9 @@ const settingsReducer = (
         ...state,
         export: {
           markdown: {
-            mode: action.payload
-          }
-        }
+            mode: action.payload,
+          },
+        },
       }
     case 'RESET':
       return state
@@ -160,22 +154,25 @@ const Settings = memo(
     useEffect(() => {
       dispatch({
         type: 'SET_PROXY_METHOD',
-        payload: config.proxy?.method ?? 'proxy'
+        payload: config.proxy?.method ?? 'proxy',
       })
       dispatch({ type: 'SET_PROXY', payload: { ...config.proxy?.proxy } })
       dispatch({
         type: 'SET_REVERSE_PROXY',
-        payload: config.proxy?.reverseProxy ?? ''
+        payload: config.proxy?.reverseProxy ?? '',
       })
       dispatch({ type: 'SET_OPEN_API_KEY', payload: config.openApiKey })
       dispatch({ type: 'SET_IMAGE_SCALE', payload: config.imageScale })
       dispatch({
         type: 'SET_MARKDOWN_USER_MESSAGE_MODE',
-        payload: config.export.markdown.mode
+        payload: config.export.markdown.mode,
       })
       dispatch({ type: 'SET_USE_STREAM', payload: config.useStream })
       dispatch({ type: 'SET_USE_ENTER', payload: config.useEnter })
-      dispatch({ type: 'SET_SHOW_LINE_NUMBERS', payload: config.showLineNumbers })
+      dispatch({
+        type: 'SET_SHOW_LINE_NUMBERS',
+        payload: config.showLineNumbers,
+      })
     }, [config])
 
     const onProxyMethodChange = useCallback(
@@ -197,7 +194,7 @@ const Settings = memo(
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         dispatch({
           type: 'SET_PROXY',
-          payload: { ...state.proxy, [key]: value }
+          payload: { ...state.proxy, [key]: value },
         })
       },
       [state.proxy]
@@ -237,7 +234,7 @@ const Settings = memo(
     const resetSettings = useCallback((): void => {
       dispatch({
         type: 'RESET',
-        payload: initialState
+        payload: initialState,
       })
     }, [])
 
@@ -251,8 +248,8 @@ const Settings = memo(
       useEnter,
       showLineNumbers,
       export: {
-        markdown: { mode }
-      }
+        markdown: { mode },
+      },
     } = state
 
     const onFinish = useCallback(async (): Promise<void> => {
@@ -264,7 +261,7 @@ const Settings = memo(
           proxy: {
             method: proxyMethod,
             reverseProxy,
-            proxy: Object.keys(proxy).length === 0 ? undefined : proxy
+            proxy: Object.keys(proxy).length === 0 ? undefined : proxy,
           },
           imageScale,
           openApiKey,
@@ -273,9 +270,9 @@ const Settings = memo(
           showLineNumbers,
           export: {
             markdown: {
-              mode
-            }
-          }
+              mode,
+            },
+          },
         }
 
         console.log('新配置文件', newSettings)
@@ -318,10 +315,10 @@ const Settings = memo(
         const res = await invoke<Model>('get_model', {
           proxyConfig: {
             ...config?.proxy,
-            reverse_proxy: config?.proxy?.reverseProxy
+            reverse_proxy: config?.proxy?.reverseProxy,
           },
           apiKey: config?.openApiKey,
-          model: Models.GPT_3_5
+          model: Models.GPT_3_5,
         })
 
         if (res.id) void message.success('代理有效')
@@ -352,7 +349,7 @@ const Settings = memo(
 
           <Form.Item
             name="proxy"
-            label='代理'
+            label="代理"
             wrapperCol={{ span: 21 }}
             labelCol={{ span: 3 }}
             initialValue={config.proxy}
@@ -374,83 +371,77 @@ const Settings = memo(
                 </Select.Option>
               </Select>
 
-              {proxyMethod == null
-                ? null
-                : proxyMethod === 'proxy'
-                  ? (
-                    <>
-                      <Form.Item
-                        name={['proxy', 'protocol']}
-                        initialValue={proxy.protocol}
-                        noStyle
-                        rules={[{ required: true, message: '请选择代理协议！' }]}
-                      >
-                        <Select
-                          style={{ width: 91 }}
-                          value={proxy.protocol}
-                          placeholder="选择协议"
-                          optionFilterProp="children"
-                          onChange={(value) => {
-                            onProxyInputChange('protocol', value)
-                          }}
-                        >
-                          {protocolOptions}
-                        </Select>
-                      </Form.Item>
-
-                      <Form.Item
-                        name={['proxy', 'host']}
-                        initialValue={proxy.host}
-                        noStyle
-                        rules={[{ required: true, message: '请输入代理地址！' }]}
-                      >
-                        <Input
-                          placeholder="HOST"
-                          value={proxy.host}
-                          style={{ width: 130 }}
-                          onChange={(e) => {
-                            onProxyInputChange('host', e.target.value)
-                          }}
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        name={['proxy', 'port']}
-                        noStyle
-                        initialValue={proxy.port}
-                        rules={[{ required: true, message: '请输入代理端口！' }]}
-                      >
-                        <InputNumber
-                          min={PORT_MIN}
-                          max={PORT_MAX}
-                          value={proxy.port}
-                          style={{ width: 70 }}
-                          placeholder="PORT"
-                          onChange={(value) => {
-                            onProxyInputChange('port', value ?? 1)
-                          }}
-                        />
-                      </Form.Item>
-                    </>
-                    )
-                  : (
-                    <Form.Item
-                      name="reverse-proxy"
-                      initialValue={config.proxy?.reverseProxy}
-                      noStyle
-                      rules={[
-                        { required: true, message: '请输入反向代理地址！' }
-                      ]}
+              {proxyMethod == null ? null : proxyMethod === 'proxy' ? (
+                <>
+                  <Form.Item
+                    name={['proxy', 'protocol']}
+                    initialValue={proxy.protocol}
+                    noStyle
+                    rules={[{ required: true, message: '请选择代理协议！' }]}
+                  >
+                    <Select
+                      style={{ width: 91 }}
+                      value={proxy.protocol}
+                      placeholder="选择协议"
+                      optionFilterProp="children"
+                      onChange={(value) => {
+                        onProxyInputChange('protocol', value)
+                      }}
                     >
-                      <Input
-                        placeholder="REVERSE PROXY"
-                        style={{ width: 260 }}
-                        onChange={(e) => {
-                          onReverseProxyInputChange(e.target.value)
-                        }}
-                      />
-                    </Form.Item>
-                    )}
+                      {protocolOptions}
+                    </Select>
+                  </Form.Item>
+
+                  <Form.Item
+                    name={['proxy', 'host']}
+                    initialValue={proxy.host}
+                    noStyle
+                    rules={[{ required: true, message: '请输入代理地址！' }]}
+                  >
+                    <Input
+                      placeholder="HOST"
+                      value={proxy.host}
+                      style={{ width: 130 }}
+                      onChange={(e) => {
+                        onProxyInputChange('host', e.target.value)
+                      }}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name={['proxy', 'port']}
+                    noStyle
+                    initialValue={proxy.port}
+                    rules={[{ required: true, message: '请输入代理端口！' }]}
+                  >
+                    <InputNumber
+                      min={PORT_MIN}
+                      max={PORT_MAX}
+                      value={proxy.port}
+                      style={{ width: 70 }}
+                      placeholder="PORT"
+                      onChange={(value) => {
+                        onProxyInputChange('port', value ?? 1)
+                      }}
+                    />
+                  </Form.Item>
+                </>
+              ) : (
+                <Form.Item
+                  name="reverse-proxy"
+                  initialValue={config.proxy?.reverseProxy}
+                  noStyle
+                  rules={[{ required: true, message: '请输入反向代理地址！' }]}
+                >
+                  <Input
+                    placeholder="REVERSE PROXY"
+                    style={{ width: 260 }}
+                    onChange={(e) => {
+                      onReverseProxyInputChange(e.target.value)
+                    }}
+                  />
+                </Form.Item>
+              )}
 
               <Tooltip title="检测连通性。设置好代理后应点击此按钮检查连通性，避免在使用过程中出现网络错误">
                 <Button
@@ -470,7 +461,11 @@ const Settings = memo(
             <Input.Password onChange={onInputOpenApiKey} />
           </Form.Item>
 
-          <Form.Item name="image-scale" label="图片缩放比例" tooltip='导出图片的缩放比例'>
+          <Form.Item
+            name="image-scale"
+            label="图片缩放比例"
+            tooltip="导出图片的缩放比例"
+          >
             <Row>
               <Col span={12}>
                 <Slider
@@ -493,14 +488,18 @@ const Settings = memo(
             </Row>
           </Form.Item>
 
-          <Form.Item name="use-stream" label="流式响应" tooltip='是否使用流式响应'>
+          <Form.Item
+            name="use-stream"
+            label="流式响应"
+            tooltip="是否使用流式响应"
+          >
             <Switch checked={useStream} onChange={onUseStreamChange} />
           </Form.Item>
 
           <Form.Item
             name="use-enter"
             label="回车发送消息"
-            tooltip="是否使用回车键发送消息，开启后会影响换行，需使用回车键换行时应关闭此功能"
+            tooltip="是否使用回车键发送消息，开启后需通过shift+enter完成换行"
           >
             <Switch checked={useEnter} onChange={onUseEnterChange} />
           </Form.Item>
@@ -510,7 +509,10 @@ const Settings = memo(
             label="显示行号"
             tooltip="代码块中是否显示行号，开启后在选择并复制文字时也会复制行号"
           >
-            <Switch checked={showLineNumbers} onChange={onShowLineNumbersChange} />
+            <Switch
+              checked={showLineNumbers}
+              onChange={onShowLineNumbersChange}
+            />
           </Form.Item>
 
           <Divider>导出</Divider>
