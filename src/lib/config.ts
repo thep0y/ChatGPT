@@ -19,13 +19,13 @@ export const defaultConfig: Config = {
   showLineNumbers: false,
   isOnTop: true,
   prompt: {
-    inChinese: true
+    inChinese: true,
   },
   export: {
     markdown: {
-      mode: 1
-    }
-  }
+      mode: 1,
+    },
+  },
 }
 
 interface PromptStruct {
@@ -49,24 +49,26 @@ interface ConfigStruct {
   export?: ExportConfig
 }
 
-export const PROTOCOLS = [[
-  {
-    value: 'http://',
-    label: 'http'
-  },
-  {
-    value: 'https://',
-    label: 'https'
-  },
-  {
-    value: 'socks5://',
-    label: 'socks5'
-  },
-  {
-    value: 'socks5h://',
-    label: 'socks5h'
-  }
-]]
+export const PROTOCOLS = [
+  [
+    {
+      value: 'http://',
+      label: 'http',
+    },
+    {
+      value: 'https://',
+      label: 'https',
+    },
+    {
+      value: 'socks5://',
+      label: 'socks5',
+    },
+    {
+      value: 'socks5h://',
+      label: 'socks5h',
+    },
+  ],
+]
 
 export const readConfig = async (): Promise<Config> => {
   try {
@@ -78,15 +80,11 @@ export const readConfig = async (): Promise<Config> => {
       await message.warning('配置文件不存在，请先填写关键配置信息')
     }
 
-    if (config === null || config.open_api_key === '') {
-      await message.warning('配置文件不存在，请先填写关键配置信息')
-    }
-
     return {
       proxy: {
         method: config?.proxy?.method,
         proxy: config?.proxy?.proxy,
-        reverseProxy: config?.proxy?.reverse_proxy
+        reverseProxy: config?.proxy?.reverse_proxy,
       },
       prompt: { inChinese: config?.prompt?.in_chinese ?? true },
       openApiKey: config?.open_api_key ?? '',
@@ -98,9 +96,9 @@ export const readConfig = async (): Promise<Config> => {
       isOnTop: config?.is_on_top,
       export: {
         markdown: {
-          mode: config.export?.markdown?.mode ?? 1
-        }
-      }
+          mode: config.export?.markdown?.mode ?? 1,
+        },
+      },
     }
   } catch (e) {
     void message.error(String(e))
@@ -115,7 +113,7 @@ export const saveConfig = async (config: Config): Promise<void> => {
       proxy: {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         ...config.proxy!,
-        reverse_proxy: config.proxy?.reverseProxy
+        reverse_proxy: config.proxy?.reverseProxy,
       },
       prompt: { in_chinese: config.prompt.inChinese },
       open_api_key: config.openApiKey,
@@ -125,7 +123,7 @@ export const saveConfig = async (config: Config): Promise<void> => {
       show_line_numbers: config.showLineNumbers,
       topics: config.topics,
       export: config.export,
-      is_on_top: config.isOnTop
+      is_on_top: config.isOnTop,
     }
 
     await invoke('write_config', { config: configStruct })
