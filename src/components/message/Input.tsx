@@ -181,4 +181,4 @@ const MessageInput = memo(
 
 MessageInput.displayName = 'MessageInput'
 
-export default memo(MessageInput)
+export default MessageInput
